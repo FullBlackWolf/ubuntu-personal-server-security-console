@@ -2,16 +2,16 @@
   "use strict";
 
   const services = [
-    { unit: "ufw.service", label: "UFW 防火墙", description: "默认拒绝入站；外部 RDP 明确阻止。", restart: false },
-    { unit: "fail2ban.service", label: "Fail2ban", description: "监控 SSH 登录失败并自动封禁攻击来源。", restart: true },
-    { unit: "auditd.service", label: "auditd 审计", description: "记录关键安全事件和敏感配置变更。", restart: false },
-    { unit: "apparmor.service", label: "AppArmor", description: "限制受保护程序可访问的系统资源。", restart: false },
-    { unit: "unattended-upgrades.service", label: "自动安全更新", description: "自动安装 Ubuntu 安全更新，不自动重启。", restart: false },
-    { unit: "guest-command-approval.service", label: "访客命令审批", description: "guestuser 的受限命令请求、日志与白名单服务。", restart: true },
-    { unit: "fwknop-server.service", label: "SPA 敲门", description: "认证敲门后临时开放 SSH，并支持逐公钥会话门禁。", restart: true },
-    { unit: "ssh.socket", label: "OpenSSH", description: "仅允许密钥认证；root 登录已禁止。", restart: false },
-    { unit: "xrdp.service", label: "xrdp", description: "RDP 仅供 SSH 隧道访问，外部端口被防火墙阻止。", restart: true },
-    { unit: "cockpit.socket", label: "Cockpit 控制台", description: "本机服务器管理与安全控制中心。", restart: false }
+    { unit: "ufw.service", label: "UFW Firewall", description: "Inbound traffic is denied by default; external RDP is explicitly blocked.", restart: false },
+    { unit: "fail2ban.service", label: "Fail2ban", description: "Monitors failed SSH logins and automatically bans attack sources.", restart: true },
+    { unit: "auditd.service", label: "auditd Auditing", description: "Records critical security events and sensitive configuration changes.", restart: false },
+    { unit: "apparmor.service", label: "AppArmor", description: "Restricts the system resources available to protected programs.", restart: false },
+    { unit: "unattended-upgrades.service", label: "Automatic Security Updates", description: "Installs Ubuntu security updates automatically without rebooting.", restart: false },
+    { unit: "guest-command-approval.service", label: "Guest Command Approval", description: "Handles guestuser restricted-command requests, logs, and allowlists.", restart: true },
+    { unit: "fwknop-server.service", label: "SPA Authorization", description: "Temporarily opens SSH after authenticated SPA authorization and supports per-key session gating.", restart: true },
+    { unit: "ssh.socket", label: "OpenSSH", description: "Allows key authentication only; root login is disabled.", restart: false },
+    { unit: "xrdp.service", label: "xrdp", description: "RDP is available only through an SSH tunnel; the firewall blocks its external port.", restart: true },
+    { unit: "cockpit.socket", label: "Cockpit Console", description: "Local server administration and security control center.", restart: false }
   ];
 
   const serviceByUnit = new Map(services.map(item => [item.unit, item]));
@@ -64,16 +64,16 @@
   }
 
   function statusLabel(status) {
-    return ({ active: "运行中", inactive: "未运行", failed: "失败", loading: "检查中" })[status] || status;
+    return ({ active: "Running", inactive: "Stopped", failed: "Failed", loading: "Checking" })[status] || status;
   }
 
   function formatCount(value) {
-    return new Intl.NumberFormat("zh-CN").format(Number(value) || 0);
+    return new Intl.NumberFormat("en-US").format(Number(value) || 0);
   }
 
   function formatDateTime(value) {
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? String(value || "—") : date.toLocaleString("zh-CN", { hour12: false });
+    return Number.isNaN(date.getTime()) ? String(value || "—") : date.toLocaleString("en-US", { hour12: false });
   }
 
   function svgElement(name, attributes) {
@@ -91,7 +91,7 @@
   }
 
   function formatRate(value) {
-    return Number(value || 0).toLocaleString("zh-CN", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
+    return Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
   }
 
   function renderPostgresChart() {
@@ -103,7 +103,7 @@
     if (!series.length) {
       const empty = document.createElement("div");
       empty.className = "empty-chart";
-      empty.textContent = "此时间范围内没有可用数据";
+      empty.textContent = "No data is available for this time range";
       postgresElements.chart.append(empty);
       return;
     }
@@ -147,8 +147,8 @@
       const date = new Date(series[index].hour);
       const label = svgElement("text", { x: xAt(index), y: height - 9, "text-anchor": tick === 0 ? "start" : tick === tickCount - 1 ? "end" : "middle", class: "axis-label" });
       label.textContent = days <= 3
-        ? date.toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", hour12: false })
-        : date.toLocaleString("zh-CN", { month: "numeric", day: "numeric", hour: "2-digit", hour12: false });
+        ? date.toLocaleString("en-US", { month: "numeric", day: "numeric", hour: "2-digit", hour12: false })
+        : date.toLocaleString("en-US", { month: "numeric", day: "numeric", hour: "2-digit", hour12: false });
       svg.append(label);
     }
 
@@ -177,7 +177,7 @@
       focusLine.style.display = "block";
       focusDot.style.display = "block";
       tooltip.hidden = false;
-      tooltip.textContent = `${formatDateTime(item.hour)} · ${formatRate(item.per_minute)} / min（${formatCount(item.count)} 条）`;
+      tooltip.textContent = `${formatDateTime(item.hour)} · ${formatRate(item.per_minute)} / min (${formatCount(item.count)} records)`;
       tooltip.style.left = `${Math.min(window.innerWidth - tooltip.offsetWidth - 8, event.clientX + 12)}px`;
       tooltip.style.top = `${Math.max(8, event.clientY - 38)}px`;
     });
@@ -187,8 +187,8 @@
       tooltip.hidden = true;
     });
     postgresElements.chart.append(svg, tooltip);
-    postgresElements.chart.setAttribute("aria-label", `最近 ${days} 天 PostgreSQL 每分钟错误趋势，共 ${total} 条错误`);
-    postgresElements.chartSummary.textContent = `${formatCount(total)} 条错误 · 峰值 ${formatRate(Math.max(...values))} / min`;
+    postgresElements.chart.setAttribute("aria-label", `PostgreSQL errors-per-minute trend for the past ${days} days, ${total} total errors`);
+    postgresElements.chartSummary.textContent = `${formatCount(total)} errors · peak ${formatRate(Math.max(...values))} / min`;
   }
 
   function appendTableCell(row, value, className) {
@@ -210,7 +210,7 @@
 
   function renderFatalLogs(logs) {
     postgresElements.fatalRows.replaceChildren();
-    if (!logs.length) return renderEmptyRow(postgresElements.fatalRows, 5, "最近 30 天没有 PostgreSQL FATAL 日志");
+    if (!logs.length) return renderEmptyRow(postgresElements.fatalRows, 5, "No PostgreSQL FATAL logs were found during the past 30 days");
     for (const item of logs) {
       const row = document.createElement("tr");
       appendTableCell(row, formatDateTime(item.timestamp));
@@ -244,18 +244,18 @@
     const maximum = Math.max(auth1h, auth24h, 1);
     document.getElementById("postgres-auth-1h-bar").style.width = `${(auth1h / maximum) * 100}%`;
     document.getElementById("postgres-auth-24h-bar").style.width = `${(auth24h / maximum) * 100}%`;
-    const rangePrefix = report.imported ? `截至 ${formatDateTime(report.range_end)} 的 30 天` : "最近 30 天";
-    document.getElementById("postgres-auth-note").textContent = `${rangePrefix}共 ${formatCount(report.auth_failures["30d"])} 次；仅统计 FATAL 级别的认证拒绝。`;
-    postgresElements.fatalCount.textContent = `${rangePrefix} ${formatCount(report.fatal_logs.length)} 条，最多显示 100 条`;
+    const rangePrefix = report.imported ? `30 days through ${formatDateTime(report.range_end)}` : "Past 30 days";
+    document.getElementById("postgres-auth-note").textContent = `${rangePrefix}: ${formatCount(report.auth_failures["30d"])} failures; only FATAL-level authentication rejections are counted.`;
+    postgresElements.fatalCount.textContent = `${rangePrefix}: ${formatCount(report.fatal_logs.length)} records, up to 100 shown`;
     renderFatalLogs(report.fatal_logs);
-    renderRanking(postgresElements.userRows, report.failed_login_users, "没有可识别的失败登录用户");
-    renderRanking(postgresElements.ipRows, report.failed_login_ips, "没有可识别的失败登录来源 IP");
+    renderRanking(postgresElements.userRows, report.failed_login_users, "No identifiable failed-login users");
+    renderRanking(postgresElements.ipRows, report.failed_login_ips, "No identifiable failed-login source IPs");
     renderPostgresChart();
-    const sourceNote = report.sources.length ? (report.imported ? `旧日志 ${report.sources[0]}` : `数据源 ${report.sources.length} 个`) : "未发现 PostgreSQL 日志源";
-    const limited = report.data_limited ? "；数据达到读取上限" : "";
+    const sourceNote = report.sources.length ? (report.imported ? `Archived log ${report.sources[0]}` : `${report.sources.length} data sources`) : "No PostgreSQL log source found";
+    const limited = report.data_limited ? "; data reached the read limit" : "";
     postgresElements.updated.textContent = report.imported
-      ? `${sourceNote} · 日志截止 ${formatDateTime(report.range_end)}${limited}`
-      : `统计生成于 ${formatDateTime(report.generated_at)} · ${sourceNote}${limited}`;
+      ? `${sourceNote} · logs through ${formatDateTime(report.range_end)}${limited}`
+      : `Generated ${formatDateTime(report.generated_at)} · ${sourceNote}${limited}`;
   }
 
   function validPostgresReport(report) {
@@ -268,42 +268,42 @@
   async function fetchLivePostgresReport() {
     const text = await run(["/usr/local/libexec/postgresql-security-report"], true);
     const report = JSON.parse(text);
-    if (!validPostgresReport(report)) throw new Error("报表程序返回了无效数据");
+    if (!validPostgresReport(report)) throw new Error("The reporting program returned invalid data");
     postgresState.liveReport = report;
     return report;
   }
 
   async function refreshPostgres() {
-    postgresElements.updated.textContent = "正在读取最近 30 天 PostgreSQL 日志…";
+    postgresElements.updated.textContent = "Reading PostgreSQL logs from the past 30 days…";
     try {
       renderPostgresReport(await fetchLivePostgresReport());
     } catch (error) {
       postgresState.report = null;
-      postgresElements.updated.textContent = `PostgreSQL 统计加载失败：${error.message || error}`;
+      postgresElements.updated.textContent = `Unable to load PostgreSQL statistics: ${error.message || error}`;
       document.getElementById("postgres-auth-1h").textContent = "—";
       document.getElementById("postgres-auth-24h").textContent = "—";
       document.getElementById("postgres-auth-1h-bar").style.width = "0";
       document.getElementById("postgres-auth-24h-bar").style.width = "0";
-      document.getElementById("postgres-auth-note").textContent = "无法读取 PostgreSQL 认证失败统计。";
-      postgresElements.chartSummary.textContent = "统计加载失败";
-      postgresElements.fatalCount.textContent = "无法读取最近日志";
+      document.getElementById("postgres-auth-note").textContent = "Unable to read PostgreSQL authentication-failure statistics.";
+      postgresElements.chartSummary.textContent = "Statistics failed to load";
+      postgresElements.fatalCount.textContent = "Unable to read recent logs";
       postgresElements.chart.replaceChildren();
       const empty = document.createElement("div");
       empty.className = "empty-chart";
-      empty.textContent = "无法读取 PostgreSQL 日志统计";
+      empty.textContent = "Unable to read PostgreSQL log statistics";
       postgresElements.chart.append(empty);
-      renderEmptyRow(postgresElements.fatalRows, 5, "统计加载失败");
-      renderEmptyRow(postgresElements.userRows, 3, "统计加载失败");
-      renderEmptyRow(postgresElements.ipRows, 3, "统计加载失败");
+      renderEmptyRow(postgresElements.fatalRows, 5, "Statistics failed to load");
+      renderEmptyRow(postgresElements.userRows, 3, "Statistics failed to load");
+      renderEmptyRow(postgresElements.ipRows, 3, "Statistics failed to load");
     }
   }
 
   async function readFileBytes(file) {
-    if (file.size > maxUploadBytes) throw new Error("文件超过 64 MiB 读取上限");
+    if (file.size > maxUploadBytes) throw new Error("The file exceeds the 64 MiB read limit");
     if (!file.name.toLowerCase().endsWith(".gz") && file.type !== "application/gzip") {
       return new Uint8Array(await file.arrayBuffer());
     }
-    if (typeof DecompressionStream === "undefined") throw new Error("当前浏览器不支持读取 gzip，请先解压文件");
+    if (typeof DecompressionStream === "undefined") throw new Error("This browser cannot read gzip files; decompress the file first");
     const reader = file.stream().pipeThrough(new DecompressionStream("gzip")).getReader();
     const chunks = [];
     let total = 0;
@@ -313,7 +313,7 @@
       total += value.byteLength;
       if (total > maxUploadBytes) {
         await reader.cancel();
-        throw new Error("解压后的日志超过 64 MiB 读取上限");
+        throw new Error("The decompressed log exceeds the 64 MiB read limit");
       }
       chunks.push(value);
     }
@@ -328,10 +328,10 @@
     const file = postgresState.selectedFile;
     if (!file) return;
     postgresElements.readButton.disabled = true;
-    postgresElements.fileStatus.textContent = `正在读取 ${file.name}…`;
+    postgresElements.fileStatus.textContent = `Reading ${file.name}…`;
     try {
       const text = await readFileText(file);
-      if (new Blob([text]).size > maxUploadBytes) throw new Error("日志超过 64 MiB 读取上限");
+      if (new Blob([text]).size > maxUploadBytes) throw new Error("The log exceeds the 64 MiB read limit");
       let report = null;
       if (file.name.toLowerCase().endsWith(".json")) {
         try {
@@ -347,11 +347,11 @@
         const result = await run(["/usr/local/libexec/postgresql-security-report", "--stdin", file.name], true, text);
         report = JSON.parse(result);
       }
-      if (!validPostgresReport(report)) throw new Error("未能从文件生成有效的 PostgreSQL 报表");
+      if (!validPostgresReport(report)) throw new Error("Unable to generate a valid PostgreSQL report from the file");
       renderPostgresReport(report);
-      postgresElements.fileStatus.textContent = `已读取 ${file.name}；当前图表显示旧日志，点击“返回当前日志”可切换。`;
+      postgresElements.fileStatus.textContent = `Read ${file.name}; the charts now show archived logs. Select Return to Live Logs to switch back.`;
     } catch (error) {
-      postgresElements.fileStatus.textContent = `读取失败：${error.message || error}`;
+      postgresElements.fileStatus.textContent = `Read failed: ${error.message || error}`;
     } finally {
       postgresElements.readButton.disabled = false;
     }
@@ -369,7 +369,7 @@
       try {
         const handle = await window.showSaveFilePicker({
           suggestedName: name,
-          types: [{ description: "PostgreSQL 安全日志快照", accept: { "application/json": [".json"] } }]
+          types: [{ description: "PostgreSQL security-log snapshot", accept: { "application/json": [".json"] } }]
         });
         const writable = await handle.createWritable();
         await writable.write(blob);
@@ -390,7 +390,7 @@
 
   async function saveCurrentPostgresLog() {
     postgresElements.saveButton.disabled = true;
-    postgresElements.fileStatus.textContent = "正在读取最新日志并准备保存…";
+    postgresElements.fileStatus.textContent = "Reading the latest logs and preparing the download…";
     try {
       const liveReport = await fetchLivePostgresReport();
       if (!postgresState.report?.imported) renderPostgresReport(liveReport);
@@ -398,22 +398,22 @@
       const contents = JSON.stringify({ schema: "postgresql-security-snapshot-v1", saved_at: savedAt, report: liveReport }, null, 2) + "\n";
       const name = snapshotFilename();
       await writeSnapshotFile(name, contents);
-      postgresElements.fileStatus.textContent = `已保存最新日志快照：${name}`;
+      postgresElements.fileStatus.textContent = `Saved the latest log snapshot: ${name}`;
     } catch (error) {
-      postgresElements.fileStatus.textContent = error?.name === "AbortError" ? "已取消保存" : `保存失败：${error.message || error}`;
+      postgresElements.fileStatus.textContent = error?.name === "AbortError" ? "Save canceled" : `Save failed: ${error.message || error}`;
     } finally {
       postgresElements.saveButton.disabled = false;
     }
   }
 
   async function showLivePostgresLog() {
-    postgresElements.fileStatus.textContent = "正在返回当前日志…";
+    postgresElements.fileStatus.textContent = "Returning to live logs…";
     try {
       const report = postgresState.liveReport || await fetchLivePostgresReport();
       renderPostgresReport(report);
-      postgresElements.fileStatus.textContent = "已切换回当前 PostgreSQL 日志。";
+      postgresElements.fileStatus.textContent = "Switched back to live PostgreSQL logs.";
     } catch (error) {
-      postgresElements.fileStatus.textContent = `切换失败：${error.message || error}`;
+      postgresElements.fileStatus.textContent = `Unable to switch: ${error.message || error}`;
     }
   }
 
@@ -423,19 +423,19 @@
       const start = position === "tail" ? Math.max(0, lines.length - archiveDisplayLineLimit) : 0;
       return { shown: lines.slice(start, start + archiveDisplayLineLimit), total: lines.length, start };
     }
-    const lowered = term.toLocaleLowerCase("zh-CN");
+    const lowered = term.toLocaleLowerCase("en-US");
     let total = 0;
     for (const line of lines) {
-      if (line.toLocaleLowerCase("zh-CN").includes(lowered)) total += 1;
+      if (line.toLocaleLowerCase("en-US").includes(lowered)) total += 1;
     }
     const shown = [];
     if (position === "head") {
       for (let index = 0; index < lines.length && shown.length < archiveDisplayLineLimit; index += 1) {
-        if (lines[index].toLocaleLowerCase("zh-CN").includes(lowered)) shown.push(lines[index]);
+        if (lines[index].toLocaleLowerCase("en-US").includes(lowered)) shown.push(lines[index]);
       }
     } else {
       for (let index = lines.length - 1; index >= 0 && shown.length < archiveDisplayLineLimit; index -= 1) {
-        if (lines[index].toLocaleLowerCase("zh-CN").includes(lowered)) shown.push(lines[index]);
+        if (lines[index].toLocaleLowerCase("en-US").includes(lowered)) shown.push(lines[index]);
       }
       shown.reverse();
     }
@@ -452,16 +452,16 @@
     if (display.length > archiveDisplayCharacterLimit) {
       characterLimited = true;
       display = position === "tail"
-        ? "…内容过长，已截取末尾…\n" + display.slice(-archiveDisplayCharacterLimit)
-        : display.slice(0, archiveDisplayCharacterLimit) + "\n…内容过长，已截取开头…";
+        ? "…Content is too long; showing the end…\n" + display.slice(-archiveDisplayCharacterLimit)
+        : display.slice(0, archiveDisplayCharacterLimit) + "\n…Content is too long; showing the beginning…";
     }
-    archiveElements.output.textContent = display || "没有匹配的日志行。";
+    archiveElements.output.textContent = display || "No matching log lines.";
     if (term) {
-      archiveElements.resultCount.textContent = `匹配 ${formatCount(result.total)} 行，显示 ${formatCount(result.shown.length)} 行${characterLimited ? "；正文达到 4 MiB 显示上限" : ""}`;
+      archiveElements.resultCount.textContent = `${formatCount(result.total)} matching lines; showing ${formatCount(result.shown.length)}${characterLimited ? "; content reached the 4 MiB display limit" : ""}`;
     } else {
       const first = result.shown.length ? result.start + 1 : 0;
       const last = result.start + result.shown.length;
-      archiveElements.resultCount.textContent = `共 ${formatCount(result.total)} 行，显示第 ${formatCount(first)}–${formatCount(last)} 行${characterLimited ? "；正文达到 4 MiB 显示上限" : ""}`;
+      archiveElements.resultCount.textContent = `${formatCount(result.total)} total lines; showing ${formatCount(first)}–${formatCount(last)}${characterLimited ? "; content reached the 4 MiB display limit" : ""}`;
     }
     if (position === "tail") archiveElements.output.scrollTop = archiveElements.output.scrollHeight;
     else archiveElements.output.scrollTop = 0;
@@ -472,8 +472,8 @@
     if (!file) return;
     archiveElements.readButton.disabled = true;
     archiveElements.mergeButton.disabled = true;
-    archiveElements.mergeButton.textContent = "一键合并到现有日志中";
-    archiveElements.status.textContent = `正在读取 ${file.name}…`;
+    archiveElements.mergeButton.textContent = "Merge into Current Logs";
+    archiveElements.status.textContent = `Reading ${file.name}…`;
     try {
       const text = await readFileText(file, archiveElements.encoding.value);
       archiveState.text = text;
@@ -482,11 +482,11 @@
       archiveElements.position.disabled = false;
       archiveElements.clearButton.disabled = false;
       archiveElements.mergeButton.disabled = false;
-      archiveElements.status.textContent = `已读取 ${file.name} · ${formatCount(file.size)} 字节 · ${formatCount(archiveState.lines.length)} 行${text.includes("\x00") ? " · 检测到二进制内容，显示可能不完整" : ""}`;
+      archiveElements.status.textContent = `Read ${file.name} · ${formatCount(file.size)} bytes · ${formatCount(archiveState.lines.length)} lines${text.includes("\x00") ? " · binary content detected; display may be incomplete" : ""}`;
       renderArchiveLog();
     } catch (error) {
-      archiveElements.status.textContent = `读取失败：${error.message || error}`;
-      archiveElements.output.textContent = "无法读取所选日志。";
+      archiveElements.status.textContent = `Read failed: ${error.message || error}`;
+      archiveElements.output.textContent = "Unable to read the selected log.";
     } finally {
       archiveElements.readButton.disabled = false;
     }
@@ -496,17 +496,17 @@
     const file = archiveState.selectedFile;
     if (!file || !archiveState.text) return;
     archiveElements.mergeButton.disabled = true;
-    archiveElements.mergeButton.textContent = "正在合并…";
-    archiveElements.status.textContent = `正在将 ${file.name} 写入受管审计日志…`;
+    archiveElements.mergeButton.textContent = "Merging…";
+    archiveElements.status.textContent = `Writing ${file.name} to the managed audit log…`;
     try {
       const result = JSON.parse(await run(["/usr/local/sbin/security-operations-control", "import-log", file.name], true, archiveState.text));
       archiveElements.status.textContent = result.duplicate
-        ? `该文件已在审计中：${result.id} · SHA-256 ${result.sha256}`
-        : `已合并并加入审计：${result.id} · ${formatCount(result.bytes)} 字节 · SHA-256 ${result.sha256}`;
-      archiveElements.mergeButton.textContent = result.duplicate ? "已存在于审计中" : "已合并到现有日志";
+        ? `This file is already audited: ${result.id} · SHA-256 ${result.sha256}`
+        : `Merged and added to auditing: ${result.id} · ${formatCount(result.bytes)} bytes · SHA-256 ${result.sha256}`;
+      archiveElements.mergeButton.textContent = result.duplicate ? "Already Audited" : "Merged into Current Logs";
     } catch (error) {
-      archiveElements.status.textContent = `合并失败：${error.message || error}`;
-      archiveElements.mergeButton.textContent = "一键合并到现有日志中";
+      archiveElements.status.textContent = `Merge failed: ${error.message || error}`;
+      archiveElements.mergeButton.textContent = "Merge into Current Logs";
       archiveElements.mergeButton.disabled = false;
     }
   }
@@ -516,29 +516,29 @@
     archiveState.lines = [];
     archiveState.text = "";
     archiveElements.fileInput.value = "";
-    archiveElements.fileName.textContent = "尚未选择文件";
+    archiveElements.fileName.textContent = "No file selected";
     archiveElements.fileName.title = "";
-    archiveElements.status.textContent = "尚未选择日志";
+    archiveElements.status.textContent = "No log selected";
     archiveElements.search.value = "";
     archiveElements.search.disabled = true;
     archiveElements.position.disabled = true;
     archiveElements.readButton.disabled = true;
     archiveElements.clearButton.disabled = true;
     archiveElements.mergeButton.disabled = true;
-    archiveElements.mergeButton.textContent = "一键合并到现有日志中";
-    archiveElements.resultCount.textContent = "单次读取最多 64 MiB，页面最多显示 20,000 行";
-    archiveElements.output.textContent = "选择日志文件后点击“读取日志”。";
+    archiveElements.mergeButton.textContent = "Merge into Current Logs";
+    archiveElements.resultCount.textContent = "Reads up to 64 MiB and displays up to 20,000 lines";
+    archiveElements.output.textContent = "Choose a log file, then select Read Log.";
   }
 
   async function refreshAll() {
     const button = document.getElementById("refresh");
     button.disabled = true;
-    button.textContent = "正在刷新…";
+    button.textContent = "Refreshing…";
     try {
       await Promise.allSettled([refresh(), refreshPostgres()]);
     } finally {
       button.disabled = false;
-      button.textContent = "刷新状态";
+      button.textContent = "Refresh Status";
     }
   }
 
@@ -564,7 +564,7 @@
     logs.type = "button";
     logs.dataset.action = "logs";
     logs.dataset.unit = item.unit;
-    logs.textContent = "最近日志";
+    logs.textContent = "Recent Logs";
     actions.append(logs);
 
     if (item.restart) {
@@ -572,7 +572,7 @@
       restart.type = "button";
       restart.dataset.action = "restart";
       restart.dataset.unit = item.unit;
-      restart.textContent = "重启服务";
+      restart.textContent = "Restart Service";
       actions.append(restart);
     }
 
@@ -581,7 +581,7 @@
   }
 
   function show(text) {
-    output.textContent = text || "操作完成。";
+    output.textContent = text || "Action completed.";
     output.scrollTop = output.scrollHeight;
   }
 
@@ -595,18 +595,18 @@
       }
     }));
     grid.replaceChildren(...services.map((item, index) => renderCard(item, results[index])));
-    updated.textContent = "更新于 " + new Date().toLocaleTimeString();
+    updated.textContent = "Updated " + new Date().toLocaleTimeString("en-US");
   }
 
   async function privilegedAction(button, args, successMessage) {
     button.disabled = true;
-    show("正在执行…");
+    show("Running…");
     try {
       const text = await run(args, true);
       show((text && text.trim()) || successMessage);
       await refresh();
     } catch (error) {
-      show("操作失败：" + (error.message || error));
+      show("Action failed: " + (error.message || error));
     } finally {
       button.disabled = false;
     }
@@ -622,22 +622,22 @@
     if (button.id === "archive-read-log") return readArchiveLog();
     if (button.id === "archive-merge-log") return mergeArchiveLog();
     if (button.id === "archive-clear-log") return clearArchiveLog();
-    if (button.id === "clear-output") return show("等待操作…");
+    if (button.id === "clear-output") return show("Waiting for an action…");
     if (button.dataset.jump) return cockpit.jump(button.dataset.jump);
 
     const action = button.dataset.action;
     const unit = button.dataset.unit;
     if (action === "logs" && serviceByUnit.has(unit)) {
-      await privilegedAction(button, ["/usr/bin/journalctl", "-u", unit, "-n", "40", "--no-pager", "-o", "short-iso"], "没有近期日志。");
+      await privilegedAction(button, ["/usr/bin/journalctl", "-u", unit, "-n", "40", "--no-pager", "-o", "short-iso"], "No recent logs.");
     } else if (action === "restart" && serviceByUnit.get(unit)?.restart) {
-      if (window.confirm("确定要重启“" + serviceByUnit.get(unit).label + "”吗？"))
-        await privilegedAction(button, ["/usr/bin/systemctl", "restart", unit], "服务已重启。");
+      if (window.confirm("Restart “" + serviceByUnit.get(unit).label + "”?"))
+        await privilegedAction(button, ["/usr/bin/systemctl", "restart", unit], "Service restarted.");
     } else if (action === "ufw") {
-      await privilegedAction(button, ["/usr/sbin/ufw", "status", "verbose"], "防火墙状态已读取。");
+      await privilegedAction(button, ["/usr/sbin/ufw", "status", "verbose"], "Firewall status loaded.");
     } else if (action === "fail2ban") {
-      await privilegedAction(button, ["/usr/bin/fail2ban-client", "status", "sshd"], "Fail2ban 状态已读取。");
+      await privilegedAction(button, ["/usr/bin/fail2ban-client", "status", "sshd"], "Fail2ban status loaded.");
     } else if (action === "audit") {
-      await privilegedAction(button, ["/usr/sbin/auditctl", "-l"], "审计规则已读取。");
+      await privilegedAction(button, ["/usr/sbin/auditctl", "-l"], "Audit rules loaded.");
     }
   });
 
@@ -645,9 +645,9 @@
     const file = postgresElements.fileInput.files?.[0] || null;
     postgresState.selectedFile = file;
     postgresElements.readButton.disabled = !file;
-    postgresElements.fileName.textContent = file ? file.name : "尚未选择文件";
+    postgresElements.fileName.textContent = file ? file.name : "No file selected";
     postgresElements.fileName.title = file?.name || "";
-    postgresElements.fileStatus.textContent = file ? `已选择 ${file.name}（${formatCount(file.size)} 字节）` : "";
+    postgresElements.fileStatus.textContent = file ? `Selected ${file.name} (${formatCount(file.size)} bytes)` : "";
   });
   archiveElements.fileInput.addEventListener("change", () => {
     const file = archiveElements.fileInput.files?.[0] || null;
@@ -656,10 +656,10 @@
     archiveState.lines = [];
     archiveElements.readButton.disabled = !file;
     archiveElements.mergeButton.disabled = true;
-    archiveElements.mergeButton.textContent = "一键合并到现有日志中";
-    archiveElements.fileName.textContent = file ? file.name : "尚未选择文件";
+    archiveElements.mergeButton.textContent = "Merge into Current Logs";
+    archiveElements.fileName.textContent = file ? file.name : "No file selected";
     archiveElements.fileName.title = file?.name || "";
-    archiveElements.status.textContent = file ? `已选择 ${file.name}（${formatCount(file.size)} 字节）` : "尚未选择日志";
+    archiveElements.status.textContent = file ? `Selected ${file.name} (${formatCount(file.size)} bytes)` : "No log selected";
   });
   archiveElements.search.addEventListener("input", () => {
     window.clearTimeout(archiveSearchTimer);

@@ -32,12 +32,12 @@ def rule_allows(rules: str, remote: ipaddress._BaseAddress) -> bool:
 
 def main() -> int:
     if len(sys.argv) != 3 or not re.fullmatch(r"[A-Za-z0-9_-]{43}", sys.argv[1]):
-        print("门禁参数无效。", file=sys.stderr)
+        print("The gate argument is invalid.", file=sys.stderr)
         return 2
     try:
         remote = ipaddress.ip_address(sys.argv[2])
     except ValueError:
-        print("远程地址无效。", file=sys.stderr)
+        print("The remote address is invalid.", file=sys.stderr)
         return 2
     try:
         result = subprocess.run(
@@ -46,14 +46,14 @@ def main() -> int:
             text=True, timeout=4, check=False,
         )
     except (OSError, subprocess.SubprocessError):
-        print("无法读取 fwknop 防火墙状态。", file=sys.stderr)
+        print("The fwknop firewall state cannot be read.", file=sys.stderr)
         return 1
     if result.returncode != 0:
-        print("无法读取 fwknop 防火墙状态。", file=sys.stderr)
+        print("The fwknop firewall state cannot be read.", file=sys.stderr)
         return 1
     if rule_allows(result.stdout, remote):
         return 0
-    print("未找到该来源地址仍有效的 fwknop SSH 放行规则；请先敲门。", file=sys.stderr)
+    print("No active fwknop SSH allow rule exists for this source address; complete SPA authorization first.", file=sys.stderr)
     return 1
 
 

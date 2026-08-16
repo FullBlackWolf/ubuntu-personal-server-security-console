@@ -83,7 +83,7 @@ def account_for(name: str) -> Account:
     for item in accounts():
         if item.name == name:
             return item
-    raise UserError("账号不存在或不允许管理。")
+    raise UserError("The account does not exist or cannot be managed.")
 
 
 def authorized_path(account: Account) -> str:
@@ -100,16 +100,16 @@ def read_lines(account: Account) -> list[str]:
         descriptor = os.open("authorized_keys", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=ssh_fd)
         info = os.fstat(descriptor)
         if not stat.S_ISREG(info.st_mode) or info.st_uid not in (0, account.uid):
-            raise UserError(f"{account.name} 的 authorized_keys 类型或所有者异常。")
+            raise UserError(f"The type or owner of {account.name}'s authorized_keys file is invalid.")
         if info.st_size > 1024 * 1024:
-            raise UserError(f"{account.name} 的 authorized_keys 超过 1 MiB，已拒绝读取。")
+            raise UserError(f"{account.name}'s authorized_keys file exceeds 1 MiB and was not read.")
         with os.fdopen(descriptor, "r", encoding="utf-8", errors="strict") as handle:
             descriptor = None
             return handle.read().splitlines()
     except FileNotFoundError:
         return []
     except (UnicodeError, OSError) as error:
-        raise UserError(f"无法读取 {account.name} 的 authorized_keys：{error}") from error
+        raise UserError(f"Unable to read {account.name}'s authorized_keys file: {error}") from error
     finally:
         if descriptor is not None:
             os.close(descriptor)
@@ -142,12 +142,12 @@ def parse_option_list(text: str) -> list[tuple[str, str | None]]:
         else:
             current.append(char)
     if quoted or escaped:
-        raise UserError("公钥选项中的引号或转义不完整。")
+        raise UserError("The public-key options contain an incomplete quote or escape sequence.")
     fields.append("".join(current))
     result = []
     for field in fields:
         if not field:
-            raise UserError("公钥选项中存在空项目。")
+            raise UserError("The public-key options contain an empty item.")
         if "=" in field:
             name, value = field.split("=", 1)
             if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
@@ -162,13 +162,13 @@ def decode_blob(key_type: str, blob: str) -> bytes:
     try:
         raw = base64.b64decode(blob.encode("ascii"), validate=True)
     except (ValueError, UnicodeError) as error:
-        raise UserError("公钥的 Base64 内容无效。") from error
+        raise UserError("The public key contains invalid Base64 data.") from error
     if len(raw) < 8:
-        raise UserError("公钥内容过短。")
+        raise UserError("The public-key data is too short.")
     declared_len = int.from_bytes(raw[:4], "big")
     declared = raw[4:4 + declared_len].decode("ascii", errors="ignore")
     if declared != key_type:
-        raise UserError("公钥类型与编码内容不一致。")
+        raise UserError("The public-key type does not match its encoded data.")
     return raw
 
 
@@ -295,51 +295,51 @@ def knock_status() -> dict[str, object]:
 
 def validate_comment(value: object) -> str:
     if not isinstance(value, str):
-        raise UserError("公钥名称必须是文本。")
+        raise UserError("The public-key name must be text.")
     value = value.strip()
     if len(value) > 160 or any(ord(char) < 32 or ord(char) == 127 for char in value):
-        raise UserError("公钥名称最多 160 个字符，且不能包含控制字符。")
+        raise UserError("The public-key name is limited to 160 characters and cannot contain control characters.")
     return value
 
 
 def validate_sources(value: object) -> str:
     if not isinstance(value, str):
-        raise UserError("来源地址必须是文本。")
+        raise UserError("Source addresses must be text.")
     value = value.replace(" ", "")
     if not value:
         return ""
     if len(value) > 512:
-        raise UserError("来源地址列表过长。")
+        raise UserError("The source-address list is too long.")
     items = value.split(",")
     if all(item.startswith("!") for item in items):
-        raise UserError("来源地址至少需要一个非排除项。")
+        raise UserError("The source-address list needs at least one non-excluded entry.")
     for item in items:
         candidate = item[1:] if item.startswith("!") else item
         if not candidate:
-            raise UserError("来源地址列表包含空项目。")
+            raise UserError("The source-address list contains an empty item.")
         try:
             ipaddress.ip_network(candidate, strict=False)
         except ValueError as error:
-            raise UserError(f"来源地址无效：{item}") from error
+            raise UserError(f"Invalid source address: {item}") from error
     return value
 
 
 def validate_expiry(value: object) -> str:
     if not isinstance(value, str):
-        raise UserError("失效日期必须是文本。")
+        raise UserError("The expiration date must be text.")
     if not value:
         return ""
     try:
         parsed = dt.date.fromisoformat(value)
     except ValueError as error:
-        raise UserError("失效日期格式无效。") from error
+        raise UserError("The expiration date format is invalid.") from error
     return parsed.strftime("%Y%m%d")
 
 
 def bool_field(payload: dict[str, object], name: str, default: bool = False) -> bool:
     value = payload.get(name, default)
     if not isinstance(value, bool):
-        raise UserError(f"{name} 必须是布尔值。")
+        raise UserError(f"{name} must be a Boolean value.")
     return value
 
 
@@ -347,7 +347,7 @@ def quote_option(name: str, value: str | None) -> str:
     if value is None:
         return name
     if any(char in value for char in ("\n", "\r")):
-        raise UserError(f"{name} 包含不允许的字符。")
+        raise UserError(f"{name} contains prohibited characters.")
     escaped = value.replace("\\", "\\\\").replace('"', '\\"')
     return f'{name}="{escaped}"'
 
@@ -365,7 +365,7 @@ def build_line(key: ParsedKey, payload: dict[str, object]) -> str:
     managed = f"{GATE_COMMAND} {key.gate_id}"
     conflict = [value for _, value in existing_commands if value != managed]
     if knock and conflict:
-        raise UserError("这把公钥已有自定义强制命令，无法同时启用敲门门禁。")
+        raise UserError("This public key already has a custom forced command, so SPA-gated access cannot be enabled at the same time.")
     if not knock:
         preserved.extend(("command", value) for value in conflict)
 
@@ -399,7 +399,7 @@ def build_line(key: ParsedKey, payload: dict[str, object]) -> str:
 
 def locate_key(account: Account, fingerprint: object) -> tuple[list[str], ParsedKey]:
     if not isinstance(fingerprint, str) or not fingerprint.startswith("SHA256:"):
-        raise UserError("公钥指纹无效。")
+        raise UserError("The public-key fingerprint is invalid.")
     lines = read_lines(account)
     found = []
     for index, line in enumerate(lines):
@@ -407,9 +407,9 @@ def locate_key(account: Account, fingerprint: object) -> tuple[list[str], Parsed
         if key and key.fingerprint == fingerprint:
             found.append(key)
     if not found:
-        raise UserError("没有找到这把公钥；请刷新页面后重试。")
+        raise UserError("This public key was not found. Refresh the page and try again.")
     if len(found) > 1:
-        raise UserError("该账号存在重复公钥，请先手动清理重复项。")
+        raise UserError("This account has duplicate public keys. Remove the duplicates manually before continuing.")
     return lines, found[0]
 
 
@@ -444,7 +444,7 @@ def write_lines(account: Account, lines: list[str]) -> None:
         try:
             info = os.fstat(ssh_fd)
             if not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0, account.uid):
-                raise UserError(".ssh 目录所有者异常，已拒绝写入。")
+                raise UserError("The .ssh directory has an invalid owner and was not modified.")
             os.fchmod(ssh_fd, 0o700)
             temporary = f".authorized_keys.tmp.{os.getpid()}"
             descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=ssh_fd)
@@ -469,18 +469,18 @@ def add_key(payload: dict[str, object]) -> None:
     account = account_for(str(payload.get("user", "")))
     public_key = payload.get("public_key")
     if not isinstance(public_key, str) or len(public_key) > 16384 or "PRIVATE KEY" in public_key:
-        raise UserError("请粘贴一行有效的 OpenSSH 公钥，不要粘贴私钥。")
+        raise UserError("Paste one valid OpenSSH public key, not a private key.")
     meaningful = [line.strip() for line in public_key.splitlines() if line.strip() and not line.lstrip().startswith("#")]
     if len(meaningful) != 1:
-        raise UserError("每次只能添加一把公钥。")
+        raise UserError("Only one public key can be added at a time.")
     parsed = parse_key_line(meaningful[0], 0)
     if not parsed:
-        raise UserError("无法识别该 OpenSSH 公钥。")
+        raise UserError("The OpenSSH public key could not be recognized.")
     if any(name for name, _ in parsed.options):
-        raise UserError("新增公钥不能自带 authorized_keys 选项，请只粘贴公钥类型、内容和备注。")
+        raise UserError("A new key cannot include authorized_keys options. Paste only the key type, key data, and comment.")
     for key in all_keys():
         if key["user"] == account.name and key["fingerprint"] == parsed.fingerprint:
-            raise UserError("该账号已经安装了这把公钥。")
+            raise UserError("This public key is already installed for the account.")
     comment = validate_comment(payload.get("comment", "")) or parsed.comment
     settings: dict[str, object] = {
         "comment": comment,
@@ -517,19 +517,19 @@ def delete_key(payload: dict[str, object]) -> None:
 def load_payload() -> dict[str, object]:
     raw = sys.stdin.buffer.read(65537)
     if len(raw) > 65536:
-        raise UserError("请求内容过大。")
+        raise UserError("The request is too large.")
     try:
         value = json.loads(raw.decode("utf-8"))
     except (UnicodeError, json.JSONDecodeError) as error:
-        raise UserError("请求不是有效的 JSON。") from error
+        raise UserError("The request is not valid JSON.") from error
     if not isinstance(value, dict):
-        raise UserError("请求格式无效。")
+        raise UserError("The request format is invalid.")
     return value
 
 
 def mutate() -> None:
     if os.geteuid() != 0:
-        raise UserError("此操作需要管理员授权。")
+        raise UserError("Administrator authorization is required.")
     payload = load_payload()
     action = payload.get("action")
     if action == "add":
@@ -539,7 +539,7 @@ def mutate() -> None:
     elif action == "delete":
         delete_key(payload)
     else:
-        raise UserError("不支持的变更操作。")
+        raise UserError("Unsupported change operation.")
     print(json.dumps({"ok": True}, ensure_ascii=False))
 
 
@@ -553,18 +553,18 @@ def list_data() -> None:
 
 def knock_logs() -> None:
     if os.geteuid() != 0:
-        raise UserError("读取敲门日志需要管理员授权。")
+        raise UserError("Administrator authorization is required to read SPA authorization logs.")
     command = [
         "/usr/bin/journalctl", "-n", "120", "--no-pager", "-o", "short-iso",
         "-u", "fwknop-server.service", "-u", "fwknopd.service", "-t", "fwknopd",
     ]
     result = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=8, check=False)
-    print(result.stdout.strip() or "没有近期 fwknop 日志。")
+    print(result.stdout.strip() or "No recent fwknop logs were found.")
 
 
 def main() -> int:
     if len(sys.argv) != 2 or sys.argv[1] not in {"list", "mutate", "knock-logs"}:
-        print("用法：security-key-control {list|mutate|knock-logs}", file=sys.stderr)
+        print("Usage: security-key-control {list|mutate|knock-logs}", file=sys.stderr)
         return 2
     try:
         if sys.argv[1] == "list":
@@ -578,7 +578,7 @@ def main() -> int:
         print(str(error), file=sys.stderr)
         return 1
     except (OSError, subprocess.SubprocessError) as error:
-        print(f"系统操作失败：{error}", file=sys.stderr)
+        print(f"System operation failed: {error}", file=sys.stderr)
         return 1
 
 

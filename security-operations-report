@@ -36,12 +36,12 @@ NOW = dt.datetime.now().astimezone()
 CUTOFF = NOW - dt.timedelta(days=RETENTION_DAYS)
 
 AUDIT_CATEGORIES = {
-    "identity": "账户与身份配置",
-    "privilege_config": "管理员权限配置",
-    "sshd_config": "SSH 配置",
-    "xrdp_config": "远程桌面配置",
-    "firewall_config": "防火墙配置",
-    "systemd_config": "系统服务配置",
+    "identity": "Account and identity configuration",
+    "privilege_config": "Administrative privilege configuration",
+    "sshd_config": "SSH configuration",
+    "xrdp_config": "Remote desktop configuration",
+    "firewall_config": "Firewall configuration",
+    "systemd_config": "System service configuration",
 }
 
 SECRET_RE = re.compile(
@@ -210,16 +210,16 @@ def load_audit_key(key: str) -> list[dict]:
             actor = audit_field(block, "uid", "system")
 
         if key == "privileged_exec":
-            category = "提权命令"
+            category = "Privileged command"
             target = audit_field(block, "exe")
             severity = "high" if mutating_command(command) else "medium"
-            title = "管理员变更命令" if severity == "high" else "管理员只读/检查命令"
+            title = "Administrative change command" if severity == "high" else "Administrative read-only/inspection command"
         else:
             category = AUDIT_CATEGORIES[key]
             paths = audit_paths(block)
             target = max(paths, key=len) if paths else audit_field(block, "exe")
             severity = "high"
-            title = f"{category}发生变更"
+            title = f"{category} changed"
 
         dedup = (category, actor, command, int(moment.timestamp() // 2))
         if dedup in seen:
@@ -295,13 +295,13 @@ def classify_high_journal(name: str, record: dict) -> dict | None:
     actor = journal_actor(message)
     source = source_ip(message)
     if name == "sshd" and "accepted publickey" in lower:
-        category, title, target = "远程管理会话", "SSH 公钥登录成功", "SSH/22"
+        category, title, target = "Remote administration session", "SSH public-key login succeeded", "SSH/22"
     elif name == "fwknop" and "added access rule" in lower:
-        category, title, target = "临时端口授权", "fwknop 临时开放访问", first_match(r"\b(tcp/\d+)\b", message)
+        category, title, target = "Temporary port authorization", "fwknop temporarily allowed access", first_match(r"\b(tcp/\d+)\b", message)
     elif name == "cockpit" and "session opened" in lower:
-        category, title, target = "控制中心会话", "Cockpit 管理会话建立", "Cockpit/9090"
+        category, title, target = "Control center session", "Cockpit administrative session established", "Cockpit/9090"
     elif name == "xrdp" and ("login successful" in lower or "authentication is successful" in lower):
-        category, title, target = "远程桌面会话", "xrdp 登录成功", "xrdp/3389"
+        category, title, target = "Remote desktop session", "xrdp login succeeded", "xrdp/3389"
     if not category:
         return None
     cursor = str(record.get("__CURSOR", record.get("__REALTIME_TIMESTAMP", "unknown")))
@@ -321,40 +321,40 @@ def classify_suspicious(name: str, record: dict) -> dict | None:
     category = title = target = None
     severity = "medium"
     if name == "ufw" and ("[ufw block]" in lower or "[ufw limit]" in lower):
-        category, title, target = "防火墙阻止", "UFW 阻止入站连接", ufw_target(message)
+        category, title, target = "Firewall block", "UFW blocked an inbound connection", ufw_target(message)
         severity = "high" if first_match(r"\bDPT=(\d+)", message, "") in {"22", "3389", "9090"} else "medium"
     elif name == "sshd" and any(token in lower for token in (
         "failed password", "invalid user", "authentication failure", "maximum authentication attempts",
         "unable to negotiate", "bad protocol version", "no matching", "error: pam",
     )):
-        category, title, target = "SSH 认证异常", "SSH 登录或协议异常", "SSH/22"
+        category, title, target = "SSH authentication anomaly", "SSH login or protocol anomaly", "SSH/22"
         severity = "high"
     elif name == "sudo" and any(token in lower for token in (
         "authentication failure", "conversation failed", "auth could not identify", "account temporarily locked",
         "incorrect password", "not in the sudoers",
     )):
-        category, title, target = "管理员认证异常", "sudo 认证失败或账户锁定", "sudo/root"
+        category, title, target = "Administrative authentication anomaly", "sudo authentication failure or account lockout", "sudo/root"
         severity = "high" if "locked" in lower or "authentication failure" in lower else "medium"
     elif name == "polkit" and any(token in lower for token in ("failed", "failure", "denied")):
-        category, title, target = "提权认证异常", "Polkit 管理员认证失败", "polkit/root"
+        category, title, target = "Privilege authentication anomaly", "Polkit administrative authentication failed", "polkit/root"
         severity = "high"
     elif name == "fwknop" and any(token in lower for token in (
         "invalid", "replay", "decrypt", "not allowed", "no access", "digest", "expired", "reject",
     )):
-        category, title, target = "SPA 敲门异常", "fwknop 拒绝或无法验证 SPA", "fwknop/62201"
+        category, title, target = "SPA authorization anomaly", "fwknop rejected or could not verify SPA", "fwknop/62201"
         severity = "high"
     elif name == "xrdp" and any(token in lower for token in (
         "authentication failure", "login failed", "login error", "pam_authenticate failed", "access denied",
     )):
-        category, title, target = "远程桌面认证异常", "xrdp 登录失败", "xrdp/3389"
+        category, title, target = "Remote desktop authentication anomaly", "xrdp login failed", "xrdp/3389"
         severity = "high"
     elif name == "cockpit" and any(token in lower for token in (
         "authentication failure", "login failed", "pam_authenticate failed", "access denied",
     )):
-        category, title, target = "控制中心认证异常", "Cockpit 登录失败", "Cockpit/9090"
+        category, title, target = "Control center authentication anomaly", "Cockpit login failed", "Cockpit/9090"
         severity = "high"
     elif name == "fail2ban" and re.search(r"\bban\b", lower) and "unban" not in lower:
-        category, title, target = "自动封禁", "Fail2ban 已封禁来源", "Fail2ban/sshd"
+        category, title, target = "Automatic ban", "Fail2ban banned a source", "Fail2ban/sshd"
         severity = "high"
     if not category:
         return None
@@ -547,20 +547,20 @@ def build_alerts(events: list[dict], config: dict, pg: dict) -> list[dict]:
     auth_by_source = collections.defaultdict(list)
     firewall_by_source = collections.defaultdict(list)
     for event in ten_minutes:
-        if "认证异常" in event["category"] or "登录失败" in event["title"]:
+        if "authentication anomaly" in event["category"].lower() or "login failed" in event["title"].lower():
             auth_by_source[event["source"]].append(event)
-        if event["category"] == "防火墙阻止":
+        if event["category"] == "Firewall block":
             firewall_by_source[event["source"]].append(event)
     for source, matches in auth_by_source.items():
         if len(matches) >= int(thresholds["auth_failures_10m"]):
-            alerts.append(alert_record("auth_failures_10m", "high", "短时间认证失败激增", f"来源 {source} 在 10 分钟内出现 {len(matches)} 次认证失败。", matches))
+            alerts.append(alert_record("auth_failures_10m", "high", "Authentication failures spiked", f"Source {source} generated {len(matches)} authentication failures within 10 minutes.", matches))
     for source, matches in firewall_by_source.items():
         if len(matches) >= int(thresholds["firewall_blocks_10m"]):
-            alerts.append(alert_record("firewall_blocks_10m", "medium", "防火墙阻止量异常", f"来源 {source} 在 10 分钟内被阻止 {len(matches)} 次。", matches))
+            alerts.append(alert_record("firewall_blocks_10m", "medium", "Firewall blocks spiked", f"Source {source} was blocked {len(matches)} times within 10 minutes.", matches))
 
     pg_count = int(pg.get("auth_failures", {}).get("1h", 0) or 0)
     if pg_count >= int(thresholds["postgres_auth_failures_1h"]):
-        alerts.append(alert_record("postgres_auth_failures_1h", "high", "PostgreSQL 认证失败激增", f"最近 1 小时出现 {pg_count} 次 PostgreSQL 认证失败。", [], pg_count))
+        alerts.append(alert_record("postgres_auth_failures_1h", "high", "PostgreSQL authentication failures spiked", f"{pg_count} PostgreSQL authentication failures occurred during the past hour.", [], pg_count))
 
     if thresholds.get("off_hours_root"):
         start, end = int(config["off_hours"]["start"]), int(config["off_hours"]["end"])
@@ -570,13 +570,13 @@ def build_alerts(events: list[dict], config: dict, pg: dict) -> list[dict]:
             if event["actor"] == "root" and (hour >= start or hour < end):
                 matches.append(event)
         if matches:
-            alerts.append(alert_record("off_hours_root", "high", "非工作时间 root 操作", f"非工作时间发现 {len(matches)} 条 root 操作。", matches))
+            alerts.append(alert_record("off_hours_root", "high", "Off-hours root activity", f"Detected {len(matches)} root operations outside business hours.", matches))
 
     if thresholds.get("security_config_change"):
         config_categories = set(AUDIT_CATEGORIES.values())
         matches = [event for event in last_day if event["category"] in config_categories]
         if matches:
-            alerts.append(alert_record("security_config_change", "high", "安全配置发生变更", f"最近 24 小时发现 {len(matches)} 条安全配置变更。", matches))
+            alerts.append(alert_record("security_config_change", "high", "Security configuration changed", f"Detected {len(matches)} security configuration changes during the past 24 hours.", matches))
 
     if thresholds.get("new_remote_source"):
         old_sources = {
@@ -588,7 +588,7 @@ def build_alerts(events: list[dict], config: dict, pg: dict) -> list[dict]:
             if event["risk"] == "high" and event["source"] not in ("", "—") and event["source"] not in old_sources:
                 new_by_source[event["source"]].append(event)
         for source, matches in new_by_source.items():
-            alerts.append(alert_record("new_remote_source", "medium", "首次出现的远程管理来源", f"最近 30 天首次看到来源 {source} 的成功管理事件。", matches))
+            alerts.append(alert_record("new_remote_source", "medium", "New remote administration source", f"Source {source} produced its first successful administrative event in the past 30 days.", matches))
 
     return sorted(alerts, key=lambda item: (item["severity"] == "high", item["latest_at"]), reverse=True)
 
@@ -598,9 +598,9 @@ def build_correlations(events: list[dict]) -> list[dict]:
     for event in events:
         identities = []
         if event["source"] not in ("", "—"):
-            identities.append(("来源", event["source"]))
+            identities.append(("Source", event["source"]))
         if event["actor"] not in ("", "—", "system"):
-            identities.append(("用户", event["actor"]))
+            identities.append(("User", event["actor"]))
         for identity in identities:
             grouped[identity].append(event)
     chains = []
@@ -696,12 +696,12 @@ def load_imported_events() -> tuple[list[dict], dict]:
             moment, original_timestamp = imported_line_time(text, imported_at, line_number)
             upper = text.upper()
             severity = "high" if any(token in upper for token in ("FATAL", "PANIC", "CRITICAL", "ALERT", "EMERG")) else "medium"
-            title = "导入日志高优先级记录" if severity == "high" else "导入日志记录"
+            title = "High-priority imported log record" if severity == "high" else "Imported log record"
             record = event_record(
                 moment=moment,
                 risk="imported",
                 severity=severity,
-                category="导入日志",
+                category="Imported log",
                 title=title,
                 actor=journal_actor(text),
                 source=source_ip(text),
@@ -760,7 +760,7 @@ def aggregate(mode: str, events: list[dict]) -> dict:
         },
         "daily": daily,
         "categories": [{"name": name, "count": count} for name, count in categories.most_common(20)],
-        "dimension_label": "操作用户" if mode == "high" else "来源 IP",
+        "dimension_label": "Operator" if mode == "high" else "Source IP",
         "dimension": [{"name": name, "count": count} for name, count in dimension.most_common(20)],
         "events": events[:DETAIL_LIMIT],
         "details_limited": len(events) > DETAIL_LIMIT,

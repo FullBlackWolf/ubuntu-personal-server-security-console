@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>安全事件中心</title>
+  <title>Security Event Center</title>
   <link rel="stylesheet" href="security-operations.css">
 </head>
 <body data-mode="center">
@@ -11,66 +11,66 @@
     <header class="hero">
       <div>
         <p class="eyebrow">SECURITY EVENT CENTER</p>
-        <h1>安全事件中心</h1>
-        <p class="subtitle">统一关联高风险操作、认证异常、防火墙、Fail2ban、远程管理、PostgreSQL 和手动导入日志，并检查采集与归档完整性。</p>
+        <h1>Security Event Center</h1>
+        <p class="subtitle">Correlates high-risk operations, authentication anomalies, firewall activity, Fail2ban, remote administration, PostgreSQL, and manually imported logs while validating collection and archive integrity.</p>
       </div>
-      <div class="hero-actions"><button id="create-archive" class="button secondary" type="button">立即归档并校验</button><button id="refresh" class="button primary" type="button">刷新事件中心</button></div>
+      <div class="hero-actions"><button id="create-archive" class="button secondary" type="button">Archive and Verify Now</button><button id="refresh" class="button primary" type="button">Refresh Event Center</button></div>
     </header>
 
-    <nav class="tabs" aria-label="安全操作页面">
-      <button class="tab active" type="button">安全事件中心</button>
-      <button class="tab" data-jump="/security_operations/high-risk-operations" type="button">高风险操作</button>
-      <button class="tab" data-jump="/security_operations/suspicious-operations" type="button">可疑操作</button>
-      <button class="tab" data-jump="/security_dashboard/security-dashboard" type="button">安全控制台</button>
+    <nav class="tabs" aria-label="Security operations pages">
+      <button class="tab active" type="button">Security Event Center</button>
+      <button class="tab" data-jump="/security_operations/high-risk-operations" type="button">High-risk Operations</button>
+      <button class="tab" data-jump="/security_operations/suspicious-operations" type="button">Suspicious Operations</button>
+      <button class="tab" data-jump="/security_dashboard/security-dashboard" type="button">Security Console</button>
     </nav>
 
-    <section id="center-notice" class="notice center-notice"><div><strong>持续审计与完整性检查</strong><span id="center-generated">正在读取日志和服务状态…</span></div><button id="open-config" class="filter-button" type="button">告警规则、白名单与保留设置</button></section>
+    <section id="center-notice" class="notice center-notice"><div><strong>Continuous Auditing and Integrity Checks</strong><span id="center-generated">Reading logs and service status…</span></div><button id="open-config" class="filter-button" type="button">Alert Rules, Allowlist, and Retention</button></section>
 
-    <section class="health-grid" aria-label="日志健康状态">
-      <article id="health-auditd" class="health-card loading"><span>auditd</span><strong id="health-auditd-status">检查中</strong><small id="health-auditd-detail">丢失事件 —</small></article>
-      <article id="health-journal" class="health-card loading"><span>journald</span><strong id="health-journal-status">检查中</strong><small id="health-journal-detail">最后日志 —</small></article>
-      <article id="health-storage" class="health-card loading"><span>日志磁盘</span><strong id="health-storage-status">—</strong><small id="health-storage-detail">剩余空间 —</small></article>
-      <article id="health-clock" class="health-card loading"><span>系统时钟</span><strong id="health-clock-status">检查中</strong><small>NTP 同步状态</small></article>
-      <article id="health-archive" class="health-card loading"><span>校验归档</span><strong id="health-archive-status">—</strong><small id="health-archive-detail">尚未校验</small></article>
-      <article id="health-imports" class="health-card loading"><span>导入审计日志</span><strong id="health-imports-status">—</strong><small id="health-imports-detail">完整性检查中</small></article>
-      <article id="health-postgres" class="health-card loading"><span>PostgreSQL</span><strong id="health-postgres-status">—</strong><small id="health-postgres-detail">认证失败 1h / 24h</small></article>
+    <section class="health-grid" aria-label="Log health status">
+      <article id="health-auditd" class="health-card loading"><span>auditd</span><strong id="health-auditd-status">Checking</strong><small id="health-auditd-detail">Lost events —</small></article>
+      <article id="health-journal" class="health-card loading"><span>journald</span><strong id="health-journal-status">Checking</strong><small id="health-journal-detail">Latest log —</small></article>
+      <article id="health-storage" class="health-card loading"><span>Log Storage</span><strong id="health-storage-status">—</strong><small id="health-storage-detail">Free space —</small></article>
+      <article id="health-clock" class="health-card loading"><span>System Clock</span><strong id="health-clock-status">Checking</strong><small>NTP synchronization status</small></article>
+      <article id="health-archive" class="health-card loading"><span>Verified Archives</span><strong id="health-archive-status">—</strong><small id="health-archive-detail">Not verified yet</small></article>
+      <article id="health-imports" class="health-card loading"><span>Imported Audit Logs</span><strong id="health-imports-status">—</strong><small id="health-imports-detail">Checking integrity</small></article>
+      <article id="health-postgres" class="health-card loading"><span>PostgreSQL</span><strong id="health-postgres-status">—</strong><small id="health-postgres-detail">Authentication failures 1h / 24h</small></article>
     </section>
 
     <section class="center-grid">
-      <article class="panel alerts-panel"><div class="panel-heading"><div><h2>当前告警</h2><span id="alert-count">等待分析</span></div><button id="enable-notifications" class="mini-button" type="button">启用桌面通知</button></div><div id="alert-list" class="alert-list"><p class="empty">正在分析告警规则…</p></div></article>
-      <article class="panel correlations-panel"><div class="panel-heading"><div><h2>关联事件链</h2><span>同一用户或来源 30 分钟窗口</span></div></div><div id="correlation-list" class="correlation-list"><p class="empty">正在关联事件…</p></div></article>
+      <article class="panel alerts-panel"><div class="panel-heading"><div><h2>Active Alerts</h2><span id="alert-count">Waiting for analysis</span></div><button id="enable-notifications" class="mini-button" type="button">Enable Desktop Notifications</button></div><div id="alert-list" class="alert-list"><p class="empty">Evaluating alert rules…</p></div></article>
+      <article class="panel correlations-panel"><div class="panel-heading"><div><h2>Correlated Event Chains</h2><span>Same user or source within 30 minutes</span></div></div><div id="correlation-list" class="correlation-list"><p class="empty">Correlating events…</p></div></article>
     </section>
 
     <section class="panel timeline-panel">
       <div class="panel-heading timeline-heading">
-        <div><h2>统一安全时间线</h2><span id="timeline-count">等待加载</span></div>
+        <div><h2>Unified Security Timeline</h2><span id="timeline-count">Waiting to load</span></div>
         <div class="timeline-tools">
-          <select id="timeline-period" aria-label="时间范围"><option value="1">24 小时</option><option value="7" selected>7 天</option><option value="30">30 天</option><option value="all">全部（含导入旧日志）</option></select>
-          <select id="timeline-risk" aria-label="事件类型"><option value="">全部事件</option><option value="high">高风险操作</option><option value="suspicious">可疑事件</option><option value="imported">导入日志</option></select>
-          <select id="timeline-category" aria-label="事件类别"><option value="">全部类别</option></select>
-          <input id="timeline-search" type="search" placeholder="搜索用户、IP、目标、日志…" aria-label="搜索统一时间线">
-          <select id="saved-filter" aria-label="保存的筛选器"><option value="">保存的筛选器</option></select>
-          <button id="save-filter" class="filter-button" type="button">保存筛选</button><button id="delete-filter" class="filter-button" type="button" disabled>删除筛选</button><button id="timeline-export" class="filter-button" type="button">导出 JSON</button>
+          <select id="timeline-period" aria-label="Time range"><option value="1">24 hours</option><option value="7" selected>7 days</option><option value="30">30 days</option><option value="all">All (including imported archives)</option></select>
+          <select id="timeline-risk" aria-label="Event type"><option value="">All events</option><option value="high">High-risk operations</option><option value="suspicious">Suspicious events</option><option value="imported">Imported logs</option></select>
+          <select id="timeline-category" aria-label="Event category"><option value="">All categories</option></select>
+          <input id="timeline-search" type="search" placeholder="Search user, IP, target, or log…" aria-label="Search unified timeline">
+          <select id="saved-filter" aria-label="Saved filters"><option value="">Saved filters</option></select>
+          <button id="save-filter" class="filter-button" type="button">Save Filter</button><button id="delete-filter" class="filter-button" type="button" disabled>Delete Filter</button><button id="timeline-export" class="filter-button" type="button">Export JSON</button>
         </div>
       </div>
-      <div class="table-wrap timeline-table-wrap"><table><thead><tr><th>时间</th><th>类型</th><th>级别</th><th>类别</th><th>用户/来源</th><th>事件摘要</th><th>详情</th></tr></thead><tbody id="timeline-rows"><tr><td colspan="7" class="empty">正在加载…</td></tr></tbody></table></div>
-      <button id="timeline-more" class="button secondary hidden" type="button">加载更多</button>
+      <div class="table-wrap timeline-table-wrap"><table><thead><tr><th>Time</th><th>Type</th><th>Priority</th><th>Category</th><th>User/Source</th><th>Event Summary</th><th>Details</th></tr></thead><tbody id="timeline-rows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody></table></div>
+      <button id="timeline-more" class="button secondary hidden" type="button">Load More</button>
     </section>
 
-    <section class="panel archive-panel"><div class="panel-heading"><div><h2>防篡改归档</h2><span>JSON 报表与独立 SHA-256 校验文件，按设置天数保留</span></div><button id="verify-archives" class="mini-button" type="button">重新校验</button></div><div class="table-wrap"><table><thead><tr><th>归档文件</th><th>创建时间</th><th>大小</th><th>校验状态</th></tr></thead><tbody id="archive-rows"><tr><td colspan="4" class="empty">尚未读取归档</td></tr></tbody></table></div><p class="integrity-note">本地 SHA-256 可发现文件变化；若攻击者已取得 root 权限，仍应把归档复制到独立的只追加或远程存储。</p></section>
-    <footer><span>日报与周报由 systemd 定时器自动生成</span><button class="link" data-jump="/system/logs" type="button">打开系统日志</button></footer>
+    <section class="panel archive-panel"><div class="panel-heading"><div><h2>Tamper-evident Archives</h2><span>JSON reports with separate SHA-256 checksum files, retained for the configured period</span></div><button id="verify-archives" class="mini-button" type="button">Verify Again</button></div><div class="table-wrap"><table><thead><tr><th>Archive File</th><th>Created</th><th>Size</th><th>Verification Status</th></tr></thead><tbody id="archive-rows"><tr><td colspan="4" class="empty">Archives not loaded yet</td></tr></tbody></table></div><p class="integrity-note">Local SHA-256 checks detect file changes. If an attacker gains root access, copy archives to independent append-only or remote storage.</p></section>
+    <footer><span>Daily and weekly reports are generated automatically by systemd timers</span><button class="link" data-jump="/system/logs" type="button">Open System Logs</button></footer>
   </main>
 
-  <dialog id="center-event-dialog"><div class="dialog-heading"><div><p class="eyebrow">EVENT CONTEXT</p><h2 id="center-dialog-title">事件详情</h2></div><button id="center-dialog-close" class="close" type="button" aria-label="关闭">×</button></div><dl id="center-dialog-meta"></dl><pre id="center-dialog-log"></pre><section class="context-section"><h3>前后 10 分钟关联日志</h3><div id="context-events" class="context-events"></div></section><div class="dialog-actions"><button id="open-high-event" class="button secondary" type="button">前往高风险复核</button><button id="center-dialog-close-bottom" class="button primary" type="button">关闭</button></div></dialog>
+  <dialog id="center-event-dialog"><div class="dialog-heading"><div><p class="eyebrow">EVENT CONTEXT</p><h2 id="center-dialog-title">Event Details</h2></div><button id="center-dialog-close" class="close" type="button" aria-label="Close">×</button></div><dl id="center-dialog-meta"></dl><pre id="center-dialog-log"></pre><section class="context-section"><h3>Related Logs within ±10 Minutes</h3><div id="context-events" class="context-events"></div></section><div class="dialog-actions"><button id="open-high-event" class="button secondary" type="button">Open High-risk Review</button><button id="center-dialog-close-bottom" class="button primary" type="button">Close</button></div></dialog>
 
-  <dialog id="config-dialog"><form id="config-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">ALERT POLICY</p><h2>告警规则、白名单与日志保留</h2></div><button id="config-close" class="close" type="button" aria-label="关闭">×</button></div><div class="config-body">
-    <fieldset><legend>日志保留</legend><label>保存天数（1–3650）<input name="retention_days" type="number" min="1" max="3650" required value="30"></label><small>默认 30 天；保存后同步用于 journald 清理、导入日志和安全归档。</small></fieldset>
-    <fieldset><legend>数量阈值</legend><label>认证失败 / 10 分钟<input name="auth_failures_10m" type="number" min="1" max="10000" required></label><label>防火墙阻止 / 10 分钟<input name="firewall_blocks_10m" type="number" min="1" max="100000" required></label><label>PostgreSQL 认证失败 / 1 小时<input name="postgres_auth_failures_1h" type="number" min="1" max="10000" required></label></fieldset>
-    <fieldset><legend>行为规则</legend><label class="check-label"><input name="new_remote_source" type="checkbox"> 新远程管理来源</label><label class="check-label"><input name="off_hours_root" type="checkbox"> 非工作时间 root 操作</label><label class="check-label"><input name="security_config_change" type="checkbox"> 安全配置变更</label><div class="hour-range"><label>非工作时间开始<input name="off_hours_start" type="number" min="0" max="23"></label><label>结束<input name="off_hours_end" type="number" min="0" max="23"></label></div></fieldset>
-    <fieldset><legend>白名单（每行一项）</legend><label>用户<textarea name="whitelist_actors" rows="4" placeholder="backup-user"></textarea></label><label>来源 IP<textarea name="whitelist_sources" rows="4" placeholder="192.0.2.10"></textarea></label><label>事件类别<textarea name="whitelist_categories" rows="4" placeholder="远程管理会话"></textarea></label></fieldset>
-    <fieldset><legend>外部通知（默认关闭）</legend><label class="check-label"><input name="webhook_enabled" type="checkbox"> 启用 HTTPS Webhook</label><label>Webhook URL<input name="webhook_url" type="url" placeholder="https://alerts.example/hook"></label><label class="check-label"><input name="email_enabled" type="checkbox"> 使用本机 sendmail 发送邮件</label><label>收件地址<input name="email_to" type="email" placeholder="security@example.com"></label><small>只发送告警摘要，不外发原始日志；每 5 分钟检查一次。</small></fieldset>
-    <label class="check-label"><input name="browser_notifications" type="checkbox"> 页面打开时对新告警发送浏览器桌面通知</label><p id="config-status" class="form-status"></p>
-  </div><div class="dialog-actions"><button id="config-cancel" class="button secondary" type="button">取消</button><button class="button primary" type="submit">保存规则</button></div></form></dialog>
+  <dialog id="config-dialog"><form id="config-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">ALERT POLICY</p><h2>Alert Rules, Allowlist, and Log Retention</h2></div><button id="config-close" class="close" type="button" aria-label="Close">×</button></div><div class="config-body">
+    <fieldset><legend>Log Retention</legend><label>Retention days (1–3650)<input name="retention_days" type="number" min="1" max="3650" required value="30"></label><small>Defaults to 30 days; after saving, the value applies to journald cleanup, imported logs, and security archives.</small></fieldset>
+    <fieldset><legend>Count Thresholds</legend><label>Authentication failures / 10 minutes<input name="auth_failures_10m" type="number" min="1" max="10000" required></label><label>Firewall blocks / 10 minutes<input name="firewall_blocks_10m" type="number" min="1" max="100000" required></label><label>PostgreSQL authentication failures / 1 hour<input name="postgres_auth_failures_1h" type="number" min="1" max="10000" required></label></fieldset>
+    <fieldset><legend>Behavior Rules</legend><label class="check-label"><input name="new_remote_source" type="checkbox"> New remote administration source</label><label class="check-label"><input name="off_hours_root" type="checkbox"> Off-hours root activity</label><label class="check-label"><input name="security_config_change" type="checkbox"> Security configuration changes</label><div class="hour-range"><label>Off-hours start<input name="off_hours_start" type="number" min="0" max="23"></label><label>End<input name="off_hours_end" type="number" min="0" max="23"></label></div></fieldset>
+    <fieldset><legend>Allowlist (one entry per line)</legend><label>Users<textarea name="whitelist_actors" rows="4" placeholder="backup-user"></textarea></label><label>Source IPs<textarea name="whitelist_sources" rows="4" placeholder="192.0.2.10"></textarea></label><label>Event Categories<textarea name="whitelist_categories" rows="4" placeholder="Remote administration session"></textarea></label></fieldset>
+    <fieldset><legend>External Notifications (disabled by default)</legend><label class="check-label"><input name="webhook_enabled" type="checkbox"> Enable HTTPS webhook</label><label>Webhook URL<input name="webhook_url" type="url" placeholder="https://alerts.example/hook"></label><label class="check-label"><input name="email_enabled" type="checkbox"> Send email through local sendmail</label><label>Recipient<input name="email_to" type="email" placeholder="security@example.com"></label><small>Only alert summaries are sent; raw logs never leave the host. Checks run every five minutes.</small></fieldset>
+    <label class="check-label"><input name="browser_notifications" type="checkbox"> Send browser desktop notifications for new alerts while the page is open</label><p id="config-status" class="form-status"></p>
+  </div><div class="dialog-actions"><button id="config-cancel" class="button secondary" type="button">Cancel</button><button class="button primary" type="submit">Save Rules</button></div></form></dialog>
 
   <script src="../cockpit-demo.js"></script><script src="security-center.js"></script>
 </body>

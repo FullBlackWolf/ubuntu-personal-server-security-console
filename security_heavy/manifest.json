@@ -5,7 +5,7 @@
   },
   "menu": {
     "security-heavy": {
-      "label": "高资源防护",
+      "label": "High-resource Protection",
       "order": 6,
       "keywords": [
         { "matches": ["security", "aide", "lynis", "debsums", "clamav", "scan", "high resource"] }

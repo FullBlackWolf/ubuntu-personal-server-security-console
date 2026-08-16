@@ -44,11 +44,11 @@
   function reviewRecord(eventId) { return state.reviews[eventId] || null; }
   function isResolved(eventId) { return ["reviewed", "false_positive", "resolved"].includes(reviewRecord(eventId)?.status); }
   function reviewLabel(eventId) {
-    return ({ reviewed: "已复核", false_positive: "误报", resolved: "已处置", escalated: "升级调查", pending: "待复核" })[reviewRecord(eventId)?.status] || "待复核";
+    return ({ reviewed: "Reviewed", false_positive: "False positive", resolved: "Resolved", escalated: "Escalated investigation", pending: "Pending review" })[reviewRecord(eventId)?.status] || "Pending review";
   }
 
   function number(value) {
-    return new Intl.NumberFormat("zh-CN").format(value || 0);
+    return new Intl.NumberFormat("en-US").format(value || 0);
   }
 
   function setText(id, value) {
@@ -62,7 +62,7 @@
     if (!items.length) {
       const empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = "此时间范围内没有记录";
+      empty.textContent = "No records in this time range";
       container.append(empty);
       return;
     }
@@ -90,14 +90,14 @@
 
   function formatTime(timestamp) {
     const date = new Date(timestamp);
-    return Number.isNaN(date.getTime()) ? timestamp : date.toLocaleString("zh-CN", { hour12: false });
+    return Number.isNaN(date.getTime()) ? timestamp : date.toLocaleString("en-US", { hour12: false });
   }
 
   function filteredEvents() {
     if (!state.report) return [];
     const period = elements.period.value;
     const cutoff = Date.now() - (period === "1h" ? 3_600_000 : Number(period) * 86_400_000);
-    const term = elements.search.value.trim().toLocaleLowerCase("zh-CN");
+    const term = elements.search.value.trim().toLocaleLowerCase("en-US");
     return state.report.events.filter(event => {
       if (event.epoch_ms < cutoff) return false;
       if (elements.category?.value && event.category !== elements.category.value) return false;
@@ -106,7 +106,7 @@
       if (elements.review?.value === "reviewed" && !isResolved(event.id)) return false;
       if (!term) return true;
       return [event.category, event.title, event.actor, event.source, event.target, event.detail]
-        .join(" ").toLocaleLowerCase("zh-CN").includes(term);
+        .join(" ").toLocaleLowerCase("en-US").includes(term);
     });
   }
 
@@ -129,7 +129,7 @@
       const severityCell = document.createElement("td");
       const severity = document.createElement("span");
       severity.className = `severity ${event.severity}`;
-      severity.textContent = event.severity === "high" ? "高" : "关注";
+      severity.textContent = event.severity === "high" ? "High" : "Attention";
       severityCell.append(severity);
       row.append(severityCell);
 
@@ -162,7 +162,7 @@
       button.className = "log-button";
       button.type = "button";
       button.dataset.eventId = event.id;
-      button.textContent = "查看日志";
+      button.textContent = "View Log";
       logCell.append(button);
       row.append(logCell);
       elements.rows.append(row);
@@ -173,12 +173,12 @@
       const cell = document.createElement("td");
       cell.colSpan = mode === "high" ? 7 : 6;
       cell.className = "empty";
-      cell.textContent = "当前筛选条件下没有记录";
+      cell.textContent = "No records match the current filters";
       row.append(cell);
       elements.rows.append(row);
     }
-    const suffix = state.report.details_limited ? "；详情仅保留最新 1500 条用于页面展示" : "";
-    elements.resultCount.textContent = `匹配 ${number(events.length)} 条，显示 ${number(shown.length)} 条${suffix}`;
+    const suffix = state.report.details_limited ? "; only the newest 1,500 details are retained for display" : "";
+    elements.resultCount.textContent = `${number(events.length)} matching records; showing ${number(shown.length)}${suffix}`;
     elements.loadMore.classList.toggle("hidden", shown.length >= events.length);
   }
 
@@ -196,19 +196,19 @@
     state.selectedEventId = eventId;
     elements.dialogTitle.textContent = event.title;
     elements.dialogMeta.replaceChildren();
-    addMeta("时间", formatTime(event.timestamp));
-    addMeta("类别", event.category);
-    addMeta("用户/来源", `${event.actor} / ${event.source}`);
-    addMeta("目标", event.target);
-    addMeta("日志来源", event.log_source === "auditd" ? "auditd 审计日志" : "systemd journal");
-    addMeta("日志引用", event.log_ref);
-    elements.dialogLog.textContent = event.detail || "没有可显示的日志正文。";
+    addMeta("Time", formatTime(event.timestamp));
+    addMeta("Category", event.category);
+    addMeta("User/Source", `${event.actor} / ${event.source}`);
+    addMeta("Target", event.target);
+    addMeta("Log Source", event.log_source === "auditd" ? "auditd audit log" : "systemd journal");
+    addMeta("Log Reference", event.log_ref);
+    elements.dialogLog.textContent = event.detail || "No log content is available.";
     if (elements.toggleReview) {
       const record = reviewRecord(eventId);
       elements.reviewStatus.value = record?.status || "pending";
       elements.reviewNote.value = record?.note || "";
-      elements.reviewMeta.textContent = record ? `上次由 ${record.reviewer} 于 ${formatTime(record.updated_at)} 保存` : "尚未保存服务端复核记录";
-      elements.toggleReview.textContent = "保存复核记录";
+      elements.reviewMeta.textContent = record ? `Last saved by ${record.reviewer} at ${formatTime(record.updated_at)}` : "No server-side review record saved";
+      elements.toggleReview.textContent = "Save Review Record";
     }
     elements.dialog.showModal();
   }
@@ -226,10 +226,10 @@
       renderTable(); renderHighWorkspace();
       if (elements.dialog.open && state.selectedEventId === eventId) {
         elements.reviewStatus.value = record.status; elements.reviewNote.value = record.note;
-        elements.reviewMeta.textContent = `已由 ${record.reviewer} 于 ${formatTime(record.updated_at)} 保存到服务器`;
+        elements.reviewMeta.textContent = `Saved to the server by ${record.reviewer} at ${formatTime(record.updated_at)}`;
       }
     } catch (error) {
-      if (elements.reviewMeta) elements.reviewMeta.textContent = `保存失败：${error.message || error}`;
+      if (elements.reviewMeta) elements.reviewMeta.textContent = `Save failed: ${error.message || error}`;
     } finally {
       if (elements.toggleReview) elements.toggleReview.disabled = false;
     }
@@ -238,7 +238,7 @@
   function sourceChip(id, label, count) {
     const node = document.getElementById(id);
     if (!node) return;
-    node.textContent = `${label}：${number(count)} 条`;
+    node.textContent = `${label}: ${number(count)} records`;
     node.className = `source-chip ${count ? "active" : "empty-source"}`;
   }
 
@@ -252,7 +252,7 @@
     sourceChip("audit-source", "auditd", insights.log_sources?.auditd || 0);
     sourceChip("journal-source", "journald", insights.log_sources?.journald || 0);
     const lastEvent = document.getElementById("last-event");
-    if (lastEvent) lastEvent.textContent = `最近事件：${insights.last_event_at ? formatTime(insights.last_event_at) : "无"}`;
+    if (lastEvent) lastEvent.textContent = `Latest event: ${insights.last_event_at ? formatTime(insights.last_event_at) : "None"}`;
 
     elements.attention.replaceChildren();
     for (const [index, event] of pending.slice(0, 8).entries()) {
@@ -279,7 +279,7 @@
     if (!pending.length) {
       const empty = document.createElement("p");
       empty.className = "empty";
-      empty.textContent = "已载入的高优先级事件均已复核";
+      empty.textContent = "All loaded high-priority events have been reviewed";
       elements.attention.append(empty);
     }
   }
@@ -287,7 +287,7 @@
   function populateCategoryFilter(categories) {
     if (!elements.category) return;
     const previous = elements.category.value;
-    elements.category.replaceChildren(new Option("全部类别", ""), ...categories.map(item => new Option(item.name, item.name)));
+    elements.category.replaceChildren(new Option("All categories", ""), ...categories.map(item => new Option(item.name, item.name)));
     elements.category.value = previous;
   }
 
@@ -303,7 +303,7 @@
     renderBars("category-chart", report.categories, "name", "count");
     renderBars("dimension-chart", report.dimension, "name", "count");
     populateCategoryFilter(report.categories);
-    elements.generated.textContent = `统计生成于 ${formatTime(report.generated_at)}；日志最长保留 ${report.retention_days} 天`;
+    elements.generated.textContent = `Generated ${formatTime(report.generated_at)}; logs are retained for up to ${report.retention_days} days`;
     renderTable();
     renderHighWorkspace();
   }
@@ -343,7 +343,7 @@
       }, null, 2) + "\n", "application/json;charset=utf-8");
       return;
     }
-    const header = ["时间", "优先级", "类别", "操作用户", "来源", "目标", "摘要", "复核状态", "日志来源", "日志引用"];
+    const header = ["Time", "Priority", "Category", "Operator", "Source", "Target", "Summary", "Review Status", "Log Source", "Log Reference"];
     const rows = events.map(event => [
       event.timestamp, event.severity, event.category, event.actor, event.source,
       event.target, event.title, reviewLabel(event.id),
@@ -355,8 +355,8 @@
 
   async function refresh() {
     elements.refresh.disabled = true;
-    elements.refresh.textContent = "正在分析…";
-    elements.generated.textContent = "正在读取近 30 天日志…";
+    elements.refresh.textContent = "Analyzing…";
+    elements.generated.textContent = "Reading logs from the past 30 days…";
     try {
       if (mode === "high") {
         const [text, stateText] = await Promise.all([spawnReport(), control("reviews")]);
@@ -367,11 +367,11 @@
         renderReport(JSON.parse(await spawnReport()));
       }
     } catch (error) {
-      elements.generated.textContent = `统计加载失败：${error.message || error}`;
+      elements.generated.textContent = `Unable to load statistics: ${error.message || error}`;
       elements.rows.replaceChildren();
     } finally {
       elements.refresh.disabled = false;
-      elements.refresh.textContent = "刷新统计";
+      elements.refresh.textContent = "Refresh Statistics";
     }
   }
 

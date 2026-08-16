@@ -5,7 +5,7 @@
   },
   "menu": {
     "security-dashboard": {
-      "label": "服务器安全控制台",
+      "label": "Server Security Console",
       "order": 5,
       "keywords": [
         { "matches": ["security", "ssh", "firewall", "fail2ban", "auditd", "apparmor", "xrdp", "command approval"] }

@@ -12,16 +12,16 @@ CHECKER = "/usr/local/libexec/security-key-knock-check"
 
 
 def deny(message: str) -> None:
-    print(f"SSH 访问被拒绝：{message}", file=sys.stderr)
+    print(f"SSH access denied: {message}", file=sys.stderr)
     raise SystemExit(126)
 
 
 if len(sys.argv) != 2 or not re.fullmatch(r"[A-Za-z0-9_-]{43}", sys.argv[1]):
-    deny("公钥门禁标识无效。")
+    deny("The public-key gate identifier is invalid.")
 
 connection = os.environ.get("SSH_CONNECTION", "").split()
 if len(connection) != 4:
-    deny("无法确认远程来源地址。")
+    deny("The remote source address cannot be verified.")
 remote_ip = connection[0]
 
 try:
@@ -31,9 +31,9 @@ try:
         text=True, timeout=5, check=False,
     )
 except (OSError, subprocess.SubprocessError):
-    deny("敲门验证器不可用。")
+    deny("The SPA verification helper is unavailable.")
 if result.returncode != 0:
-    deny((result.stderr or "请先完成 SPA 敲门后再连接。").strip())
+    deny((result.stderr or "Complete SPA authorization before connecting.").strip())
 
 entry = pwd.getpwuid(os.getuid())
 shell = entry.pw_shell if os.path.isfile(entry.pw_shell) else "/bin/sh"

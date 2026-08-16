@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>公钥与敲门</title>
+  <title>SSH Keys and SPA</title>
   <link rel="stylesheet" href="security-keys.css">
 </head>
 <body>
@@ -11,13 +11,13 @@
     <header class="hero">
       <div>
         <p class="eyebrow">SSH ACCESS CONTROL</p>
-        <h1>公钥与敲门</h1>
-        <p class="subtitle">管理本机 SSH 公钥，并为每把钥匙分别限制来源、有效期、转发能力和 SPA 敲门要求。</p>
+        <h1>SSH Keys and SPA</h1>
+        <p class="subtitle">Manage local SSH public keys and configure source restrictions, expiration, forwarding capabilities, and SPA authorization requirements for each key.</p>
       </div>
       <div class="hero-actions">
-        <button class="button secondary" data-jump="/security_dashboard/security-dashboard" type="button">返回安全概览</button>
-        <button id="refresh" class="button secondary" type="button">刷新</button>
-        <button id="add-key" class="button primary" type="button">添加公钥</button>
+        <button class="button secondary" data-jump="/security_dashboard/security-dashboard" type="button">Back to Security Overview</button>
+        <button id="refresh" class="button secondary" type="button">Refresh</button>
+        <button id="add-key" class="button primary" type="button">Add Public Key</button>
       </div>
     </header>
 
@@ -25,33 +25,33 @@
       <div class="knock-symbol">K</div>
       <div class="knock-copy">
         <div class="status-line">
-          <strong>SPA 敲门服务</strong>
-          <span id="knock-badge" class="badge loading">检查中</span>
+          <strong>SPA Authorization Service</strong>
+          <span id="knock-badge" class="badge loading">Checking</span>
         </div>
-        <p id="knock-description">正在检查本机 fwknop 和 SSH 门禁状态…</p>
+        <p id="knock-description">Checking local fwknop and SSH access-gate status…</p>
       </div>
-      <button id="knock-logs" class="inline-button" type="button">最近日志</button>
+      <button id="knock-logs" class="inline-button" type="button">Recent Logs</button>
     </section>
 
-    <section class="toolbar" aria-label="筛选公钥">
+    <section class="toolbar" aria-label="Filter public keys">
       <label class="search">
-        <span>搜索</span>
-        <input id="search" type="search" placeholder="名称、指纹、账号或类型">
+        <span>Search</span>
+        <input id="search" type="search" placeholder="Name, fingerprint, account, or type">
       </label>
       <label>
-        <span>账号</span>
-        <select id="user-filter"><option value="">全部账号</option></select>
+        <span>Account</span>
+        <select id="user-filter"><option value="">All accounts</option></select>
       </label>
-      <div class="count"><strong id="key-count">0</strong><span>把公钥</span></div>
+      <div class="count"><strong id="key-count">0</strong><span>public keys</span></div>
     </section>
 
     <section id="key-list" class="key-list" aria-live="polite"></section>
 
     <section id="empty" class="empty" hidden>
       <div class="empty-icon">＋</div>
-      <h2>还没有 SSH 公钥</h2>
-      <p>添加第一把公钥后，可以单独启用敲门、来源限制和最小权限。</p>
-      <button class="button primary" data-open-add type="button">添加公钥</button>
+      <h2>No SSH public keys yet</h2>
+      <p>Add the first public key to configure SPA authorization, source restrictions, and least-privilege access.</p>
+      <button class="button primary" data-open-add type="button">Add Public Key</button>
     </section>
   </main>
 
@@ -60,49 +60,49 @@
       <div class="dialog-head">
         <div>
           <p class="eyebrow">PER-KEY POLICY</p>
-          <h2 id="settings-title">公钥安全设置</h2>
+          <h2 id="settings-title">Public-key Security Settings</h2>
           <p id="settings-fingerprint" class="mono muted"></p>
         </div>
-        <button class="icon-button" data-close type="button" aria-label="关闭">×</button>
+        <button class="icon-button" data-close type="button" aria-label="Close">×</button>
       </div>
 
       <div class="form-body">
-        <label class="field full"><span>名称 / 备注</span><input name="comment" maxlength="160" placeholder="例如：办公室 MacBook"></label>
+        <label class="field full"><span>Name / Comment</span><input name="comment" maxlength="160" placeholder="For example: Office MacBook"></label>
         <div class="field-row">
-          <label class="field"><span>允许的来源地址</span><input name="allow_from" placeholder="留空为任意；例如 192.0.2.0/24"></label>
-          <label class="field"><span>失效日期</span><input name="expires" type="date"></label>
+          <label class="field"><span>Allowed Source Addresses</span><input name="allow_from" placeholder="Leave blank for any source; for example, 192.0.2.0/24"></label>
+          <label class="field"><span>Expiration Date</span><input name="expires" type="date"></label>
         </div>
 
         <div class="setting featured">
           <div>
-            <strong>连接前必须 SPA 敲门</strong>
-            <p>只有来源地址仍处于 fwknop 临时放行窗口时，这把公钥才能建立会话。</p>
+            <strong>Require SPA authorization before connecting</strong>
+            <p>This key can establish a session only while its source address is within the temporary fwknop access window.</p>
           </div>
           <label class="switch"><input name="knock_required" type="checkbox"><span></span></label>
         </div>
 
         <div class="setting danger-soft">
-          <div><strong>启用这把公钥</strong><p>关闭后保留配置，但 SSH 会立即拒绝此公钥。</p></div>
+          <div><strong>Enable this public key</strong><p>Disabling keeps the configuration but causes SSH to reject this key immediately.</p></div>
           <label class="switch"><input name="enabled" type="checkbox"><span></span></label>
         </div>
 
-        <h3>会话能力</h3>
+        <h3>Session Capabilities</h3>
         <div class="settings-grid">
-          <div class="setting"><div><strong>交互终端（PTY）</strong><p>允许打开 Shell 或终端会话。</p></div><label class="switch"><input name="pty" type="checkbox"><span></span></label></div>
-          <div class="setting"><div><strong>端口转发</strong><p>允许 SSH 隧道与端口映射。</p></div><label class="switch"><input name="port_forwarding" type="checkbox"><span></span></label></div>
-          <div class="setting"><div><strong>SSH Agent 转发</strong><p>允许远端使用本地 Agent。</p></div><label class="switch"><input name="agent_forwarding" type="checkbox"><span></span></label></div>
-          <div class="setting"><div><strong>X11 转发</strong><p>允许图形应用通过 SSH 转发。</p></div><label class="switch"><input name="x11_forwarding" type="checkbox"><span></span></label></div>
-          <div class="setting"><div><strong>执行 ~/.ssh/rc</strong><p>允许登录时运行用户 SSH rc。</p></div><label class="switch"><input name="user_rc" type="checkbox"><span></span></label></div>
-          <div id="touch-setting" class="setting"><div><strong>硬件触摸验证</strong><p>FIDO 安全密钥每次使用都要求触摸确认。</p></div><label class="switch"><input name="touch_required" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>Interactive Terminal (PTY)</strong><p>Allow shell or terminal sessions.</p></div><label class="switch"><input name="pty" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>Port Forwarding</strong><p>Allow SSH tunnels and port mapping.</p></div><label class="switch"><input name="port_forwarding" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>SSH Agent Forwarding</strong><p>Allow the remote host to use the local agent.</p></div><label class="switch"><input name="agent_forwarding" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>X11 Forwarding</strong><p>Allow graphical applications to be forwarded through SSH.</p></div><label class="switch"><input name="x11_forwarding" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>Run ~/.ssh/rc</strong><p>Allow the user's SSH rc file to run during login.</p></div><label class="switch"><input name="user_rc" type="checkbox"><span></span></label></div>
+          <div id="touch-setting" class="setting"><div><strong>Hardware Touch Verification</strong><p>Require touch confirmation each time a FIDO security key is used.</p></div><label class="switch"><input name="touch_required" type="checkbox"><span></span></label></div>
         </div>
         <p id="form-error" class="form-error" role="alert"></p>
       </div>
 
       <div class="dialog-actions">
-        <button id="delete-key" class="button danger" type="button">删除公钥</button>
+        <button id="delete-key" class="button danger" type="button">Delete Public Key</button>
         <span class="spacer"></span>
-        <button class="button secondary neutral" data-close type="button">取消</button>
-        <button id="save-key" class="button primary" type="submit">保存设置</button>
+        <button class="button secondary neutral" data-close type="button">Cancel</button>
+        <button id="save-key" class="button primary" type="submit">Save Settings</button>
       </div>
     </form>
   </dialog>
@@ -110,28 +110,28 @@
   <dialog id="add-dialog">
     <form id="add-form" method="dialog">
       <div class="dialog-head">
-        <div><p class="eyebrow">NEW SSH KEY</p><h2>添加公钥</h2></div>
-        <button class="icon-button" data-close type="button" aria-label="关闭">×</button>
+        <div><p class="eyebrow">NEW SSH KEY</p><h2>Add Public Key</h2></div>
+        <button class="icon-button" data-close type="button" aria-label="Close">×</button>
       </div>
       <div class="form-body">
-        <label class="field full"><span>安装到账号</span><select name="user" required></select></label>
-        <label class="field full"><span>OpenSSH 公钥</span><textarea name="public_key" rows="6" required placeholder="ssh-ed25519 AAAAC3… device-name"></textarea><small>只粘贴公钥；请勿粘贴私钥。</small></label>
-        <label class="field full"><span>名称 / 备注（可选）</span><input name="comment" maxlength="160" placeholder="默认使用公钥末尾的备注"></label>
+        <label class="field full"><span>Install for Account</span><select name="user" required></select></label>
+        <label class="field full"><span>OpenSSH Public Key</span><textarea name="public_key" rows="6" required placeholder="ssh-ed25519 AAAAC3… device-name"></textarea><small>Paste a public key only; never paste a private key.</small></label>
+        <label class="field full"><span>Name / Comment (optional)</span><input name="comment" maxlength="160" placeholder="Uses the comment at the end of the public key by default"></label>
         <div class="setting featured">
-          <div><strong>连接前必须 SPA 敲门</strong><p>建议远程管理钥匙启用；客户端需已有 fwknop 配置。</p></div>
+          <div><strong>Require SPA authorization before connecting</strong><p>Recommended for remote administration keys; the client must already have an fwknop configuration.</p></div>
           <label class="switch"><input name="knock_required" type="checkbox" checked><span></span></label>
         </div>
         <p id="add-error" class="form-error" role="alert"></p>
       </div>
       <div class="dialog-actions">
-        <span class="spacer"></span><button class="button secondary neutral" data-close type="button">取消</button><button id="create-key" class="button primary" type="submit">添加公钥</button>
+        <span class="spacer"></span><button class="button secondary neutral" data-close type="button">Cancel</button><button id="create-key" class="button primary" type="submit">Add Public Key</button>
       </div>
     </form>
   </dialog>
 
   <dialog id="output-dialog" class="output-dialog">
-    <div class="dialog-head"><div><p class="eyebrow">FWKNOP JOURNAL</p><h2>最近敲门日志</h2></div><button class="icon-button" data-close type="button">×</button></div>
-    <pre id="output">正在读取…</pre>
+    <div class="dialog-head"><div><p class="eyebrow">FWKNOP JOURNAL</p><h2>Recent SPA Authorization Logs</h2></div><button class="icon-button" data-close type="button">×</button></div>
+    <pre id="output">Loading…</pre>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>

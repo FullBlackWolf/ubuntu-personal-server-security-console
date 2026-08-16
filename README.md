@@ -49,8 +49,8 @@ The complete engineering specification is available in [ARCHITECTURE.md](ARCHITE
 Download the `.deb` from the latest GitHub release, verify its checksum, and install it:
 
 ```bash
-sha256sum -c server-security-console_1.0.0_all.deb.sha256
-sudo apt install ./server-security-console_1.0.0_all.deb
+sha256sum -c server-security-console_1.1.0_all.deb.sha256
+sudo apt install ./server-security-console_1.1.0_all.deb
 server-security-console-installer --gui
 ```
 
@@ -68,7 +68,7 @@ Open Cockpit at `https://SERVER_ADDRESS:9090/` after installation and refresh th
 
 ```bash
 ./packaging/build-deb.sh
-sha256sum -c dist/server-security-console_1.0.0_all.deb.sha256
+sha256sum -c dist/server-security-console_1.1.0_all.deb.sha256
 ```
 
 The package is architecture-independent and targets currently supported Ubuntu LTS releases with Cockpit and Python 3.10 or newer.

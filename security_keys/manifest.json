@@ -5,10 +5,10 @@
   },
   "menu": {
     "security-keys": {
-      "label": "公钥与敲门",
+      "label": "SSH Keys and SPA",
       "order": 6,
       "keywords": [
-        { "matches": ["security", "ssh", "public key", "authorized_keys", "fwknop", "SPA", "公钥", "敲门"] }
+        { "matches": ["security", "ssh", "public key", "authorized_keys", "fwknop", "SPA", "key management", "port knocking"] }
       ]
     }
   },

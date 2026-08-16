@@ -15,7 +15,7 @@ import sys
 import tempfile
 
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 PAYLOAD = Path(os.environ.get("SSC_PAYLOAD", "/usr/share/server-security-console/payload"))
 STATE_FILE = Path(os.environ.get("SSC_INSTALL_STATE", "/var/lib/server-security-console-installer/state.json"))
 BACKUP_ROOT = Path(os.environ.get("SSC_BACKUP_ROOT", "/var/backups/server-security-console-installer"))

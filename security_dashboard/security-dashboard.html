@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>服务器安全控制台</title>
+  <title>Server Security Console</title>
   <link rel="stylesheet" href="security-dashboard.css">
 </head>
 <body>
@@ -11,24 +11,24 @@
     <header class="hero">
       <div>
         <p class="eyebrow">LOW-RESOURCE PROTECTION</p>
-        <h1>服务器安全控制台</h1>
-        <p class="subtitle">集中查看本机持续运行的轻量防护。高磁盘、CPU 或内存占用的扫描已移至独立页面，默认不启用。</p>
+        <h1>Server Security Console</h1>
+        <p class="subtitle">Monitor continuously running, lightweight local protections in one place. Disk-, CPU-, and memory-intensive scans are available on a separate page and disabled by default.</p>
       </div>
       <div class="hero-actions">
-        <button class="button secondary" data-jump="/security_keys/security-keys" type="button">公钥与敲门</button>
-        <button class="button secondary" data-jump="/security_heavy/security-heavy" type="button">高资源防护</button>
-        <button class="button secondary" data-jump="/security_operations/security-center" type="button">安全事件中心</button>
-        <button class="button secondary" data-jump="/security_operations/high-risk-operations" type="button">高风险操作</button>
-        <button class="button secondary" data-jump="/security_operations/suspicious-operations" type="button">可疑操作</button>
-        <button id="refresh" class="button primary" type="button">刷新状态</button>
+        <button class="button secondary" data-jump="/security_keys/security-keys" type="button">SSH Keys and SPA</button>
+        <button class="button secondary" data-jump="/security_heavy/security-heavy" type="button">High-resource Protection</button>
+        <button class="button secondary" data-jump="/security_operations/security-center" type="button">Security Event Center</button>
+        <button class="button secondary" data-jump="/security_operations/high-risk-operations" type="button">High-risk Operations</button>
+        <button class="button secondary" data-jump="/security_operations/suspicious-operations" type="button">Suspicious Operations</button>
+        <button id="refresh" class="button primary" type="button">Refresh Status</button>
       </div>
     </header>
 
-    <section class="notice" aria-label="安全摘要">
+    <section class="notice" aria-label="Security summary">
       <span class="shield">◆</span>
       <div>
-        <strong>低资源持续防护</strong>
-        <p>UFW、Fail2ban、auditd、AppArmor、自动安全更新和命令审批保持启用；外部 RDP 继续被阻止。</p>
+        <strong>Continuous low-resource protection</strong>
+        <p>UFW, Fail2ban, auditd, AppArmor, unattended security upgrades, and command authorization remain enabled; external RDP stays blocked.</p>
       </div>
     </section>
 
@@ -36,9 +36,9 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">LIGHTWEIGHT SERVICES</p>
-          <h2>轻量防护状态</h2>
+          <h2>Lightweight Protection Status</h2>
         </div>
-        <span id="updated" class="muted">尚未刷新</span>
+        <span id="updated" class="muted">Not refreshed yet</span>
       </div>
       <div id="service-grid" class="grid" aria-live="polite"></div>
     </section>
@@ -47,72 +47,72 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">POSTGRESQL SECURITY</p>
-          <h2 id="postgres-title">PostgreSQL 安全统计</h2>
+          <h2 id="postgres-title">PostgreSQL Security Statistics</h2>
         </div>
-        <span id="postgres-updated" class="muted">正在读取日志…</span>
+        <span id="postgres-updated" class="muted">Reading logs…</span>
       </div>
 
-      <div class="postgres-toolbar" aria-label="PostgreSQL 日志文件操作">
+      <div class="postgres-toolbar" aria-label="PostgreSQL log-file actions">
         <input id="postgres-log-file" class="visually-hidden" type="file" accept=".log,.txt,.csv,.json,.jsonlog,.gz,text/plain,text/csv,application/json,application/gzip">
-        <label for="postgres-log-file" class="toolbar-button">选择旧日志路径</label>
-        <span id="postgres-file-name" class="selected-file">尚未选择文件</span>
-        <button id="postgres-read-log" class="toolbar-button" type="button" disabled>读取旧日志</button>
-        <button id="postgres-live-log" class="toolbar-button" type="button" hidden>返回当前日志</button>
-        <button id="postgres-save-log" class="toolbar-button save" type="button">保存新日志</button>
+        <label for="postgres-log-file" class="toolbar-button">Choose Archived Log</label>
+        <span id="postgres-file-name" class="selected-file">No file selected</span>
+        <button id="postgres-read-log" class="toolbar-button" type="button" disabled>Read Archived Log</button>
+        <button id="postgres-live-log" class="toolbar-button" type="button" hidden>Return to Live Logs</button>
+        <button id="postgres-save-log" class="toolbar-button save" type="button">Save Current Logs</button>
         <span id="postgres-file-status" class="toolbar-status" role="status"></span>
       </div>
 
       <div class="postgres-overview">
         <article class="postgres-panel auth-panel">
           <div class="panel-heading">
-            <div><h3>PostgreSQL Auth Failures</h3><span>登录认证失败</span></div>
+            <div><h3>PostgreSQL Auth Failures</h3><span>Failed login authentication</span></div>
             <span class="range-note">1h / 24h</span>
           </div>
           <div class="auth-metrics" aria-live="polite">
-            <div class="auth-metric"><span>最近 1 小时</span><strong id="postgres-auth-1h">—</strong><span id="postgres-auth-1h-bar" class="metric-bar"></span></div>
-            <div class="auth-metric"><span>最近 24 小时</span><strong id="postgres-auth-24h">—</strong><span id="postgres-auth-24h-bar" class="metric-bar"></span></div>
+            <div class="auth-metric"><span>Past 1 hour</span><strong id="postgres-auth-1h">—</strong><span id="postgres-auth-1h-bar" class="metric-bar"></span></div>
+            <div class="auth-metric"><span>Past 24 hours</span><strong id="postgres-auth-24h">—</strong><span id="postgres-auth-24h-bar" class="metric-bar"></span></div>
           </div>
-          <p id="postgres-auth-note" class="panel-note">统计 FATAL 级别的认证拒绝记录。</p>
+          <p id="postgres-auth-note" class="panel-note">Counts FATAL-level authentication rejections.</p>
         </article>
 
         <article class="postgres-panel error-panel">
           <div class="panel-heading chart-heading">
-            <div><h3>PostgreSQL Errors per minute</h3><span>按小时聚合的 ERROR / FATAL / PANIC</span></div>
-            <label class="range-picker">预览范围
-              <select id="postgres-period" aria-label="PostgreSQL 错误图表预览范围">
-                <option value="1">1 天</option>
-                <option value="3">3 天</option>
-                <option value="7" selected>7 天</option>
-                <option value="14">14 天</option>
-                <option value="30">30 天</option>
+            <div><h3>PostgreSQL Errors per Minute</h3><span>Hourly aggregation of ERROR / FATAL / PANIC</span></div>
+            <label class="range-picker">Preview range
+              <select id="postgres-period" aria-label="PostgreSQL error-chart preview range">
+                <option value="1">1 day</option>
+                <option value="3">3 days</option>
+                <option value="7" selected>7 days</option>
+                <option value="14">14 days</option>
+                <option value="30">30 days</option>
               </select>
             </label>
           </div>
-          <div id="postgres-error-chart" class="line-chart" role="img" aria-label="PostgreSQL 每分钟错误数小时趋势"></div>
-          <div class="chart-legend"><span><i></i>Errors / min</span><span id="postgres-chart-summary">等待数据</span></div>
+          <div id="postgres-error-chart" class="line-chart" role="img" aria-label="Hourly PostgreSQL errors-per-minute trend"></div>
+          <div class="chart-legend"><span><i></i>Errors / min</span><span id="postgres-chart-summary">Waiting for data</span></div>
         </article>
       </div>
 
       <article class="postgres-panel fatal-panel">
         <div class="panel-heading">
-          <div><h3>Recent PostgreSQL FATAL logs</h3><span id="postgres-fatal-count">最近 30 天，最多 100 条</span></div>
+          <div><h3>Recent PostgreSQL FATAL Logs</h3><span id="postgres-fatal-count">Past 30 days, up to 100 records</span></div>
         </div>
         <div class="postgres-table-wrap">
           <table class="postgres-table">
-            <thead><tr><th>时间</th><th>用户</th><th>数据库</th><th>来源 IP</th><th>日志</th></tr></thead>
-            <tbody id="postgres-fatal-rows"><tr><td colspan="5" class="empty-cell">正在读取…</td></tr></tbody>
+            <thead><tr><th>Time</th><th>User</th><th>Database</th><th>Source IP</th><th>Log</th></tr></thead>
+            <tbody id="postgres-fatal-rows"><tr><td colspan="5" class="empty-cell">Loading…</td></tr></tbody>
           </table>
         </div>
       </article>
 
       <div class="postgres-rankings">
         <article class="postgres-panel ranking-panel">
-          <div class="panel-heading"><div><h3>PostgreSQL Failed Login Users - top 100</h3><span>最近 30 天</span></div></div>
-          <div class="ranking-table-wrap"><table class="ranking-table"><thead><tr><th>#</th><th>用户</th><th>失败次数</th></tr></thead><tbody id="postgres-user-rows"><tr><td colspan="3" class="empty-cell">正在读取…</td></tr></tbody></table></div>
+          <div class="panel-heading"><div><h3>PostgreSQL Failed Login Users — Top 100</h3><span>Past 30 days</span></div></div>
+          <div class="ranking-table-wrap"><table class="ranking-table"><thead><tr><th>#</th><th>User</th><th>Failures</th></tr></thead><tbody id="postgres-user-rows"><tr><td colspan="3" class="empty-cell">Loading…</td></tr></tbody></table></div>
         </article>
         <article class="postgres-panel ranking-panel">
-          <div class="panel-heading"><div><h3>PostgreSQL Failed Login IP - top 100</h3><span>最近 30 天</span></div></div>
-          <div class="ranking-table-wrap"><table class="ranking-table"><thead><tr><th>#</th><th>来源 IP</th><th>失败次数</th></tr></thead><tbody id="postgres-ip-rows"><tr><td colspan="3" class="empty-cell">正在读取…</td></tr></tbody></table></div>
+          <div class="panel-heading"><div><h3>PostgreSQL Failed Login IPs — Top 100</h3><span>Past 30 days</span></div></div>
+          <div class="ranking-table-wrap"><table class="ranking-table"><thead><tr><th>#</th><th>Source IP</th><th>Failures</th></tr></thead><tbody id="postgres-ip-rows"><tr><td colspan="3" class="empty-cell">Loading…</td></tr></tbody></table></div>
         </article>
       </div>
     </section>
@@ -121,71 +121,71 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">OPERATIONS</p>
-          <h2>轻量维护操作</h2>
+          <h2>Lightweight Maintenance Actions</h2>
         </div>
       </div>
       <div class="action-grid">
-        <button class="action" data-jump="/security_keys/security-keys" type="button"><strong>公钥与敲门</strong><span>逐公钥设置 SPA 门禁、来源、有效期与会话权限</span></button>
-        <button class="action" data-action="ufw" type="button"><strong>查看 UFW 规则</strong><span>检查当前入站策略与端口限制</span></button>
-        <button class="action" data-action="fail2ban" type="button"><strong>查看 Fail2ban</strong><span>显示 sshd jail 和封禁统计</span></button>
-        <button class="action" data-action="audit" type="button"><strong>查看审计规则</strong><span>显示当前加载的 auditd 规则</span></button>
-        <button class="action warning" data-jump="/security_heavy/security-heavy" type="button"><strong>高资源防护</strong><span>AIDE、Lynis、debsums 与 ClamAV 扫描开关</span></button>
-        <button class="action warning" data-jump="/security_operations/high-risk-operations" type="button"><strong>高风险操作统计</strong><span>提权命令、安全配置变化与远程管理会话</span></button>
-        <button class="action warning" data-jump="/security_operations/security-center" type="button"><strong>安全事件中心</strong><span>统一时间线、告警规则、日志健康与校验归档</span></button>
-        <button class="action warning" data-jump="/security_operations/suspicious-operations" type="button"><strong>可疑操作</strong><span>认证失败、防火墙阻止与自动封禁详情</span></button>
+        <button class="action" data-jump="/security_keys/security-keys" type="button"><strong>SSH Keys and SPA</strong><span>Configure SPA gating, sources, expiration, and session permissions per key</span></button>
+        <button class="action" data-action="ufw" type="button"><strong>View UFW Rules</strong><span>Inspect the current inbound policy and port restrictions</span></button>
+        <button class="action" data-action="fail2ban" type="button"><strong>View Fail2ban</strong><span>Show the sshd jail and ban statistics</span></button>
+        <button class="action" data-action="audit" type="button"><strong>View Audit Rules</strong><span>Show the auditd rules currently loaded</span></button>
+        <button class="action warning" data-jump="/security_heavy/security-heavy" type="button"><strong>High-resource Protection</strong><span>AIDE, Lynis, debsums, and ClamAV scan controls</span></button>
+        <button class="action warning" data-jump="/security_operations/high-risk-operations" type="button"><strong>High-risk Operations</strong><span>Privileged commands, security configuration changes, and remote administration sessions</span></button>
+        <button class="action warning" data-jump="/security_operations/security-center" type="button"><strong>Security Event Center</strong><span>Unified timeline, alert rules, log health, and verified archives</span></button>
+        <button class="action warning" data-jump="/security_operations/suspicious-operations" type="button"><strong>Suspicious Operations</strong><span>Authentication failures, firewall blocks, and automatic-ban details</span></button>
       </div>
     </section>
 
     <section class="quick-links">
-      <button class="link-button" data-jump="/system/services" type="button">全部服务</button>
-      <button class="link-button" data-jump="/system/logs" type="button">系统日志</button>
-      <button class="link-button" data-jump="/system/terminal" type="button">管理终端</button>
-      <button class="link-button" data-jump="/updates" type="button">软件更新</button>
-      <button class="link-button" data-jump="/network" type="button">网络</button>
-      <button class="link-button" data-jump="/storage" type="button">存储</button>
+      <button class="link-button" data-jump="/system/services" type="button">All Services</button>
+      <button class="link-button" data-jump="/system/logs" type="button">System Logs</button>
+      <button class="link-button" data-jump="/system/terminal" type="button">Administrative Terminal</button>
+      <button class="link-button" data-jump="/updates" type="button">Software Updates</button>
+      <button class="link-button" data-jump="/network" type="button">Networking</button>
+      <button class="link-button" data-jump="/storage" type="button">Storage</button>
     </section>
 
     <section class="archive-reader" aria-labelledby="archive-reader-title">
       <div class="section-heading">
         <div>
           <p class="eyebrow">UNIVERSAL LOG ARCHIVE</p>
-          <h2 id="archive-reader-title">通用旧日志读取器</h2>
+          <h2 id="archive-reader-title">Universal Archived Log Reader</h2>
         </div>
-        <span id="archive-log-status" class="muted">尚未选择日志</span>
+        <span id="archive-log-status" class="muted">No log selected</span>
       </div>
       <div class="archive-toolbar">
         <input id="archive-log-file" class="visually-hidden" type="file">
-        <label for="archive-log-file" class="toolbar-button">选择任意旧日志路径</label>
-        <span id="archive-file-name" class="selected-file">尚未选择文件</span>
-        <label class="archive-option">编码
+        <label for="archive-log-file" class="toolbar-button">Choose Any Archived Log</label>
+        <span id="archive-file-name" class="selected-file">No file selected</span>
+        <label class="archive-option">Encoding
           <select id="archive-encoding">
             <option value="utf-8" selected>UTF-8</option>
             <option value="gb18030">GB18030 / GBK</option>
           </select>
         </label>
-        <button id="archive-read-log" class="toolbar-button" type="button" disabled>读取日志</button>
-        <button id="archive-merge-log" class="toolbar-button save" type="button" disabled>一键合并到现有日志中</button>
-        <button id="archive-clear-log" class="toolbar-button" type="button" disabled>清空</button>
+        <button id="archive-read-log" class="toolbar-button" type="button" disabled>Read Log</button>
+        <button id="archive-merge-log" class="toolbar-button save" type="button" disabled>Merge into Current Logs</button>
+        <button id="archive-clear-log" class="toolbar-button" type="button" disabled>Clear</button>
       </div>
       <div class="archive-filters">
-        <input id="archive-search" type="search" placeholder="筛选日志内容…" aria-label="筛选旧日志内容" disabled>
-        <label class="archive-option">显示位置
+        <input id="archive-search" type="search" placeholder="Filter log content…" aria-label="Filter archived log content" disabled>
+        <label class="archive-option">Show
           <select id="archive-position" disabled>
-            <option value="tail" selected>最新行</option>
-            <option value="head">最早行</option>
+            <option value="tail" selected>Newest lines</option>
+            <option value="head">Oldest lines</option>
           </select>
         </label>
-        <span id="archive-result-count">单次读取最多 64 MiB，页面最多显示 20,000 行</span>
+        <span id="archive-result-count">Reads up to 64 MiB and displays up to 20,000 lines</span>
       </div>
-      <pre id="archive-log-output" class="archive-output">选择日志文件后点击“读取日志”。</pre>
+      <pre id="archive-log-output" class="archive-output">Choose a log file, then select Read Log.</pre>
     </section>
 
     <section class="output-section">
       <div class="section-heading compact">
-        <h2>操作输出</h2>
-        <button id="clear-output" class="text-button" type="button">清空</button>
+        <h2>Action Output</h2>
+        <button id="clear-output" class="text-button" type="button">Clear</button>
       </div>
-      <pre id="output">等待操作…</pre>
+      <pre id="output">Waiting for an action…</pre>
     </section>
   </main>
   <script src="../base1/cockpit.js"></script>

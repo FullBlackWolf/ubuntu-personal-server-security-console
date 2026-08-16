@@ -18,7 +18,7 @@ document.getElementById("fill-demo").addEventListener("click", () => {
 document.getElementById("login-form").addEventListener("submit", (event) => {
   event.preventDefault();
   if (username.value !== DEMO_USER || password.value !== DEMO_PASSWORD) {
-    error.textContent = "请使用页面显示的公开预览账号和密码。";
+    error.textContent = "Use the public preview username and password shown on this page.";
     return;
   }
   sessionStorage.setItem(SESSION_KEY, "authenticated");

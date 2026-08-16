@@ -10,7 +10,7 @@ usage() {
 
 require_root() {
     if [ "$(id -u)" -ne 0 ]; then
-        echo "此操作需要管理员授权。" >&2
+        echo "Administrator authorization is required." >&2
         exit 1
     fi
 }
@@ -18,7 +18,7 @@ require_root() {
 valid_task() {
     case "${1:-}" in
         aide|lynis|debsums|clam-scan|clamd) return 0 ;;
-        *) echo "不支持的任务：${1:-}" >&2; exit 2 ;;
+        *) echo "Unsupported task: ${1:-}" >&2; exit 2 ;;
     esac
 }
 
@@ -53,21 +53,21 @@ debsums_running() {
 show_status() {
     aide_auto=off
     if grep -q '^CRON_DAILY_RUN=yes$' /etc/default/aide 2>/dev/null && unit_enabled dailyaidecheck.timer; then aide_auto=on; fi
-    aide_detail='基线未创建；首次运行将初始化基线'
-    if [ -f /var/lib/aide/aide.db ] || [ -f /var/lib/aide/aide.db.gz ]; then aide_detail='基线已就绪；运行时执行完整性校验'; fi
+    aide_detail='No baseline exists; the first run will initialize it'
+    if [ -f /var/lib/aide/aide.db ] || [ -f /var/lib/aide/aide.db.gz ]; then aide_detail='Baseline ready; runs perform integrity verification'; fi
     printf 'aide|%s|%s|%s\n' "$aide_auto" "$(running_or_not aide_running)" "$aide_detail"
 
-    printf 'lynis|%s|%s|每日计划，默认关闭\n' "$(on_or_off unit_enabled lynis.timer)" "$(running_or_not unit_active lynis.service)"
+    printf 'lynis|%s|%s|Daily schedule; disabled by default\n' "$(on_or_off unit_enabled lynis.timer)" "$(running_or_not unit_active lynis.service)"
 
     debsums_auto=off
     if grep -Eq '^CRON_CHECK=(daily|weekly|monthly)$' /etc/default/debsums 2>/dev/null; then debsums_auto=on; fi
-    printf 'debsums|%s|%s|启用后每周校验已安装软件包\n' "$debsums_auto" "$(running_or_not debsums_running)"
+    printf 'debsums|%s|%s|Verifies installed packages weekly when enabled\n' "$debsums_auto" "$(running_or_not debsums_running)"
 
-    printf 'clam-scan|%s|%s|每周一 02:00，默认关闭\n' "$(on_or_off unit_enabled clamav-weekly-scan.timer)" "$(running_or_not unit_active clamav-weekly-scan.service)"
+    printf 'clam-scan|%s|%s|Mondays at 02:00; disabled by default\n' "$(on_or_off unit_enabled clamav-weekly-scan.timer)" "$(running_or_not unit_active clamav-weekly-scan.service)"
 
     clamd_auto=off
     if unit_enabled clamav-daemon.service || unit_enabled clamav-daemon.socket; then clamd_auto=on; fi
-    printf 'clamd|%s|%s|常驻内存扫描引擎，默认关闭\n' "$clamd_auto" "$(running_or_not unit_active clamav-daemon.service)"
+    printf 'clamd|%s|%s|Resident scanning engine; disabled by default\n' "$clamd_auto" "$(running_or_not unit_active clamav-daemon.service)"
 }
 
 set_config_value() {
@@ -88,26 +88,26 @@ set_auto() {
     case "$task:$setting" in
         aide:on)
             if ! [ -f /var/lib/aide/aide.db ] && ! [ -f /var/lib/aide/aide.db.gz ]; then
-                echo 'AIDE 基线尚未创建。请先使用“立即运行”完成基线初始化，再启用每日校验。' >&2
+                echo 'The AIDE baseline has not been created. Run it once to initialize the baseline before enabling daily verification.' >&2
                 exit 1
             fi
             set_config_value /etc/default/aide CRON_DAILY_RUN yes
             $SYSTEMCTL enable --now dailyaidecheck.timer
-            echo 'AIDE 每日自动校验已启用。'
+            echo 'AIDE daily verification is enabled.'
             ;;
         aide:off)
             set_config_value /etc/default/aide CRON_DAILY_RUN no
             $SYSTEMCTL disable --now dailyaidecheck.timer
-            echo 'AIDE 每日自动校验已关闭。'
+            echo 'AIDE daily verification is disabled.'
             ;;
-        lynis:on) $SYSTEMCTL enable --now lynis.timer; echo 'Lynis 每日自动审计已启用。' ;;
-        lynis:off) $SYSTEMCTL disable --now lynis.timer; echo 'Lynis 每日自动审计已关闭。' ;;
-        debsums:on) set_config_value /etc/default/debsums CRON_CHECK weekly; echo 'debsums 每周自动校验已启用。' ;;
-        debsums:off) set_config_value /etc/default/debsums CRON_CHECK never; echo 'debsums 自动校验已关闭。' ;;
-        clam-scan:on) $SYSTEMCTL enable --now clamav-weekly-scan.timer; echo 'ClamAV 每周全盘扫描已启用。' ;;
-        clam-scan:off) $SYSTEMCTL disable --now clamav-weekly-scan.timer; echo 'ClamAV 每周全盘扫描已关闭。' ;;
-        clamd:on) $SYSTEMCTL enable --now clamav-daemon.service clamav-daemon.socket; echo 'ClamAV 常驻引擎已启用。' ;;
-        clamd:off) $SYSTEMCTL disable --now clamav-daemon.service clamav-daemon.socket; echo 'ClamAV 常驻引擎已关闭。' ;;
+        lynis:on) $SYSTEMCTL enable --now lynis.timer; echo 'Lynis daily auditing is enabled.' ;;
+        lynis:off) $SYSTEMCTL disable --now lynis.timer; echo 'Lynis daily auditing is disabled.' ;;
+        debsums:on) set_config_value /etc/default/debsums CRON_CHECK weekly; echo 'debsums weekly verification is enabled.' ;;
+        debsums:off) set_config_value /etc/default/debsums CRON_CHECK never; echo 'debsums automatic verification is disabled.' ;;
+        clam-scan:on) $SYSTEMCTL enable --now clamav-weekly-scan.timer; echo 'ClamAV weekly full-system scanning is enabled.' ;;
+        clam-scan:off) $SYSTEMCTL disable --now clamav-weekly-scan.timer; echo 'ClamAV weekly full-system scanning is disabled.' ;;
+        clamd:on) $SYSTEMCTL enable --now clamav-daemon.service clamav-daemon.socket; echo 'The ClamAV resident engine is enabled.' ;;
+        clamd:off) $SYSTEMCTL disable --now clamav-daemon.service clamav-daemon.socket; echo 'The ClamAV resident engine is disabled.' ;;
     esac
 }
 
@@ -116,19 +116,19 @@ run_task() {
         aide)
             if [ -f /var/lib/aide/aide.db ] || [ -f /var/lib/aide/aide.db.gz ]; then
                 $SYSTEMCTL start --no-block dailyaidecheck.service
-                echo 'AIDE 完整性校验已在后台启动。'
+                echo 'AIDE integrity verification started in the background.'
             else
                 /usr/bin/systemd-run --collect --unit=security-aide-manual --property=Nice=19 --property=IOSchedulingClass=idle /usr/sbin/aideinit -y
-                echo 'AIDE 基线初始化已在后台启动。'
+                echo 'AIDE baseline initialization started in the background.'
             fi
             ;;
-        lynis) $SYSTEMCTL start --no-block lynis.service; echo 'Lynis 审计已在后台启动。' ;;
+        lynis) $SYSTEMCTL start --no-block lynis.service; echo 'Lynis auditing started in the background.' ;;
         debsums)
             /usr/bin/systemd-run --collect --unit=security-debsums-manual --property=Nice=19 --property=IOSchedulingClass=idle /usr/bin/debsums -s
-            echo 'debsums 校验已在后台启动。'
+            echo 'debsums verification started in the background.'
             ;;
-        clam-scan) $SYSTEMCTL start --no-block clamav-weekly-scan.service; echo 'ClamAV 全盘扫描已在后台启动。' ;;
-        clamd) $SYSTEMCTL start clamav-daemon.service; echo 'ClamAV 常驻引擎已启动；未设置开机启动。' ;;
+        clam-scan) $SYSTEMCTL start --no-block clamav-weekly-scan.service; echo 'ClamAV full-system scanning started in the background.' ;;
+        clamd) $SYSTEMCTL start clamav-daemon.service; echo 'The ClamAV resident engine started without enabling it at boot.' ;;
     esac
 }
 
@@ -140,7 +140,7 @@ stop_task() {
         clam-scan) $SYSTEMCTL stop clamav-weekly-scan.service ;;
         clamd) $SYSTEMCTL stop clamav-daemon.service clamav-daemon.socket ;;
     esac
-    echo '任务已停止；自动运行设置未改变。'
+    echo 'The task stopped; its automatic-run setting was not changed.'
 }
 
 show_logs() {

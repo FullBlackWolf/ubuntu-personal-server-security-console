@@ -2,7 +2,7 @@
 set -eu
 
 project=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
-version=${VERSION:-1.0.0}
+version=${VERSION:-1.1.0}
 architecture=all
 stage="$project/build/server-security-console_${version}_${architecture}"
 output="$project/dist"

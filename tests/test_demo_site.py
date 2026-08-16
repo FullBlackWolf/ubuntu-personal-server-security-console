@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import re
 import unittest
 
 
@@ -11,6 +12,8 @@ APP = ROOT / "docs" / "app"
 PACKAGES = ("security_dashboard", "security_operations", "security_heavy", "security_keys")
 PRODUCTION_SCRIPT = '<script src="../base1/cockpit.js"></script>'
 DEMO_SCRIPT = '<script src="../cockpit-demo.js"></script>'
+CJK_PATTERN = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff]")
+TEXT_SUFFIXES = {".css", ".html", ".js", ".json", ".md", ".py", ".service", ".sh", ".timer"}
 
 
 def digest(path: Path) -> str:
@@ -18,6 +21,24 @@ def digest(path: Path) -> str:
 
 
 class ProductionParityTests(unittest.TestCase):
+    def test_repository_text_is_english_only(self):
+        excluded = {".git", "build", "dist", "__pycache__"}
+        for path in ROOT.rglob("*"):
+            if not path.is_file() or any(part in excluded for part in path.parts):
+                continue
+            if path.suffix not in TEXT_SUFFIXES and path.name not in {
+                "security-heavy-control",
+                "security-key-control",
+                "security-key-knock-check",
+                "security-key-session-gate",
+                "security-operations-control",
+                "security-operations-report",
+            }:
+                continue
+            content = path.read_text(encoding="utf-8")
+            self.assertIsNone(CJK_PATTERN.search(content), path)
+            self.assertNotIn("zh" + "-CN", content, path)
+
     def test_generated_files_match_production_sources(self):
         for package in PACKAGES:
             for source in (ROOT / package).iterdir():

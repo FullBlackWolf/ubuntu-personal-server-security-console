@@ -114,7 +114,7 @@
       severity: { high: events.filter(item => item.severity === "high").length, medium: events.filter(item => item.severity !== "high").length },
       daily: daily(events),
       categories,
-      dimension_label: mode === "high" ? "操作用户" : "来源地址",
+      dimension_label: mode === "high" ? "Operator" : "Source address",
       dimension: ranked(events, dimensionKey),
       events,
       details_limited: false,
@@ -165,7 +165,7 @@
     });
     const correlations = Array.from(actorGroups).filter(([, items]) => items.length >= 4).slice(0, 8).map(([actor, items], index) => ({
       id: `demo-correlation-${index + 1}`,
-      identity_type: "用户",
+      identity_type: "User",
       identity: actor,
       count: items.length,
       start_at: items[items.length - 1].timestamp,
@@ -192,7 +192,7 @@
       severity: { high: systemEvents.filter(item => item.severity === "high").length, medium: systemEvents.filter(item => item.severity !== "high").length },
       daily: daily(systemEvents),
       categories: ranked(systemEvents, "category"),
-      dimension_label: "来源地址",
+      dimension_label: "Source address",
       dimension: ranked(systemEvents, "source"),
       events: systemEvents,
       imported_events: importedEvents,
@@ -226,7 +226,7 @@
     const tasks = ["aide", "lynis", "debsums", "clam-scan", "clamd"];
     return tasks.map(id => {
       const item = memory.heavy[id] || { automatic: false, running: false };
-      return `${id}|${item.automatic ? "on" : "off"}|${item.running ? "running" : "stopped"}|模拟环境：未消耗服务器资源`;
+      return `${id}|${item.automatic ? "on" : "off"}|${item.running ? "running" : "stopped"}|Demo environment: no server resources were consumed`;
     }).join("\n") + "\n";
   }
 
@@ -242,7 +242,7 @@
     const data = await dataPromise;
     const command = args[0] || "";
     if (command === "/usr/bin/systemctl" && args[1] === "is-active") return "active\n";
-    if (command === "/usr/bin/systemctl" && args[1] === "restart") return "模拟环境：服务重启请求已记录，但未连接真实系统。\n";
+    if (command === "/usr/bin/systemctl" && args[1] === "restart") return "Demo environment: the service restart request was recorded without contacting a real system.\n";
     if (command === "/usr/bin/journalctl") return data.events.slice(0, 24).map(item => `${timestamp(item.minutes_ago)} demo-server ${item.source}: ${item.message}`).join("\n") + "\n";
     if (command === "/usr/sbin/ufw") return "Status: active\nDefault: deny (incoming), allow (outgoing)\n22/tcp ALLOW IN 192.0.2.0/24\n9090/tcp ALLOW IN 198.51.100.0/24\n";
     if (command === "/usr/bin/fail2ban-client") return "Status for the jail: sshd\nCurrently failed: 2\nCurrently banned: 3\nBanned IP list: 192.0.2.44 198.51.100.72 203.0.113.19\n";
@@ -252,7 +252,7 @@
     if (command === "/usr/local/sbin/security-operations-control") return handleOperations(args.slice(1), input, data);
     if (command === "/usr/local/sbin/security-heavy-control") return handleHeavy(args.slice(1));
     if (command === "/usr/local/sbin/security-key-control") return handleKeys(args[1], input);
-    throw new Error(`公共预览不支持命令：${args.join(" ")}`);
+    throw new Error(`The public preview does not support this command: ${args.join(" ")}`);
   }
 
   function handleOperations(args, input, data) {
@@ -290,7 +290,7 @@
     if (action === "stop") current.running = false;
     memory.heavy[task] = current; writeStore("heavy", memory.heavy);
     if (action === "logs") return `${new Date().toISOString()} demo-server ${task}: synthetic preview log; no scanner was executed.\n`;
-    return "模拟操作已保存到当前浏览器会话；没有执行真实扫描。\n";
+    return "The simulated operation was saved in this browser session; no real scan was performed.\n";
   }
 
   function handleKeys(action, input) {
@@ -327,7 +327,7 @@
       "/security_keys/security-keys": "security_keys/security-keys.html",
     };
     if (routes[target]) window.location.assign(siteRoot + "app/" + routes[target]);
-    else window.alert("此入口属于 Cockpit 主机管理功能，公共 GitHub 预览未连接真实服务器。");
+    else window.alert("This action belongs to Cockpit host management. The public GitHub preview is not connected to a real server.");
   }
 
   window.cockpit = {

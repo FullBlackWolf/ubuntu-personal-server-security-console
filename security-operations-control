@@ -487,16 +487,16 @@ def archive_report(kind: str) -> dict:
     suspicious = payload["suspicious"]
     pg = payload["postgresql"]
     markdown = (
-        f"# 服务器安全{kind}报告\n\n"
-        f"- 生成时间：{payload['created_at']}\n"
-        f"- 高风险操作（24h / {high['retention_days']}d）：{high['periods']['24h']} / {high['periods']['30d']}\n"
-        f"- 可疑事件（24h / {suspicious['retention_days']}d）：{suspicious['periods']['24h']} / {suspicious['periods']['30d']}\n"
-        f"- PostgreSQL 认证失败（1h / 24h）：{pg.get('auth_failures', {}).get('1h', 0)} / {pg.get('auth_failures', {}).get('24h', 0)}\n"
-        f"- 活动告警：{len(center.get('alerts', []))}\n"
-        f"- 关联事件链：{len(center.get('correlations', []))}\n"
-        f"- auditd 丢失事件：{center.get('health', {}).get('auditd', {}).get('lost', 'unknown')}\n"
-        f"- 归档校验异常：{center.get('health', {}).get('archives', {}).get('invalid', 0)}\n\n"
-        "完整事件、复核状态和校验数据见同名 JSON 归档。\n"
+        f"# Server Security {kind.title()} Report\n\n"
+        f"- Generated at: {payload['created_at']}\n"
+        f"- High-risk operations (24h / {high['retention_days']}d): {high['periods']['24h']} / {high['periods']['30d']}\n"
+        f"- Suspicious events (24h / {suspicious['retention_days']}d): {suspicious['periods']['24h']} / {suspicious['periods']['30d']}\n"
+        f"- PostgreSQL authentication failures (1h / 24h): {pg.get('auth_failures', {}).get('1h', 0)} / {pg.get('auth_failures', {}).get('24h', 0)}\n"
+        f"- Active alerts: {len(center.get('alerts', []))}\n"
+        f"- Correlation chains: {len(center.get('correlations', []))}\n"
+        f"- auditd lost events: {center.get('health', {}).get('auditd', {}).get('lost', 'unknown')}\n"
+        f"- Invalid archive checksums: {center.get('health', {}).get('archives', {}).get('invalid', 0)}\n\n"
+        "See the matching JSON archive for complete events, review state, and integrity data.\n"
     ).encode("utf-8")
     summary_path = ARCHIVE_DIR / f"{base}-summary.md"
     summary_digest = write_verified_file(summary_path, markdown)

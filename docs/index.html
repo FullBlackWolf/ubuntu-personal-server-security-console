@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="服务器安全控制台公开预览，使用仓库内的虚构模拟日志。">
+  <meta name="description" content="Public preview of the Server Security Console using fictional synthetic logs stored in the repository.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
-  <title>服务器安全控制台 · 公开预览登录</title>
+  <title>Server Security Console · Public Preview</title>
   <link rel="stylesheet" href="demo.css">
 </head>
 <body>
@@ -13,24 +13,24 @@
     <section class="login-panel">
       <div class="shield" aria-hidden="true">◆</div>
       <p class="eyebrow">SERVER SECURITY CONSOLE · PUBLIC DEMO</p>
-      <h1>服务器安全控制台</h1>
-      <p class="subtitle">登录后直接进入与本地 Cockpit 成品相同的页面。除 Cockpit 后端被只读模拟适配器替换外，HTML、CSS 和页面 JavaScript 均从生产源码生成。</p>
+      <h1>Server Security Console</h1>
+      <p class="subtitle">Sign in to open the same interface shipped with the local Cockpit application. The HTML, CSS, and page JavaScript are generated from production sources; only the Cockpit backend is replaced by a read-only demo adapter.</p>
 
-      <aside class="credentials" aria-label="公开预览账号">
-        <div><span>预览账号</span><code>visitor</code></div>
-        <div><span>预览密码</span><code>preview-only</code></div>
+      <aside class="credentials" aria-label="Public preview credentials">
+        <div><span>Preview username</span><code>visitor</code></div>
+        <div><span>Preview password</span><code>preview-only</code></div>
       </aside>
 
       <form id="login-form" novalidate>
-        <label>账号<input id="username" autocomplete="username" spellcheck="false" required></label>
-        <label>密码<input id="password" type="password" autocomplete="current-password" required></label>
+        <label>Username<input id="username" autocomplete="username" spellcheck="false" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" required></label>
         <p id="login-error" class="error" role="alert"></p>
-        <button class="primary" type="submit">进入服务器安全控制台</button>
-        <button id="fill-demo" class="secondary" type="button">自动填写预览账号</button>
+        <button class="primary" type="submit">Open Server Security Console</button>
+        <button id="fill-demo" class="secondary" type="button">Fill Preview Credentials</button>
       </form>
 
-      <div class="privacy-note"><strong>纯模拟环境</strong><span>本页面不连接真实服务器。日志、账号、主机名和 IP 均为仓库内的虚构数据；所有写操作只在当前浏览器会话中模拟。</span></div>
-      <footer><a href="https://github.com/FullBlackWolf/ubuntu-personal-server-security-console">GitHub source</a><a href="app/source-manifest.json">生产页面一致性清单</a></footer>
+      <div class="privacy-note"><strong>Synthetic environment</strong><span>This page is not connected to a real server. Logs, accounts, hostnames, and IP addresses are fictional repository data; every write operation is simulated only in the current browser session.</span></div>
+      <footer><a href="https://github.com/FullBlackWolf/ubuntu-personal-server-security-console">GitHub source</a><a href="app/source-manifest.json">Production-page parity manifest</a></footer>
     </section>
   </main>
   <script src="demo.js" defer></script>
