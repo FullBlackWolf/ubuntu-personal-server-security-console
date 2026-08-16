@@ -52,11 +52,14 @@ do
 done
 
 install -m 0644 "$project/README.md" "$stage/usr/share/doc/server-security-console/README.md"
+install -m 0644 "$project/ARCHITECTURE.md" "$stage/usr/share/doc/server-security-console/ARCHITECTURE.md"
 install -m 0644 "$project/LICENSE" "$stage/usr/share/doc/server-security-console/copyright"
 install -m 0644 "$project/SECURITY.md" "$stage/usr/share/doc/server-security-console/SECURITY.md"
-cp -a "$project/docs" "$stage/usr/share/doc/server-security-console/docs"
+install -d "$stage/usr/share/doc/server-security-console/docs"
+for document in components.md feature-preview.svg installer-preview.svg; do
+    install -m 0644 "$project/docs/$document" "$stage/usr/share/doc/server-security-console/docs/$document"
+done
 find "$stage/usr/share/server-security-console/payload" -type f -exec chmod 0644 {} +
-find "$stage/usr/share/doc/server-security-console/docs" -type f -exec chmod 0644 {} +
 find "$stage" -type d -exec chmod 0755 {} +
 
 dpkg-deb --root-owner-group --build "$stage" "$output/server-security-console_${version}_${architecture}.deb"

@@ -1,0 +1,5595 @@
+{
+  "metadata": {
+    "schema": "security-console-public-demo-v1",
+    "synthetic": true,
+    "seed": 20260816,
+    "generated_at": "2026-08-16T22:00:00Z",
+    "host": "demo-server.example.invalid",
+    "notice": "All identities, addresses, events, and measurements in this file are synthetic."
+  },
+  "summary": {
+    "active_alerts": 5,
+    "critical_alerts": 1,
+    "events_24h": 39,
+    "pending_reviews": 217,
+    "postgres_auth_failures_1h": 1,
+    "postgres_auth_failures_24h": 2,
+    "archive_integrity": "Verified",
+    "retention_days": 30
+  },
+  "health": [
+    {
+      "name": "auditd",
+      "status": "healthy",
+      "detail": "0 lost events · backlog 3"
+    },
+    {
+      "name": "journald",
+      "status": "healthy",
+      "detail": "Persistent · 428 MiB used"
+    },
+    {
+      "name": "Time sync",
+      "status": "healthy",
+      "detail": "Synchronized"
+    },
+    {
+      "name": "Imported logs",
+      "status": "healthy",
+      "detail": "4 files · SHA-256 verified"
+    },
+    {
+      "name": "Archives",
+      "status": "healthy",
+      "detail": "14 valid · 0 modified"
+    }
+  ],
+  "alerts": [
+    {
+      "severity": "critical",
+      "title": "Authentication burst",
+      "detail": "27 failures from a new synthetic source within 10 minutes."
+    },
+    {
+      "severity": "high",
+      "title": "Off-hours privileged action",
+      "detail": "A simulated root-level service change occurred outside the configured window."
+    },
+    {
+      "severity": "high",
+      "title": "PostgreSQL authentication threshold",
+      "detail": "The one-hour failed-login threshold was exceeded in the demo dataset."
+    },
+    {
+      "severity": "medium",
+      "title": "Security configuration changed",
+      "detail": "A synthetic audit event reported a protected configuration update."
+    },
+    {
+      "severity": "medium",
+      "title": "New remote source",
+      "detail": "A documentation-range source address has not appeared in the prior demo window."
+    }
+  ],
+  "events": [
+    {
+      "id": "DEMO-0221",
+      "timestamp": "2026-08-16T22:00:00Z",
+      "minutes_ago": 0,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.230",
+      "message": "FATAL: password authentication failed for user \"admin\" from 203.0.113.230",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0145",
+      "timestamp": "2026-08-16T21:59:00Z",
+      "minutes_ago": 1,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "198.51.100.189",
+      "message": "Cockpit session opened by unknown from 198.51.100.189",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0131",
+      "timestamp": "2026-08-16T21:53:00Z",
+      "minutes_ago": 7,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.159",
+      "message": "Cockpit authentication rejected for postgres from 203.0.113.159",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0135",
+      "timestamp": "2026-08-16T21:51:00Z",
+      "minutes_ago": 9,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.218",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0068",
+      "timestamp": "2026-08-16T21:43:00Z",
+      "minutes_ago": 17,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "203.0.113.119",
+      "message": "Failed public-key authentication for backup from 203.0.113.119",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0241",
+      "timestamp": "2026-08-16T21:29:00Z",
+      "minutes_ago": 31,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "198.51.100.190",
+      "message": "Expired temporary ban for 198.51.100.190",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0317",
+      "timestamp": "2026-08-16T21:09:00Z",
+      "minutes_ago": 51,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "198.51.100.86",
+      "message": "User account policy changed by backup",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0257",
+      "timestamp": "2026-08-16T21:08:00Z",
+      "minutes_ago": 52,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "192.0.2.150",
+      "message": "Failed public-key authentication for deploy from 192.0.2.150",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0258",
+      "timestamp": "2026-08-16T21:00:00Z",
+      "minutes_ago": 60,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "192.0.2.172",
+      "message": "Security configuration file updated by monitor",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0064",
+      "timestamp": "2026-08-16T20:58:00Z",
+      "minutes_ago": 62,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "203.0.113.172",
+      "message": "Cockpit session opened by admin from 203.0.113.172",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0355",
+      "timestamp": "2026-08-16T20:32:00Z",
+      "minutes_ago": 88,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.74",
+      "message": "Rate-limited connection attempt from 203.0.113.74",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0152",
+      "timestamp": "2026-08-16T20:26:00Z",
+      "minutes_ago": 94,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.24",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0033",
+      "timestamp": "2026-08-16T20:23:00Z",
+      "minutes_ago": 97,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.235",
+      "message": "Cockpit authentication rejected for unknown from 203.0.113.235",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0078",
+      "timestamp": "2026-08-16T20:19:00Z",
+      "minutes_ago": 101,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.36",
+      "message": "Verified historical log entry imported from synthetic-auth.log",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0209",
+      "timestamp": "2026-08-16T20:13:00Z",
+      "minutes_ago": 107,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "192.0.2.222",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0105",
+      "timestamp": "2026-08-16T20:12:00Z",
+      "minutes_ago": 108,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.54",
+      "message": "Cockpit session opened by backup from 203.0.113.54",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0225",
+      "timestamp": "2026-08-16T19:28:00Z",
+      "minutes_ago": 152,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "192.0.2.180",
+      "message": "Verified historical log entry imported from synthetic-auth.log",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0090",
+      "timestamp": "2026-08-16T18:41:00Z",
+      "minutes_ago": 199,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.191",
+      "message": "Cockpit authentication rejected for unknown from 198.51.100.191",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0121",
+      "timestamp": "2026-08-16T17:54:00Z",
+      "minutes_ago": 246,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.118",
+      "message": "Expired temporary ban for 203.0.113.118",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0218",
+      "timestamp": "2026-08-16T17:43:00Z",
+      "minutes_ago": 257,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "192.0.2.228",
+      "message": "Failed public-key authentication for postgres from 192.0.2.228",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0358",
+      "timestamp": "2026-08-16T16:01:00Z",
+      "minutes_ago": 359,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.42",
+      "message": "User account policy changed by unknown",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0099",
+      "timestamp": "2026-08-16T15:46:00Z",
+      "minutes_ago": 374,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "198.51.100.14",
+      "message": "Cockpit session opened by postgres from 198.51.100.14",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0159",
+      "timestamp": "2026-08-16T15:14:00Z",
+      "minutes_ago": 406,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.166",
+      "message": "User account policy changed by unknown",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0244",
+      "timestamp": "2026-08-16T14:36:00Z",
+      "minutes_ago": 444,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.203",
+      "message": "Cockpit authentication rejected for postgres from 198.51.100.203",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0283",
+      "timestamp": "2026-08-16T12:31:00Z",
+      "minutes_ago": 569,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "198.51.100.189",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0341",
+      "timestamp": "2026-08-16T12:14:00Z",
+      "minutes_ago": 586,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.202",
+      "message": "FATAL: password authentication failed for user \"unknown\" from 198.51.100.202",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0215",
+      "timestamp": "2026-08-16T11:43:00Z",
+      "minutes_ago": 617,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.3",
+      "message": "Banned 198.51.100.3 after repeated authentication failures",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0214",
+      "timestamp": "2026-08-16T10:54:00Z",
+      "minutes_ago": 666,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.49",
+      "message": "Accepted public-key session for deploy from 203.0.113.49",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0003",
+      "timestamp": "2026-08-16T10:48:00Z",
+      "minutes_ago": 672,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.90",
+      "message": "Failed public-key authentication for unknown from 203.0.113.90",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0014",
+      "timestamp": "2026-08-16T10:41:00Z",
+      "minutes_ago": 679,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.134",
+      "message": "Expired temporary ban for 192.0.2.134",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0190",
+      "timestamp": "2026-08-16T07:14:00Z",
+      "minutes_ago": 886,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.104",
+      "message": "Cockpit authentication rejected for admin from 203.0.113.104",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0073",
+      "timestamp": "2026-08-16T07:11:00Z",
+      "minutes_ago": 889,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "198.51.100.137",
+      "message": "Accepted public-key session for monitor from 198.51.100.137",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0290",
+      "timestamp": "2026-08-16T06:14:00Z",
+      "minutes_ago": 946,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.103",
+      "message": "Blocked inbound TCP probe from 203.0.113.103 to port 80",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0230",
+      "timestamp": "2026-08-16T04:53:00Z",
+      "minutes_ago": 1027,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.225",
+      "message": "Accepted public-key session for deploy from 203.0.113.225",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0310",
+      "timestamp": "2026-08-16T04:42:00Z",
+      "minutes_ago": 1038,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.8",
+      "message": "Accepted public-key session for deploy from 203.0.113.8",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0008",
+      "timestamp": "2026-08-16T03:00:00Z",
+      "minutes_ago": 1140,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "192.0.2.17",
+      "message": "Accepted public-key session for postgres from 192.0.2.17",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0336",
+      "timestamp": "2026-08-16T01:18:00Z",
+      "minutes_ago": 1242,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "203.0.113.155",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0198",
+      "timestamp": "2026-08-16T00:44:00Z",
+      "minutes_ago": 1276,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "192.0.2.143",
+      "message": "Maximum authentication attempts exceeded for deploy from 192.0.2.143",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0134",
+      "timestamp": "2026-08-15T22:17:00Z",
+      "minutes_ago": 1423,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.219",
+      "message": "Maximum authentication attempts exceeded for monitor from 198.51.100.219",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0169",
+      "timestamp": "2026-08-15T21:43:00Z",
+      "minutes_ago": 1457,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.69",
+      "message": "Rate-limited connection attempt from 192.0.2.69",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0077",
+      "timestamp": "2026-08-15T20:31:00Z",
+      "minutes_ago": 1529,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "192.0.2.56",
+      "message": "Expired temporary ban for 192.0.2.56",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0265",
+      "timestamp": "2026-08-15T20:21:00Z",
+      "minutes_ago": 1539,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "192.0.2.170",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0096",
+      "timestamp": "2026-08-15T18:53:00Z",
+      "minutes_ago": 1627,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "198.51.100.208",
+      "message": "Maximum authentication attempts exceeded for backup from 198.51.100.208",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0327",
+      "timestamp": "2026-08-15T18:06:00Z",
+      "minutes_ago": 1674,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.74",
+      "message": "FATAL: password authentication failed for user \"deploy\" from 198.51.100.74",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0167",
+      "timestamp": "2026-08-15T17:31:00Z",
+      "minutes_ago": 1709,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "203.0.113.192",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0115",
+      "timestamp": "2026-08-15T17:16:00Z",
+      "minutes_ago": 1724,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "203.0.113.90",
+      "message": "User account policy changed by monitor",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0015",
+      "timestamp": "2026-08-15T16:42:00Z",
+      "minutes_ago": 1758,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.226",
+      "message": "Failed public-key authentication for deploy from 203.0.113.226",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0035",
+      "timestamp": "2026-08-15T16:30:00Z",
+      "minutes_ago": 1770,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "198.51.100.120",
+      "message": "Banned 198.51.100.120 after repeated authentication failures",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0281",
+      "timestamp": "2026-08-15T16:23:00Z",
+      "minutes_ago": 1777,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "198.51.100.95",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0089",
+      "timestamp": "2026-08-15T16:14:00Z",
+      "minutes_ago": 1786,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "192.0.2.231",
+      "message": "Maximum authentication attempts exceeded for unknown from 192.0.2.231",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0232",
+      "timestamp": "2026-08-15T15:07:00Z",
+      "minutes_ago": 1853,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "198.51.100.129",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0067",
+      "timestamp": "2026-08-15T14:02:00Z",
+      "minutes_ago": 1918,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "203.0.113.209",
+      "message": "Maximum authentication attempts exceeded for monitor from 203.0.113.209",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0052",
+      "timestamp": "2026-08-15T11:55:00Z",
+      "minutes_ago": 2045,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.42",
+      "message": "Maximum authentication attempts exceeded for monitor from 198.51.100.42",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0112",
+      "timestamp": "2026-08-15T10:53:00Z",
+      "minutes_ago": 2107,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.92",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0216",
+      "timestamp": "2026-08-15T09:20:00Z",
+      "minutes_ago": 2200,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.110",
+      "message": "Failed public-key authentication for deploy from 203.0.113.110",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0208",
+      "timestamp": "2026-08-15T08:41:00Z",
+      "minutes_ago": 2239,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.33",
+      "message": "Rate-limited connection attempt from 203.0.113.33",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0055",
+      "timestamp": "2026-08-15T07:06:00Z",
+      "minutes_ago": 2334,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "203.0.113.234",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0314",
+      "timestamp": "2026-08-15T06:57:00Z",
+      "minutes_ago": 2343,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "203.0.113.107",
+      "message": "Blocked inbound TCP probe from 203.0.113.107 to port 8080",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0340",
+      "timestamp": "2026-08-15T06:51:00Z",
+      "minutes_ago": 2349,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "192.0.2.195",
+      "message": "Rate-limited connection attempt from 192.0.2.195",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0011",
+      "timestamp": "2026-08-15T06:29:00Z",
+      "minutes_ago": 2371,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "203.0.113.233",
+      "message": "Expired temporary ban for 203.0.113.233",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0251",
+      "timestamp": "2026-08-15T05:32:00Z",
+      "minutes_ago": 2428,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "198.51.100.170",
+      "message": "Security configuration file updated by postgres",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0148",
+      "timestamp": "2026-08-15T05:12:00Z",
+      "minutes_ago": 2448,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.132",
+      "message": "Privileged command executed by postgres: systemctl restart demo-service",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0046",
+      "timestamp": "2026-08-15T05:05:00Z",
+      "minutes_ago": 2455,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.47",
+      "message": "Verified historical log entry imported from synthetic-auth.log",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0102",
+      "timestamp": "2026-08-15T03:17:00Z",
+      "minutes_ago": 2563,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "192.0.2.38",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0098",
+      "timestamp": "2026-08-15T03:10:00Z",
+      "minutes_ago": 2570,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.68",
+      "message": "Accepted public-key session for monitor from 192.0.2.68",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0196",
+      "timestamp": "2026-08-15T02:16:00Z",
+      "minutes_ago": 2624,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "192.0.2.50",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0246",
+      "timestamp": "2026-08-15T00:30:00Z",
+      "minutes_ago": 2730,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "198.51.100.44",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0318",
+      "timestamp": "2026-08-14T23:55:00Z",
+      "minutes_ago": 2765,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "203.0.113.47",
+      "message": "Maximum authentication attempts exceeded for backup from 203.0.113.47",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0335",
+      "timestamp": "2026-08-14T22:46:00Z",
+      "minutes_ago": 2834,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "192.0.2.203",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0156",
+      "timestamp": "2026-08-14T22:12:00Z",
+      "minutes_ago": 2868,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.144",
+      "message": "Expired temporary ban for 192.0.2.144",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0233",
+      "timestamp": "2026-08-14T21:19:00Z",
+      "minutes_ago": 2921,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.149",
+      "message": "Cockpit session opened by unknown from 203.0.113.149",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0199",
+      "timestamp": "2026-08-14T21:04:00Z",
+      "minutes_ago": 2936,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "203.0.113.198",
+      "message": "Failed public-key authentication for monitor from 203.0.113.198",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0304",
+      "timestamp": "2026-08-14T20:56:00Z",
+      "minutes_ago": 2944,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "192.0.2.182",
+      "message": "Privileged command executed by deploy: systemctl restart demo-service",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0321",
+      "timestamp": "2026-08-14T20:43:00Z",
+      "minutes_ago": 2957,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "198.51.100.6",
+      "message": "FATAL: password authentication failed for user \"backup\" from 198.51.100.6",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0186",
+      "timestamp": "2026-08-14T19:33:00Z",
+      "minutes_ago": 3027,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.72",
+      "message": "Banned 203.0.113.72 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0140",
+      "timestamp": "2026-08-14T17:24:00Z",
+      "minutes_ago": 3156,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "203.0.113.170",
+      "message": "Security configuration file updated by admin",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0023",
+      "timestamp": "2026-08-14T17:21:00Z",
+      "minutes_ago": 3159,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "192.0.2.214",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0086",
+      "timestamp": "2026-08-14T17:01:00Z",
+      "minutes_ago": 3179,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.123",
+      "message": "FATAL: password authentication failed for user \"unknown\" from 192.0.2.123",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0272",
+      "timestamp": "2026-08-14T15:36:00Z",
+      "minutes_ago": 3264,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "192.0.2.205",
+      "message": "Rate-limited connection attempt from 192.0.2.205",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0036",
+      "timestamp": "2026-08-14T14:42:00Z",
+      "minutes_ago": 3318,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.201",
+      "message": "FATAL: password authentication failed for user \"postgres\" from 203.0.113.201",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0177",
+      "timestamp": "2026-08-14T10:14:00Z",
+      "minutes_ago": 3586,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.176",
+      "message": "Blocked inbound TCP probe from 192.0.2.176 to port 22",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0111",
+      "timestamp": "2026-08-14T10:13:00Z",
+      "minutes_ago": 3587,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.155",
+      "message": "Accepted public-key session for deploy from 192.0.2.155",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0138",
+      "timestamp": "2026-08-14T10:08:00Z",
+      "minutes_ago": 3592,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.101",
+      "message": "Cockpit authentication rejected for monitor from 192.0.2.101",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0187",
+      "timestamp": "2026-08-14T09:54:00Z",
+      "minutes_ago": 3606,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.19",
+      "message": "Accepted public-key session for admin from 192.0.2.19",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0081",
+      "timestamp": "2026-08-14T08:20:00Z",
+      "minutes_ago": 3700,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.152",
+      "message": "Blocked inbound TCP probe from 198.51.100.152 to port 8080",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0339",
+      "timestamp": "2026-08-14T07:55:00Z",
+      "minutes_ago": 3725,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.5",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0351",
+      "timestamp": "2026-08-14T05:04:00Z",
+      "minutes_ago": 3896,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.220",
+      "message": "Cockpit session opened by unknown from 203.0.113.220",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0146",
+      "timestamp": "2026-08-14T04:28:00Z",
+      "minutes_ago": 3932,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "198.51.100.24",
+      "message": "Expired temporary ban for 198.51.100.24",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0139",
+      "timestamp": "2026-08-14T04:26:00Z",
+      "minutes_ago": 3934,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.100",
+      "message": "Banned 203.0.113.100 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0125",
+      "timestamp": "2026-08-14T02:17:00Z",
+      "minutes_ago": 4063,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.14",
+      "message": "Cockpit session opened by deploy from 203.0.113.14",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0176",
+      "timestamp": "2026-08-13T22:54:00Z",
+      "minutes_ago": 4266,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.228",
+      "message": "Rate-limited connection attempt from 203.0.113.228",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0175",
+      "timestamp": "2026-08-13T22:10:00Z",
+      "minutes_ago": 4310,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "192.0.2.234",
+      "message": "Privileged command executed by deploy: systemctl restart demo-service",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0108",
+      "timestamp": "2026-08-13T19:22:00Z",
+      "minutes_ago": 4478,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.9",
+      "message": "Failed public-key authentication for unknown from 192.0.2.9",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0343",
+      "timestamp": "2026-08-13T13:03:00Z",
+      "minutes_ago": 4857,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "192.0.2.192",
+      "message": "Maximum authentication attempts exceeded for postgres from 192.0.2.192",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0088",
+      "timestamp": "2026-08-13T12:53:00Z",
+      "minutes_ago": 4867,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "198.51.100.121",
+      "message": "Expired temporary ban for 198.51.100.121",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0034",
+      "timestamp": "2026-08-13T10:54:00Z",
+      "minutes_ago": 4986,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.126",
+      "message": "FATAL: password authentication failed for user \"deploy\" from 203.0.113.126",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0328",
+      "timestamp": "2026-08-13T09:54:00Z",
+      "minutes_ago": 5046,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.181",
+      "message": "Failed public-key authentication for unknown from 192.0.2.181",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0224",
+      "timestamp": "2026-08-13T09:43:00Z",
+      "minutes_ago": 5057,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.171",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0154",
+      "timestamp": "2026-08-13T08:17:00Z",
+      "minutes_ago": 5143,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "203.0.113.172",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0151",
+      "timestamp": "2026-08-13T05:32:00Z",
+      "minutes_ago": 5308,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.19",
+      "message": "Blocked inbound TCP probe from 192.0.2.19 to port 5432",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0280",
+      "timestamp": "2026-08-13T05:19:00Z",
+      "minutes_ago": 5321,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.47",
+      "message": "Cockpit authentication rejected for admin from 198.51.100.47",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0182",
+      "timestamp": "2026-08-13T02:43:00Z",
+      "minutes_ago": 5477,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.40",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0163",
+      "timestamp": "2026-08-13T02:30:00Z",
+      "minutes_ago": 5490,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "198.51.100.168",
+      "message": "Failed public-key authentication for monitor from 198.51.100.168",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0041",
+      "timestamp": "2026-08-13T01:51:00Z",
+      "minutes_ago": 5529,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.5",
+      "message": "Security configuration file updated by monitor",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0040",
+      "timestamp": "2026-08-12T21:49:00Z",
+      "minutes_ago": 5771,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "198.51.100.162",
+      "message": "Security configuration file updated by admin",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0289",
+      "timestamp": "2026-08-12T19:13:00Z",
+      "minutes_ago": 5927,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "203.0.113.106",
+      "message": "Maximum authentication attempts exceeded for deploy from 203.0.113.106",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0301",
+      "timestamp": "2026-08-12T18:08:00Z",
+      "minutes_ago": 5992,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "198.51.100.240",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0204",
+      "timestamp": "2026-08-12T17:59:00Z",
+      "minutes_ago": 6001,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "192.0.2.199",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0044",
+      "timestamp": "2026-08-12T17:45:00Z",
+      "minutes_ago": 6015,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.28",
+      "message": "Security configuration file updated by monitor",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0213",
+      "timestamp": "2026-08-12T16:38:00Z",
+      "minutes_ago": 6082,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.91",
+      "message": "Failed public-key authentication for unknown from 198.51.100.91",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0114",
+      "timestamp": "2026-08-12T10:56:00Z",
+      "minutes_ago": 6424,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.149",
+      "message": "User account policy changed by postgres",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0069",
+      "timestamp": "2026-08-12T08:04:00Z",
+      "minutes_ago": 6596,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "203.0.113.98",
+      "message": "Security configuration file updated by monitor",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0109",
+      "timestamp": "2026-08-12T07:17:00Z",
+      "minutes_ago": 6643,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.38",
+      "message": "Accepted public-key session for backup from 203.0.113.38",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0183",
+      "timestamp": "2026-08-12T07:07:00Z",
+      "minutes_ago": 6653,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.199",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0334",
+      "timestamp": "2026-08-12T06:49:00Z",
+      "minutes_ago": 6671,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.36",
+      "message": "FATAL: password authentication failed for user \"monitor\" from 192.0.2.36",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0168",
+      "timestamp": "2026-08-12T00:06:00Z",
+      "minutes_ago": 7074,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.30",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0348",
+      "timestamp": "2026-08-11T22:41:00Z",
+      "minutes_ago": 7159,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "198.51.100.203",
+      "message": "Expired temporary ban for 198.51.100.203",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0344",
+      "timestamp": "2026-08-11T22:18:00Z",
+      "minutes_ago": 7182,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.117",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0278",
+      "timestamp": "2026-08-11T21:41:00Z",
+      "minutes_ago": 7219,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.73",
+      "message": "Cockpit session opened by admin from 192.0.2.73",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0269",
+      "timestamp": "2026-08-11T21:28:00Z",
+      "minutes_ago": 7232,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.174",
+      "message": "Banned 203.0.113.174 after repeated authentication failures",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0116",
+      "timestamp": "2026-08-11T19:57:00Z",
+      "minutes_ago": 7323,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.87",
+      "message": "User account policy changed by admin",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0254",
+      "timestamp": "2026-08-11T19:20:00Z",
+      "minutes_ago": 7360,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "198.51.100.109",
+      "message": "Accepted public-key session for backup from 198.51.100.109",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0205",
+      "timestamp": "2026-08-11T17:46:00Z",
+      "minutes_ago": 7454,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "203.0.113.124",
+      "message": "Accepted public-key session for postgres from 203.0.113.124",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0287",
+      "timestamp": "2026-08-11T15:57:00Z",
+      "minutes_ago": 7563,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "198.51.100.62",
+      "message": "Rate-limited connection attempt from 198.51.100.62",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0005",
+      "timestamp": "2026-08-11T15:46:00Z",
+      "minutes_ago": 7574,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.154",
+      "message": "Banned 203.0.113.154 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0093",
+      "timestamp": "2026-08-11T06:58:00Z",
+      "minutes_ago": 8102,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.128",
+      "message": "User account policy changed by postgres",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0087",
+      "timestamp": "2026-08-11T06:45:00Z",
+      "minutes_ago": 8115,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "192.0.2.12",
+      "message": "Security configuration file updated by admin",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0160",
+      "timestamp": "2026-08-11T06:19:00Z",
+      "minutes_ago": 8141,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "192.0.2.148",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0070",
+      "timestamp": "2026-08-11T04:50:00Z",
+      "minutes_ago": 8230,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.20",
+      "message": "Failed public-key authentication for admin from 198.51.100.20",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0019",
+      "timestamp": "2026-08-11T04:00:00Z",
+      "minutes_ago": 8280,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.76",
+      "message": "Cockpit authentication rejected for admin from 198.51.100.76",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0188",
+      "timestamp": "2026-08-11T03:46:00Z",
+      "minutes_ago": 8294,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.194",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0324",
+      "timestamp": "2026-08-11T03:37:00Z",
+      "minutes_ago": 8303,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.176",
+      "message": "Failed public-key authentication for unknown from 203.0.113.176",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0346",
+      "timestamp": "2026-08-11T01:22:00Z",
+      "minutes_ago": 8438,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.199",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0234",
+      "timestamp": "2026-08-11T00:32:00Z",
+      "minutes_ago": 8488,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.177",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0264",
+      "timestamp": "2026-08-10T23:44:00Z",
+      "minutes_ago": 8536,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.112",
+      "message": "FATAL: password authentication failed for user \"postgres\" from 198.51.100.112",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0189",
+      "timestamp": "2026-08-10T23:20:00Z",
+      "minutes_ago": 8560,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "203.0.113.2",
+      "message": "FATAL: password authentication failed for user \"monitor\" from 203.0.113.2",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0211",
+      "timestamp": "2026-08-10T19:51:00Z",
+      "minutes_ago": 8769,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "203.0.113.11",
+      "message": "Banned 203.0.113.11 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0179",
+      "timestamp": "2026-08-10T14:03:00Z",
+      "minutes_ago": 9117,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.219",
+      "message": "FATAL: password authentication failed for user \"admin\" from 192.0.2.219",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0076",
+      "timestamp": "2026-08-10T12:49:00Z",
+      "minutes_ago": 9191,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.39",
+      "message": "Expired temporary ban for 203.0.113.39",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0083",
+      "timestamp": "2026-08-10T10:36:00Z",
+      "minutes_ago": 9324,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "198.51.100.173",
+      "message": "Accepted public-key session for unknown from 198.51.100.173",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0065",
+      "timestamp": "2026-08-10T04:59:00Z",
+      "minutes_ago": 9661,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "203.0.113.128",
+      "message": "Security configuration file updated by deploy",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0170",
+      "timestamp": "2026-08-10T04:09:00Z",
+      "minutes_ago": 9711,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "198.51.100.25",
+      "message": "Maximum authentication attempts exceeded for postgres from 198.51.100.25",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0053",
+      "timestamp": "2026-08-10T02:05:00Z",
+      "minutes_ago": 9835,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "203.0.113.79",
+      "message": "Security configuration file updated by deploy",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0010",
+      "timestamp": "2026-08-10T00:50:00Z",
+      "minutes_ago": 9910,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.63",
+      "message": "FATAL: password authentication failed for user \"deploy\" from 203.0.113.63",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0330",
+      "timestamp": "2026-08-09T21:38:00Z",
+      "minutes_ago": 10102,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.118",
+      "message": "Blocked inbound TCP probe from 192.0.2.118 to port 9090",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0359",
+      "timestamp": "2026-08-09T15:37:00Z",
+      "minutes_ago": 10463,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "192.0.2.99",
+      "message": "Security configuration file updated by backup",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0316",
+      "timestamp": "2026-08-09T13:01:00Z",
+      "minutes_ago": 10619,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.130",
+      "message": "FATAL: password authentication failed for user \"backup\" from 192.0.2.130",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0122",
+      "timestamp": "2026-08-09T10:59:00Z",
+      "minutes_ago": 10741,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.22",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0058",
+      "timestamp": "2026-08-09T10:30:00Z",
+      "minutes_ago": 10770,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.190",
+      "message": "Blocked inbound TCP probe from 203.0.113.190 to port 9090",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0022",
+      "timestamp": "2026-08-09T10:27:00Z",
+      "minutes_ago": 10773,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "203.0.113.15",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0028",
+      "timestamp": "2026-08-09T10:07:00Z",
+      "minutes_ago": 10793,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.215",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0157",
+      "timestamp": "2026-08-09T09:45:00Z",
+      "minutes_ago": 10815,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "203.0.113.194",
+      "message": "Cockpit session opened by monitor from 203.0.113.194",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0354",
+      "timestamp": "2026-08-09T08:17:00Z",
+      "minutes_ago": 10903,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "203.0.113.186",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0291",
+      "timestamp": "2026-08-09T08:15:00Z",
+      "minutes_ago": 10905,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "203.0.113.225",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0171",
+      "timestamp": "2026-08-09T08:06:00Z",
+      "minutes_ago": 10914,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.211",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0113",
+      "timestamp": "2026-08-09T01:22:00Z",
+      "minutes_ago": 11318,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "203.0.113.231",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0256",
+      "timestamp": "2026-08-09T00:51:00Z",
+      "minutes_ago": 11349,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "198.51.100.150",
+      "message": "Rate-limited connection attempt from 198.51.100.150",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0004",
+      "timestamp": "2026-08-09T00:14:00Z",
+      "minutes_ago": 11386,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.10",
+      "message": "Accepted public-key session for deploy from 203.0.113.10",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0061",
+      "timestamp": "2026-08-08T23:15:00Z",
+      "minutes_ago": 11445,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.223",
+      "message": "Expired temporary ban for 192.0.2.223",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0037",
+      "timestamp": "2026-08-08T20:37:00Z",
+      "minutes_ago": 11603,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "198.51.100.61",
+      "message": "Privileged command executed by postgres: systemctl restart demo-service",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0222",
+      "timestamp": "2026-08-08T19:54:00Z",
+      "minutes_ago": 11646,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "192.0.2.192",
+      "message": "Expired temporary ban for 192.0.2.192",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0192",
+      "timestamp": "2026-08-08T18:28:00Z",
+      "minutes_ago": 11732,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "198.51.100.104",
+      "message": "Privileged command executed by backup: systemctl restart demo-service",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0295",
+      "timestamp": "2026-08-08T14:42:00Z",
+      "minutes_ago": 11958,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.167",
+      "message": "Failed public-key authentication for deploy from 203.0.113.167",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0193",
+      "timestamp": "2026-08-08T12:34:00Z",
+      "minutes_ago": 12086,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.204",
+      "message": "User account policy changed by monitor",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0057",
+      "timestamp": "2026-08-08T09:06:00Z",
+      "minutes_ago": 12294,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.19",
+      "message": "Blocked inbound TCP probe from 192.0.2.19 to port 8080",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0047",
+      "timestamp": "2026-08-08T06:04:00Z",
+      "minutes_ago": 12476,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.82",
+      "message": "Failed public-key authentication for unknown from 198.51.100.82",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0026",
+      "timestamp": "2026-08-08T04:47:00Z",
+      "minutes_ago": 12553,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "198.51.100.91",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0220",
+      "timestamp": "2026-08-08T01:21:00Z",
+      "minutes_ago": 12759,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.2",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0249",
+      "timestamp": "2026-08-08T00:43:00Z",
+      "minutes_ago": 12797,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.31",
+      "message": "Rate-limited connection attempt from 203.0.113.31",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0103",
+      "timestamp": "2026-08-07T23:27:00Z",
+      "minutes_ago": 12873,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "192.0.2.230",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0238",
+      "timestamp": "2026-08-07T20:02:00Z",
+      "minutes_ago": 13078,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "198.51.100.24",
+      "message": "Maximum authentication attempts exceeded for admin from 198.51.100.24",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0356",
+      "timestamp": "2026-08-07T18:39:00Z",
+      "minutes_ago": 13161,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "198.51.100.238",
+      "message": "Security configuration file updated by admin",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0133",
+      "timestamp": "2026-08-07T16:17:00Z",
+      "minutes_ago": 13303,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.33",
+      "message": "User account policy changed by admin",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0101",
+      "timestamp": "2026-08-07T14:44:00Z",
+      "minutes_ago": 13396,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.212",
+      "message": "Blocked inbound TCP probe from 203.0.113.212 to port 443",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0024",
+      "timestamp": "2026-08-07T14:15:00Z",
+      "minutes_ago": 13425,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "203.0.113.229",
+      "message": "Rate-limited connection attempt from 203.0.113.229",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0120",
+      "timestamp": "2026-08-07T10:57:00Z",
+      "minutes_ago": 13623,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.24",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0172",
+      "timestamp": "2026-08-07T09:05:00Z",
+      "minutes_ago": 13735,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "198.51.100.42",
+      "message": "Maximum authentication attempts exceeded for backup from 198.51.100.42",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0129",
+      "timestamp": "2026-08-06T23:42:00Z",
+      "minutes_ago": 14298,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "203.0.113.213",
+      "message": "Cockpit session opened by postgres from 203.0.113.213",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0309",
+      "timestamp": "2026-08-06T23:05:00Z",
+      "minutes_ago": 14335,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.93",
+      "message": "Failed public-key authentication for postgres from 198.51.100.93",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0049",
+      "timestamp": "2026-08-06T17:49:00Z",
+      "minutes_ago": 14651,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.129",
+      "message": "Banned 198.51.100.129 after repeated authentication failures",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0273",
+      "timestamp": "2026-08-06T17:42:00Z",
+      "minutes_ago": 14658,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.78",
+      "message": "Accepted public-key session for monitor from 192.0.2.78",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0042",
+      "timestamp": "2026-08-06T15:23:00Z",
+      "minutes_ago": 14797,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.44",
+      "message": "Failed public-key authentication for monitor from 192.0.2.44",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0161",
+      "timestamp": "2026-08-06T15:01:00Z",
+      "minutes_ago": 14819,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.9",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0325",
+      "timestamp": "2026-08-06T12:32:00Z",
+      "minutes_ago": 14968,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.130",
+      "message": "Accepted public-key session for monitor from 192.0.2.130",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0227",
+      "timestamp": "2026-08-06T11:43:00Z",
+      "minutes_ago": 15017,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "192.0.2.212",
+      "message": "Security configuration file updated by backup",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0030",
+      "timestamp": "2026-08-06T10:54:00Z",
+      "minutes_ago": 15066,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.42",
+      "message": "Rate-limited connection attempt from 192.0.2.42",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0352",
+      "timestamp": "2026-08-06T09:58:00Z",
+      "minutes_ago": 15122,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "198.51.100.12",
+      "message": "Rate-limited connection attempt from 198.51.100.12",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0084",
+      "timestamp": "2026-08-06T04:37:00Z",
+      "minutes_ago": 15443,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.39",
+      "message": "Failed public-key authentication for backup from 192.0.2.39",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0155",
+      "timestamp": "2026-08-06T03:22:00Z",
+      "minutes_ago": 15518,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.111",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0195",
+      "timestamp": "2026-08-06T00:50:00Z",
+      "minutes_ago": 15670,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.143",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0048",
+      "timestamp": "2026-08-06T00:15:00Z",
+      "minutes_ago": 15705,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "192.0.2.16",
+      "message": "Expired temporary ban for 192.0.2.16",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0207",
+      "timestamp": "2026-08-05T22:38:00Z",
+      "minutes_ago": 15802,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.55",
+      "message": "User account policy changed by deploy",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0288",
+      "timestamp": "2026-08-05T19:39:00Z",
+      "minutes_ago": 15981,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "198.51.100.102",
+      "message": "Security configuration file updated by backup",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0228",
+      "timestamp": "2026-08-05T19:02:00Z",
+      "minutes_ago": 16018,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.228",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0274",
+      "timestamp": "2026-08-05T16:46:00Z",
+      "minutes_ago": 16154,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "203.0.113.35",
+      "message": "Rate-limited connection attempt from 203.0.113.35",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0320",
+      "timestamp": "2026-08-05T14:58:00Z",
+      "minutes_ago": 16262,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "203.0.113.68",
+      "message": "Cockpit session opened by monitor from 203.0.113.68",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0124",
+      "timestamp": "2026-08-05T12:48:00Z",
+      "minutes_ago": 16392,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.7",
+      "message": "Cockpit authentication rejected for postgres from 203.0.113.7",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0243",
+      "timestamp": "2026-08-05T12:15:00Z",
+      "minutes_ago": 16425,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.215",
+      "message": "Cockpit authentication rejected for admin from 192.0.2.215",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0315",
+      "timestamp": "2026-08-05T12:13:00Z",
+      "minutes_ago": 16427,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "203.0.113.188",
+      "message": "Maximum authentication attempts exceeded for admin from 203.0.113.188",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0006",
+      "timestamp": "2026-08-05T10:10:00Z",
+      "minutes_ago": 16550,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.65",
+      "message": "Security configuration file updated by monitor",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0007",
+      "timestamp": "2026-08-05T06:30:00Z",
+      "minutes_ago": 16770,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "198.51.100.24",
+      "message": "Maximum authentication attempts exceeded for unknown from 198.51.100.24",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0117",
+      "timestamp": "2026-08-05T03:41:00Z",
+      "minutes_ago": 16939,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.7",
+      "message": "Blocked inbound TCP probe from 198.51.100.7 to port 9090",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0127",
+      "timestamp": "2026-08-05T03:29:00Z",
+      "minutes_ago": 16951,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "192.0.2.217",
+      "message": "User account policy changed by postgres",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0059",
+      "timestamp": "2026-08-05T03:27:00Z",
+      "minutes_ago": 16953,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.219",
+      "message": "Verified historical log entry imported from synthetic-auth.log",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0202",
+      "timestamp": "2026-08-05T00:39:00Z",
+      "minutes_ago": 17121,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "203.0.113.87",
+      "message": "Accepted public-key session for monitor from 203.0.113.87",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0292",
+      "timestamp": "2026-08-04T19:54:00Z",
+      "minutes_ago": 17406,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.95",
+      "message": "Blocked inbound TCP probe from 198.51.100.95 to port 80",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0018",
+      "timestamp": "2026-08-04T18:08:00Z",
+      "minutes_ago": 17512,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "198.51.100.227",
+      "message": "FATAL: password authentication failed for user \"backup\" from 198.51.100.227",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0201",
+      "timestamp": "2026-08-04T15:12:00Z",
+      "minutes_ago": 17688,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.192",
+      "message": "Privileged command executed by monitor: systemctl restart demo-service",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0110",
+      "timestamp": "2026-08-04T13:57:00Z",
+      "minutes_ago": 17763,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.124",
+      "message": "Rate-limited connection attempt from 192.0.2.124",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0217",
+      "timestamp": "2026-08-04T11:56:00Z",
+      "minutes_ago": 17884,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "198.51.100.97",
+      "message": "Privileged command executed by unknown: systemctl restart demo-service",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0032",
+      "timestamp": "2026-08-04T09:08:00Z",
+      "minutes_ago": 18052,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.114",
+      "message": "User account policy changed by postgres",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0016",
+      "timestamp": "2026-08-04T06:53:00Z",
+      "minutes_ago": 18187,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.60",
+      "message": "Cockpit authentication rejected for backup from 192.0.2.60",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0079",
+      "timestamp": "2026-08-04T02:22:00Z",
+      "minutes_ago": 18458,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "192.0.2.237",
+      "message": "Accepted public-key session for postgres from 192.0.2.237",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0270",
+      "timestamp": "2026-08-03T17:10:00Z",
+      "minutes_ago": 19010,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "198.51.100.51",
+      "message": "Failed public-key authentication for backup from 198.51.100.51",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0276",
+      "timestamp": "2026-08-03T14:57:00Z",
+      "minutes_ago": 19143,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "203.0.113.173",
+      "message": "Maximum authentication attempts exceeded for monitor from 203.0.113.173",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0268",
+      "timestamp": "2026-08-03T09:51:00Z",
+      "minutes_ago": 19449,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "198.51.100.199",
+      "message": "Expired temporary ban for 198.51.100.199",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0080",
+      "timestamp": "2026-08-03T08:58:00Z",
+      "minutes_ago": 19502,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.200",
+      "message": "Failed public-key authentication for monitor from 192.0.2.200",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0329",
+      "timestamp": "2026-08-03T07:38:00Z",
+      "minutes_ago": 19582,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.145",
+      "message": "Maximum authentication attempts exceeded for postgres from 203.0.113.145",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0200",
+      "timestamp": "2026-08-03T06:41:00Z",
+      "minutes_ago": 19639,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "192.0.2.76",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0094",
+      "timestamp": "2026-08-03T03:56:00Z",
+      "minutes_ago": 19804,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "198.51.100.120",
+      "message": "Rate-limited connection attempt from 198.51.100.120",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0162",
+      "timestamp": "2026-08-02T19:34:00Z",
+      "minutes_ago": 20306,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.93",
+      "message": "Rate-limited connection attempt from 203.0.113.93",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0173",
+      "timestamp": "2026-08-02T16:34:00Z",
+      "minutes_ago": 20486,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "203.0.113.126",
+      "message": "Accepted public-key session for deploy from 203.0.113.126",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0178",
+      "timestamp": "2026-08-02T16:27:00Z",
+      "minutes_ago": 20493,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "198.51.100.73",
+      "message": "Security configuration file updated by unknown",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0085",
+      "timestamp": "2026-08-02T15:27:00Z",
+      "minutes_ago": 20553,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "203.0.113.108",
+      "message": "Cockpit authentication rejected for backup from 203.0.113.108",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0303",
+      "timestamp": "2026-08-02T08:12:00Z",
+      "minutes_ago": 20988,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "203.0.113.172",
+      "message": "Maximum authentication attempts exceeded for backup from 203.0.113.172",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0300",
+      "timestamp": "2026-08-02T06:33:00Z",
+      "minutes_ago": 21087,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "192.0.2.37",
+      "message": "FATAL: password authentication failed for user \"deploy\" from 192.0.2.37",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0130",
+      "timestamp": "2026-08-02T04:04:00Z",
+      "minutes_ago": 21236,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.31",
+      "message": "User account policy changed by unknown",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0203",
+      "timestamp": "2026-08-02T02:49:00Z",
+      "minutes_ago": 21311,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "192.0.2.49",
+      "message": "Banned 192.0.2.49 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0097",
+      "timestamp": "2026-08-01T21:19:00Z",
+      "minutes_ago": 21641,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "198.51.100.77",
+      "message": "Maximum authentication attempts exceeded for admin from 198.51.100.77",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0017",
+      "timestamp": "2026-08-01T19:47:00Z",
+      "minutes_ago": 21733,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "198.51.100.159",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0260",
+      "timestamp": "2026-08-01T09:49:00Z",
+      "minutes_ago": 22331,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "203.0.113.121",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0106",
+      "timestamp": "2026-08-01T07:29:00Z",
+      "minutes_ago": 22471,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.202",
+      "message": "Blocked inbound TCP probe from 192.0.2.202 to port 80",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0271",
+      "timestamp": "2026-08-01T04:13:00Z",
+      "minutes_ago": 22667,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "203.0.113.139",
+      "message": "Expired temporary ban for 203.0.113.139",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0296",
+      "timestamp": "2026-08-01T02:06:00Z",
+      "minutes_ago": 22794,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "203.0.113.47",
+      "message": "Accepted public-key session for admin from 203.0.113.47",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0294",
+      "timestamp": "2026-08-01T00:02:00Z",
+      "minutes_ago": 22918,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "198.51.100.143",
+      "message": "Failed public-key authentication for monitor from 198.51.100.143",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0191",
+      "timestamp": "2026-07-31T23:48:00Z",
+      "minutes_ago": 22932,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.6",
+      "message": "Failed public-key authentication for admin from 203.0.113.6",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0345",
+      "timestamp": "2026-07-31T20:44:00Z",
+      "minutes_ago": 23116,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "198.51.100.182",
+      "message": "Maximum authentication attempts exceeded for unknown from 198.51.100.182",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0248",
+      "timestamp": "2026-07-31T20:16:00Z",
+      "minutes_ago": 23144,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.23",
+      "message": "Failed public-key authentication for admin from 192.0.2.23",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0025",
+      "timestamp": "2026-07-31T11:27:00Z",
+      "minutes_ago": 23673,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.45",
+      "message": "Rate-limited connection attempt from 192.0.2.45",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0071",
+      "timestamp": "2026-07-31T10:37:00Z",
+      "minutes_ago": 23723,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.141",
+      "message": "Blocked inbound TCP probe from 192.0.2.141 to port 80",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0275",
+      "timestamp": "2026-07-31T07:30:00Z",
+      "minutes_ago": 23910,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "192.0.2.181",
+      "message": "Security configuration file updated by unknown",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0245",
+      "timestamp": "2026-07-31T06:54:00Z",
+      "minutes_ago": 23946,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.140",
+      "message": "Banned 192.0.2.140 after repeated authentication failures",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0282",
+      "timestamp": "2026-07-31T05:26:00Z",
+      "minutes_ago": 24034,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "203.0.113.73",
+      "message": "Failed public-key authentication for monitor from 203.0.113.73",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0054",
+      "timestamp": "2026-07-31T01:29:00Z",
+      "minutes_ago": 24271,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "203.0.113.25",
+      "message": "Accepted public-key session for admin from 203.0.113.25",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0229",
+      "timestamp": "2026-07-31T00:34:00Z",
+      "minutes_ago": 24326,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "192.0.2.32",
+      "message": "Maximum authentication attempts exceeded for backup from 192.0.2.32",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0119",
+      "timestamp": "2026-07-30T19:33:00Z",
+      "minutes_ago": 24627,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.118",
+      "message": "FATAL: password authentication failed for user \"monitor\" from 192.0.2.118",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0308",
+      "timestamp": "2026-07-30T19:16:00Z",
+      "minutes_ago": 24644,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "198.51.100.27",
+      "message": "Maximum authentication attempts exceeded for postgres from 198.51.100.27",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0072",
+      "timestamp": "2026-07-30T14:34:00Z",
+      "minutes_ago": 24926,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "198.51.100.132",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0194",
+      "timestamp": "2026-07-30T11:22:00Z",
+      "minutes_ago": 25118,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "203.0.113.33",
+      "message": "FATAL: password authentication failed for user \"backup\" from 203.0.113.33",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0027",
+      "timestamp": "2026-07-30T08:32:00Z",
+      "minutes_ago": 25288,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.95",
+      "message": "User account policy changed by deploy",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0210",
+      "timestamp": "2026-07-30T07:49:00Z",
+      "minutes_ago": 25331,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "203.0.113.236",
+      "message": "Security configuration file updated by unknown",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0338",
+      "timestamp": "2026-07-30T06:50:00Z",
+      "minutes_ago": 25390,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.191",
+      "message": "Failed public-key authentication for unknown from 203.0.113.191",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0123",
+      "timestamp": "2026-07-30T05:33:00Z",
+      "minutes_ago": 25467,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.111",
+      "message": "Failed public-key authentication for deploy from 198.51.100.111",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0137",
+      "timestamp": "2026-07-30T03:27:00Z",
+      "minutes_ago": 25593,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.68",
+      "message": "Blocked inbound TCP probe from 198.51.100.68 to port 22",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0063",
+      "timestamp": "2026-07-30T02:32:00Z",
+      "minutes_ago": 25648,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.5",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0164",
+      "timestamp": "2026-07-29T20:54:00Z",
+      "minutes_ago": 25986,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.135",
+      "message": "Security configuration file updated by monitor",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0075",
+      "timestamp": "2026-07-29T18:23:00Z",
+      "minutes_ago": 26137,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "203.0.113.176",
+      "message": "User account policy changed by monitor",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0331",
+      "timestamp": "2026-07-29T17:57:00Z",
+      "minutes_ago": 26163,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.218",
+      "message": "Cockpit session opened by deploy from 192.0.2.218",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0306",
+      "timestamp": "2026-07-29T13:30:00Z",
+      "minutes_ago": 26430,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.198",
+      "message": "Cockpit session opened by unknown from 203.0.113.198",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0185",
+      "timestamp": "2026-07-29T05:08:00Z",
+      "minutes_ago": 26932,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.99",
+      "message": "Blocked inbound TCP probe from 192.0.2.99 to port 5432",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0012",
+      "timestamp": "2026-07-29T05:05:00Z",
+      "minutes_ago": 26935,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.174",
+      "message": "Rate-limited connection attempt from 192.0.2.174",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0236",
+      "timestamp": "2026-07-29T02:34:00Z",
+      "minutes_ago": 27086,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "203.0.113.43",
+      "message": "Failed public-key authentication for monitor from 203.0.113.43",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0092",
+      "timestamp": "2026-07-28T22:28:00Z",
+      "minutes_ago": 27332,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.29",
+      "message": "Failed public-key authentication for unknown from 198.51.100.29",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0255",
+      "timestamp": "2026-07-28T22:14:00Z",
+      "minutes_ago": 27346,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.108",
+      "message": "Rate-limited connection attempt from 203.0.113.108",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0259",
+      "timestamp": "2026-07-28T20:16:00Z",
+      "minutes_ago": 27464,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.162",
+      "message": "User account policy changed by unknown",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0223",
+      "timestamp": "2026-07-28T14:45:00Z",
+      "minutes_ago": 27795,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.134",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0118",
+      "timestamp": "2026-07-28T11:43:00Z",
+      "minutes_ago": 27977,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.233",
+      "message": "Rate-limited connection attempt from 192.0.2.233",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0104",
+      "timestamp": "2026-07-28T10:25:00Z",
+      "minutes_ago": 28055,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.155",
+      "message": "FATAL: password authentication failed for user \"backup\" from 192.0.2.155",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0305",
+      "timestamp": "2026-07-28T09:54:00Z",
+      "minutes_ago": 28086,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.109",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0240",
+      "timestamp": "2026-07-28T09:40:00Z",
+      "minutes_ago": 28100,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "198.51.100.108",
+      "message": "Accepted public-key session for deploy from 198.51.100.108",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0031",
+      "timestamp": "2026-07-28T08:24:00Z",
+      "minutes_ago": 28176,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.63",
+      "message": "Rate-limited connection attempt from 192.0.2.63",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0237",
+      "timestamp": "2026-07-28T07:18:00Z",
+      "minutes_ago": 28242,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.230",
+      "message": "Maximum authentication attempts exceeded for postgres from 203.0.113.230",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0307",
+      "timestamp": "2026-07-27T23:49:00Z",
+      "minutes_ago": 28691,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.85",
+      "message": "Privileged command executed by monitor: systemctl restart demo-service",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0286",
+      "timestamp": "2026-07-27T13:44:00Z",
+      "minutes_ago": 29296,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "198.51.100.103",
+      "message": "Blocked inbound TCP probe from 198.51.100.103 to port 5432",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0285",
+      "timestamp": "2026-07-27T12:28:00Z",
+      "minutes_ago": 29372,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.129",
+      "message": "FATAL: password authentication failed for user \"admin\" from 192.0.2.129",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0153",
+      "timestamp": "2026-07-27T05:01:00Z",
+      "minutes_ago": 29819,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "198.51.100.150",
+      "message": "Maximum authentication attempts exceeded for postgres from 198.51.100.150",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0126",
+      "timestamp": "2026-07-27T03:46:00Z",
+      "minutes_ago": 29894,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.105",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0319",
+      "timestamp": "2026-07-27T01:23:00Z",
+      "minutes_ago": 30037,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.6",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0298",
+      "timestamp": "2026-07-27T00:55:00Z",
+      "minutes_ago": 30065,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.204",
+      "message": "Rate-limited connection attempt from 203.0.113.204",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0252",
+      "timestamp": "2026-07-26T07:55:00Z",
+      "minutes_ago": 31085,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.45",
+      "message": "Banned 192.0.2.45 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0002",
+      "timestamp": "2026-07-26T07:34:00Z",
+      "minutes_ago": 31106,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "198.51.100.231",
+      "message": "Accepted public-key session for backup from 198.51.100.231",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0299",
+      "timestamp": "2026-07-26T05:27:00Z",
+      "minutes_ago": 31233,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.228",
+      "message": "User account policy changed by postgres",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0197",
+      "timestamp": "2026-07-26T05:03:00Z",
+      "minutes_ago": 31257,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "198.51.100.183",
+      "message": "Maximum authentication attempts exceeded for unknown from 198.51.100.183",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0149",
+      "timestamp": "2026-07-26T04:14:00Z",
+      "minutes_ago": 31306,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "198.51.100.189",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0150",
+      "timestamp": "2026-07-26T00:00:00Z",
+      "minutes_ago": 31560,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.100",
+      "message": "Accepted public-key session for admin from 192.0.2.100",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0293",
+      "timestamp": "2026-07-25T19:55:00Z",
+      "minutes_ago": 31805,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "203.0.113.8",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0261",
+      "timestamp": "2026-07-25T18:19:00Z",
+      "minutes_ago": 31901,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "198.51.100.8",
+      "message": "Blocked inbound TCP probe from 198.51.100.8 to port 8080",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0165",
+      "timestamp": "2026-07-25T17:49:00Z",
+      "minutes_ago": 31931,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.161",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0038",
+      "timestamp": "2026-07-25T17:35:00Z",
+      "minutes_ago": 31945,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "203.0.113.75",
+      "message": "Banned 203.0.113.75 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0277",
+      "timestamp": "2026-07-25T17:18:00Z",
+      "minutes_ago": 31962,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "203.0.113.90",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0143",
+      "timestamp": "2026-07-25T15:12:00Z",
+      "minutes_ago": 32088,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "192.0.2.6",
+      "message": "Security configuration file updated by deploy",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0250",
+      "timestamp": "2026-07-25T12:56:00Z",
+      "minutes_ago": 32224,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "192.0.2.230",
+      "message": "Blocked inbound TCP probe from 192.0.2.230 to port 443",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0180",
+      "timestamp": "2026-07-25T10:33:00Z",
+      "minutes_ago": 32367,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "192.0.2.39",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0013",
+      "timestamp": "2026-07-25T10:17:00Z",
+      "minutes_ago": 32383,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "198.51.100.211",
+      "message": "Failed public-key authentication for monitor from 198.51.100.211",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0184",
+      "timestamp": "2026-07-25T09:05:00Z",
+      "minutes_ago": 32455,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "198.51.100.192",
+      "message": "Privileged command executed by deploy: systemctl restart demo-service",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0253",
+      "timestamp": "2026-07-25T06:25:00Z",
+      "minutes_ago": 32615,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.230",
+      "message": "Blocked inbound TCP probe from 192.0.2.230 to port 5432",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0242",
+      "timestamp": "2026-07-25T02:03:00Z",
+      "minutes_ago": 32877,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.55",
+      "message": "FATAL: password authentication failed for user \"unknown\" from 192.0.2.55",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0100",
+      "timestamp": "2026-07-25T01:44:00Z",
+      "minutes_ago": 32896,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "198.51.100.115",
+      "message": "Security configuration file updated by postgres",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0141",
+      "timestamp": "2026-07-24T20:38:00Z",
+      "minutes_ago": 33202,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "198.51.100.21",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0279",
+      "timestamp": "2026-07-24T19:25:00Z",
+      "minutes_ago": 33275,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.186",
+      "message": "User account policy changed by monitor",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0021",
+      "timestamp": "2026-07-24T19:14:00Z",
+      "minutes_ago": 33286,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.136",
+      "message": "Maximum authentication attempts exceeded for monitor from 198.51.100.136",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0107",
+      "timestamp": "2026-07-24T18:30:00Z",
+      "minutes_ago": 33330,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "203.0.113.42",
+      "message": "Expired temporary ban for 203.0.113.42",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0132",
+      "timestamp": "2026-07-24T17:45:00Z",
+      "minutes_ago": 33375,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.130",
+      "message": "User account policy changed by deploy",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0050",
+      "timestamp": "2026-07-24T13:59:00Z",
+      "minutes_ago": 33601,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.104",
+      "message": "Blocked inbound TCP probe from 192.0.2.104 to port 443",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0060",
+      "timestamp": "2026-07-24T12:13:00Z",
+      "minutes_ago": 33707,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.174",
+      "message": "Banned 192.0.2.174 after repeated authentication failures",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0181",
+      "timestamp": "2026-07-24T09:39:00Z",
+      "minutes_ago": 33861,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "192.0.2.152",
+      "message": "Cockpit authentication rejected for backup from 192.0.2.152",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0247",
+      "timestamp": "2026-07-24T08:54:00Z",
+      "minutes_ago": 33906,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "198.51.100.78",
+      "message": "Failed public-key authentication for monitor from 198.51.100.78",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0009",
+      "timestamp": "2026-07-24T07:03:00Z",
+      "minutes_ago": 34017,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "192.0.2.197",
+      "message": "Maximum authentication attempts exceeded for postgres from 192.0.2.197",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0347",
+      "timestamp": "2026-07-24T05:48:00Z",
+      "minutes_ago": 34092,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "198.51.100.147",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0147",
+      "timestamp": "2026-07-24T05:39:00Z",
+      "minutes_ago": 34101,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.119",
+      "message": "Expired temporary ban for 203.0.113.119",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0284",
+      "timestamp": "2026-07-24T03:59:00Z",
+      "minutes_ago": 34201,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "203.0.113.29",
+      "message": "Cockpit session opened by postgres from 203.0.113.29",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0082",
+      "timestamp": "2026-07-24T03:37:00Z",
+      "minutes_ago": 34223,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.183",
+      "message": "Banned 198.51.100.183 after repeated authentication failures",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0262",
+      "timestamp": "2026-07-24T01:12:00Z",
+      "minutes_ago": 34368,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.188",
+      "message": "Banned 192.0.2.188 after repeated authentication failures",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0231",
+      "timestamp": "2026-07-23T23:45:00Z",
+      "minutes_ago": 34455,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.96",
+      "message": "Accepted public-key session for monitor from 192.0.2.96",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0360",
+      "timestamp": "2026-07-23T22:51:00Z",
+      "minutes_ago": 34509,
+      "source": "cockpit",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.144",
+      "message": "Cockpit authentication rejected for postgres from 198.51.100.144",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0212",
+      "timestamp": "2026-07-23T22:35:00Z",
+      "minutes_ago": 34525,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.207",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0001",
+      "timestamp": "2026-07-23T15:30:00Z",
+      "minutes_ago": 34950,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.192",
+      "message": "Rate-limited connection attempt from 192.0.2.192",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0266",
+      "timestamp": "2026-07-23T14:22:00Z",
+      "minutes_ago": 35018,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.37",
+      "message": "Expired temporary ban for 203.0.113.37",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0045",
+      "timestamp": "2026-07-23T11:35:00Z",
+      "minutes_ago": 35185,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "192.0.2.20",
+      "message": "Maximum authentication attempts exceeded for admin from 192.0.2.20",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0263",
+      "timestamp": "2026-07-23T11:08:00Z",
+      "minutes_ago": 35212,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "192.0.2.168",
+      "message": "Privileged command executed by monitor: systemctl restart demo-service",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0095",
+      "timestamp": "2026-07-23T09:39:00Z",
+      "minutes_ago": 35301,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "198.51.100.21",
+      "message": "Rate-limited connection attempt from 198.51.100.21",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0337",
+      "timestamp": "2026-07-23T09:13:00Z",
+      "minutes_ago": 35327,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.98",
+      "message": "Blocked inbound TCP probe from 198.51.100.98 to port 80",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0235",
+      "timestamp": "2026-07-23T05:41:00Z",
+      "minutes_ago": 35539,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "medium",
+      "actor": "backup",
+      "ip": "203.0.113.52",
+      "message": "Verified historical log entry imported from synthetic-auth.log",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0051",
+      "timestamp": "2026-07-22T20:09:00Z",
+      "minutes_ago": 36111,
+      "source": "auditd",
+      "category": "identity",
+      "severity": "medium",
+      "actor": "monitor",
+      "ip": "192.0.2.204",
+      "message": "User account policy changed by monitor",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0128",
+      "timestamp": "2026-07-22T15:55:00Z",
+      "minutes_ago": 36365,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "203.0.113.22",
+      "message": "Cockpit session opened by postgres from 203.0.113.22",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0297",
+      "timestamp": "2026-07-22T13:38:00Z",
+      "minutes_ago": 36502,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "unknown",
+      "ip": "198.51.100.46",
+      "message": "Maximum authentication attempts exceeded for unknown from 198.51.100.46",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0029",
+      "timestamp": "2026-07-22T13:06:00Z",
+      "minutes_ago": 36534,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "203.0.113.66",
+      "message": "Verified historical log entry imported from synthetic-auth.log",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0322",
+      "timestamp": "2026-07-22T05:01:00Z",
+      "minutes_ago": 37019,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "192.0.2.81",
+      "message": "Blocked inbound TCP probe from 192.0.2.81 to port 22",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0219",
+      "timestamp": "2026-07-22T02:07:00Z",
+      "minutes_ago": 37193,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "203.0.113.233",
+      "message": "Blocked inbound TCP probe from 203.0.113.233 to port 22",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0267",
+      "timestamp": "2026-07-22T00:15:00Z",
+      "minutes_ago": 37305,
+      "source": "imported",
+      "category": "historical import",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.66",
+      "message": "Synthetic legacy service restart record imported and indexed",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0166",
+      "timestamp": "2026-07-21T23:10:00Z",
+      "minutes_ago": 37370,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.86",
+      "message": "Expired temporary ban for 192.0.2.86",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0332",
+      "timestamp": "2026-07-21T22:25:00Z",
+      "minutes_ago": 37415,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.97",
+      "message": "ERROR: synthetic query canceled after statement timeout",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0056",
+      "timestamp": "2026-07-21T19:34:00Z",
+      "minutes_ago": 37586,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "203.0.113.237",
+      "message": "Maximum authentication attempts exceeded for admin from 203.0.113.237",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0333",
+      "timestamp": "2026-07-21T18:15:00Z",
+      "minutes_ago": 37665,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.150",
+      "message": "Expired temporary ban for 192.0.2.150",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0323",
+      "timestamp": "2026-07-21T17:11:00Z",
+      "minutes_ago": 37729,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.184",
+      "message": "Security configuration file updated by postgres",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0158",
+      "timestamp": "2026-07-21T16:08:00Z",
+      "minutes_ago": 37792,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "203.0.113.209",
+      "message": "Accepted public-key session for postgres from 203.0.113.209",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0239",
+      "timestamp": "2026-07-21T15:14:00Z",
+      "minutes_ago": 37846,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.41",
+      "message": "Privileged command executed by postgres: systemctl restart demo-service",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0349",
+      "timestamp": "2026-07-21T14:45:00Z",
+      "minutes_ago": 37875,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "deploy",
+      "ip": "192.0.2.134",
+      "message": "Accepted public-key session for deploy from 192.0.2.134",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0342",
+      "timestamp": "2026-07-20T22:28:00Z",
+      "minutes_ago": 38852,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "192.0.2.38",
+      "message": "Accepted public-key session for postgres from 192.0.2.38",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0043",
+      "timestamp": "2026-07-20T21:19:00Z",
+      "minutes_ago": 38921,
+      "source": "postgresql",
+      "category": "database authentication",
+      "severity": "medium",
+      "actor": "admin",
+      "ip": "198.51.100.168",
+      "message": "FATAL: password authentication failed for user \"admin\" from 198.51.100.168",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0353",
+      "timestamp": "2026-07-20T19:25:00Z",
+      "minutes_ago": 39035,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "192.0.2.133",
+      "message": "Rate-limited connection attempt from 192.0.2.133",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0039",
+      "timestamp": "2026-07-20T18:05:00Z",
+      "minutes_ago": 39115,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "198.51.100.130",
+      "message": "Blocked inbound TCP probe from 198.51.100.130 to port 9090",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0312",
+      "timestamp": "2026-07-20T15:52:00Z",
+      "minutes_ago": 39248,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "192.0.2.16",
+      "message": "Cockpit session opened by unknown from 192.0.2.16",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0357",
+      "timestamp": "2026-07-20T12:50:00Z",
+      "minutes_ago": 39430,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "backup",
+      "ip": "203.0.113.218",
+      "message": "Rate-limited connection attempt from 203.0.113.218",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0206",
+      "timestamp": "2026-07-20T09:38:00Z",
+      "minutes_ago": 39622,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "monitor",
+      "ip": "198.51.100.210",
+      "message": "Cockpit session opened by monitor from 198.51.100.210",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0020",
+      "timestamp": "2026-07-20T03:39:00Z",
+      "minutes_ago": 39981,
+      "source": "auditd",
+      "category": "privilege",
+      "severity": "high",
+      "actor": "admin",
+      "ip": "198.51.100.89",
+      "message": "Privileged command executed by admin: systemctl restart demo-service",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0350",
+      "timestamp": "2026-07-20T01:01:00Z",
+      "minutes_ago": 40139,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "192.0.2.91",
+      "message": "Rate-limited connection attempt from 192.0.2.91",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0142",
+      "timestamp": "2026-07-19T22:28:00Z",
+      "minutes_ago": 40292,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "203.0.113.31",
+      "message": "Security configuration file updated by monitor",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0302",
+      "timestamp": "2026-07-19T21:30:00Z",
+      "minutes_ago": 40350,
+      "source": "auditd",
+      "category": "configuration",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.112",
+      "message": "Security configuration file updated by postgres",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0311",
+      "timestamp": "2026-07-19T21:13:00Z",
+      "minutes_ago": 40367,
+      "source": "cockpit",
+      "category": "administration",
+      "severity": "low",
+      "actor": "unknown",
+      "ip": "203.0.113.238",
+      "message": "Cockpit session opened by unknown from 203.0.113.238",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0074",
+      "timestamp": "2026-07-19T14:19:00Z",
+      "minutes_ago": 40781,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "postgres",
+      "ip": "203.0.113.138",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0313",
+      "timestamp": "2026-07-19T12:48:00Z",
+      "minutes_ago": 40872,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "deploy",
+      "ip": "198.51.100.169",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "reviewed"
+    },
+    {
+      "id": "DEMO-0062",
+      "timestamp": "2026-07-19T10:51:00Z",
+      "minutes_ago": 40989,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "postgres",
+      "ip": "192.0.2.217",
+      "message": "Accepted public-key session for postgres from 192.0.2.217",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0136",
+      "timestamp": "2026-07-19T09:48:00Z",
+      "minutes_ago": 41052,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "unknown",
+      "ip": "192.0.2.13",
+      "message": "Failed public-key authentication for unknown from 192.0.2.13",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0091",
+      "timestamp": "2026-07-18T21:18:00Z",
+      "minutes_ago": 41802,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "medium",
+      "actor": "postgres",
+      "ip": "203.0.113.90",
+      "message": "Failed public-key authentication for postgres from 203.0.113.90",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0174",
+      "timestamp": "2026-07-18T16:15:00Z",
+      "minutes_ago": 42105,
+      "source": "sshd",
+      "category": "remote access",
+      "severity": "low",
+      "actor": "admin",
+      "ip": "192.0.2.171",
+      "message": "Accepted public-key session for admin from 192.0.2.171",
+      "review": "false_positive"
+    },
+    {
+      "id": "DEMO-0144",
+      "timestamp": "2026-07-18T10:48:00Z",
+      "minutes_ago": 42432,
+      "source": "postgresql",
+      "category": "database",
+      "severity": "high",
+      "actor": "monitor",
+      "ip": "198.51.100.14",
+      "message": "FATAL: remaining connection slots are reserved for administrative roles",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0226",
+      "timestamp": "2026-07-18T10:09:00Z",
+      "minutes_ago": 42471,
+      "source": "sshd",
+      "category": "authentication",
+      "severity": "high",
+      "actor": "backup",
+      "ip": "203.0.113.188",
+      "message": "Maximum authentication attempts exceeded for backup from 203.0.113.188",
+      "review": "pending"
+    },
+    {
+      "id": "DEMO-0066",
+      "timestamp": "2026-07-18T05:34:00Z",
+      "minutes_ago": 42746,
+      "source": "ufw",
+      "category": "firewall",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "198.51.100.74",
+      "message": "Blocked inbound TCP probe from 198.51.100.74 to port 443",
+      "review": "resolved"
+    },
+    {
+      "id": "DEMO-0326",
+      "timestamp": "2026-07-18T01:49:00Z",
+      "minutes_ago": 42971,
+      "source": "fail2ban",
+      "category": "response",
+      "severity": "medium",
+      "actor": "deploy",
+      "ip": "192.0.2.228",
+      "message": "Banned 192.0.2.228 after repeated authentication failures",
+      "review": "resolved"
+    }
+  ],
+  "postgresql": {
+    "errors_per_minute": [
+      {
+        "timestamp": "2026-08-09T23:00:00Z",
+        "errors_per_minute": 0.53
+      },
+      {
+        "timestamp": "2026-08-10T00:00:00Z",
+        "errors_per_minute": 0.54
+      },
+      {
+        "timestamp": "2026-08-10T01:00:00Z",
+        "errors_per_minute": 0.35
+      },
+      {
+        "timestamp": "2026-08-10T02:00:00Z",
+        "errors_per_minute": 0.7
+      },
+      {
+        "timestamp": "2026-08-10T03:00:00Z",
+        "errors_per_minute": 0.47
+      },
+      {
+        "timestamp": "2026-08-10T04:00:00Z",
+        "errors_per_minute": 0.34
+      },
+      {
+        "timestamp": "2026-08-10T05:00:00Z",
+        "errors_per_minute": 0.26
+      },
+      {
+        "timestamp": "2026-08-10T06:00:00Z",
+        "errors_per_minute": 0.45
+      },
+      {
+        "timestamp": "2026-08-10T07:00:00Z",
+        "errors_per_minute": 0.57
+      },
+      {
+        "timestamp": "2026-08-10T08:00:00Z",
+        "errors_per_minute": 1.5
+      },
+      {
+        "timestamp": "2026-08-10T09:00:00Z",
+        "errors_per_minute": 0.48
+      },
+      {
+        "timestamp": "2026-08-10T10:00:00Z",
+        "errors_per_minute": 3.03
+      },
+      {
+        "timestamp": "2026-08-10T11:00:00Z",
+        "errors_per_minute": 0.22
+      },
+      {
+        "timestamp": "2026-08-10T12:00:00Z",
+        "errors_per_minute": 3.06
+      },
+      {
+        "timestamp": "2026-08-10T13:00:00Z",
+        "errors_per_minute": 0.77
+      },
+      {
+        "timestamp": "2026-08-10T14:00:00Z",
+        "errors_per_minute": 0.38
+      },
+      {
+        "timestamp": "2026-08-10T15:00:00Z",
+        "errors_per_minute": 0.54
+      },
+      {
+        "timestamp": "2026-08-10T16:00:00Z",
+        "errors_per_minute": 2.06
+      },
+      {
+        "timestamp": "2026-08-10T17:00:00Z",
+        "errors_per_minute": 0.88
+      },
+      {
+        "timestamp": "2026-08-10T18:00:00Z",
+        "errors_per_minute": 2.24
+      },
+      {
+        "timestamp": "2026-08-10T19:00:00Z",
+        "errors_per_minute": 0.71
+      },
+      {
+        "timestamp": "2026-08-10T20:00:00Z",
+        "errors_per_minute": 0.34
+      },
+      {
+        "timestamp": "2026-08-10T21:00:00Z",
+        "errors_per_minute": 0.31
+      },
+      {
+        "timestamp": "2026-08-10T22:00:00Z",
+        "errors_per_minute": 0.57
+      },
+      {
+        "timestamp": "2026-08-10T23:00:00Z",
+        "errors_per_minute": 0.37
+      },
+      {
+        "timestamp": "2026-08-11T00:00:00Z",
+        "errors_per_minute": 0.85
+      },
+      {
+        "timestamp": "2026-08-11T01:00:00Z",
+        "errors_per_minute": 0.4
+      },
+      {
+        "timestamp": "2026-08-11T02:00:00Z",
+        "errors_per_minute": 0.83
+      },
+      {
+        "timestamp": "2026-08-11T03:00:00Z",
+        "errors_per_minute": 0.45
+      },
+      {
+        "timestamp": "2026-08-11T04:00:00Z",
+        "errors_per_minute": 0.3
+      },
+      {
+        "timestamp": "2026-08-11T05:00:00Z",
+        "errors_per_minute": 0.48
+      },
+      {
+        "timestamp": "2026-08-11T06:00:00Z",
+        "errors_per_minute": 0.25
+      },
+      {
+        "timestamp": "2026-08-11T07:00:00Z",
+        "errors_per_minute": 0.47
+      },
+      {
+        "timestamp": "2026-08-11T08:00:00Z",
+        "errors_per_minute": 0.36
+      },
+      {
+        "timestamp": "2026-08-11T09:00:00Z",
+        "errors_per_minute": 0.24
+      },
+      {
+        "timestamp": "2026-08-11T10:00:00Z",
+        "errors_per_minute": 0.48
+      },
+      {
+        "timestamp": "2026-08-11T11:00:00Z",
+        "errors_per_minute": 0.18
+      },
+      {
+        "timestamp": "2026-08-11T12:00:00Z",
+        "errors_per_minute": 0.47
+      },
+      {
+        "timestamp": "2026-08-11T13:00:00Z",
+        "errors_per_minute": 0.2
+      },
+      {
+        "timestamp": "2026-08-11T14:00:00Z",
+        "errors_per_minute": 0.26
+      },
+      {
+        "timestamp": "2026-08-11T15:00:00Z",
+        "errors_per_minute": 0.26
+      },
+      {
+        "timestamp": "2026-08-11T16:00:00Z",
+        "errors_per_minute": 0.07
+      },
+      {
+        "timestamp": "2026-08-11T17:00:00Z",
+        "errors_per_minute": 0.62
+      },
+      {
+        "timestamp": "2026-08-11T18:00:00Z",
+        "errors_per_minute": 0.85
+      },
+      {
+        "timestamp": "2026-08-11T19:00:00Z",
+        "errors_per_minute": 0.7
+      },
+      {
+        "timestamp": "2026-08-11T20:00:00Z",
+        "errors_per_minute": 2.1
+      },
+      {
+        "timestamp": "2026-08-11T21:00:00Z",
+        "errors_per_minute": 0.33
+      },
+      {
+        "timestamp": "2026-08-11T22:00:00Z",
+        "errors_per_minute": 0.45
+      },
+      {
+        "timestamp": "2026-08-11T23:00:00Z",
+        "errors_per_minute": 0.4
+      },
+      {
+        "timestamp": "2026-08-12T00:00:00Z",
+        "errors_per_minute": 0.66
+      },
+      {
+        "timestamp": "2026-08-12T01:00:00Z",
+        "errors_per_minute": 0.62
+      },
+      {
+        "timestamp": "2026-08-12T02:00:00Z",
+        "errors_per_minute": 0.34
+      },
+      {
+        "timestamp": "2026-08-12T03:00:00Z",
+        "errors_per_minute": 0
+      },
+      {
+        "timestamp": "2026-08-12T04:00:00Z",
+        "errors_per_minute": 0.37
+      },
+      {
+        "timestamp": "2026-08-12T05:00:00Z",
+        "errors_per_minute": 0.19
+      },
+      {
+        "timestamp": "2026-08-12T06:00:00Z",
+        "errors_per_minute": 0.38
+      },
+      {
+        "timestamp": "2026-08-12T07:00:00Z",
+        "errors_per_minute": 1.82
+      },
+      {
+        "timestamp": "2026-08-12T08:00:00Z",
+        "errors_per_minute": 0.43
+      },
+      {
+        "timestamp": "2026-08-12T09:00:00Z",
+        "errors_per_minute": 0.41
+      },
+      {
+        "timestamp": "2026-08-12T10:00:00Z",
+        "errors_per_minute": 0.05
+      },
+      {
+        "timestamp": "2026-08-12T11:00:00Z",
+        "errors_per_minute": 0.54
+      },
+      {
+        "timestamp": "2026-08-12T12:00:00Z",
+        "errors_per_minute": 0.52
+      },
+      {
+        "timestamp": "2026-08-12T13:00:00Z",
+        "errors_per_minute": 0.44
+      },
+      {
+        "timestamp": "2026-08-12T14:00:00Z",
+        "errors_per_minute": 0.41
+      },
+      {
+        "timestamp": "2026-08-12T15:00:00Z",
+        "errors_per_minute": 1.87
+      },
+      {
+        "timestamp": "2026-08-12T16:00:00Z",
+        "errors_per_minute": 0.47
+      },
+      {
+        "timestamp": "2026-08-12T17:00:00Z",
+        "errors_per_minute": 0.63
+      },
+      {
+        "timestamp": "2026-08-12T18:00:00Z",
+        "errors_per_minute": 0.68
+      },
+      {
+        "timestamp": "2026-08-12T19:00:00Z",
+        "errors_per_minute": 3.23
+      },
+      {
+        "timestamp": "2026-08-12T20:00:00Z",
+        "errors_per_minute": 0.73
+      },
+      {
+        "timestamp": "2026-08-12T21:00:00Z",
+        "errors_per_minute": 0.54
+      },
+      {
+        "timestamp": "2026-08-12T22:00:00Z",
+        "errors_per_minute": 0.26
+      },
+      {
+        "timestamp": "2026-08-12T23:00:00Z",
+        "errors_per_minute": 0.39
+      },
+      {
+        "timestamp": "2026-08-13T00:00:00Z",
+        "errors_per_minute": 0.73
+      },
+      {
+        "timestamp": "2026-08-13T01:00:00Z",
+        "errors_per_minute": 0.58
+      },
+      {
+        "timestamp": "2026-08-13T02:00:00Z",
+        "errors_per_minute": 0.64
+      },
+      {
+        "timestamp": "2026-08-13T03:00:00Z",
+        "errors_per_minute": 0.05
+      },
+      {
+        "timestamp": "2026-08-13T04:00:00Z",
+        "errors_per_minute": 0.41
+      },
+      {
+        "timestamp": "2026-08-13T05:00:00Z",
+        "errors_per_minute": 0.58
+      },
+      {
+        "timestamp": "2026-08-13T06:00:00Z",
+        "errors_per_minute": 0.33
+      },
+      {
+        "timestamp": "2026-08-13T07:00:00Z",
+        "errors_per_minute": 0.24
+      },
+      {
+        "timestamp": "2026-08-13T08:00:00Z",
+        "errors_per_minute": 0.32
+      },
+      {
+        "timestamp": "2026-08-13T09:00:00Z",
+        "errors_per_minute": 0.35
+      },
+      {
+        "timestamp": "2026-08-13T10:00:00Z",
+        "errors_per_minute": 0.2
+      },
+      {
+        "timestamp": "2026-08-13T11:00:00Z",
+        "errors_per_minute": 0.28
+      },
+      {
+        "timestamp": "2026-08-13T12:00:00Z",
+        "errors_per_minute": 0.47
+      },
+      {
+        "timestamp": "2026-08-13T13:00:00Z",
+        "errors_per_minute": 0.12
+      },
+      {
+        "timestamp": "2026-08-13T14:00:00Z",
+        "errors_per_minute": 0.25
+      },
+      {
+        "timestamp": "2026-08-13T15:00:00Z",
+        "errors_per_minute": 0.38
+      },
+      {
+        "timestamp": "2026-08-13T16:00:00Z",
+        "errors_per_minute": 0.29
+      },
+      {
+        "timestamp": "2026-08-13T17:00:00Z",
+        "errors_per_minute": 0.52
+      },
+      {
+        "timestamp": "2026-08-13T18:00:00Z",
+        "errors_per_minute": 0.38
+      },
+      {
+        "timestamp": "2026-08-13T19:00:00Z",
+        "errors_per_minute": 0.59
+      },
+      {
+        "timestamp": "2026-08-13T20:00:00Z",
+        "errors_per_minute": 1.07
+      },
+      {
+        "timestamp": "2026-08-13T21:00:00Z",
+        "errors_per_minute": 0.37
+      },
+      {
+        "timestamp": "2026-08-13T22:00:00Z",
+        "errors_per_minute": 0.43
+      },
+      {
+        "timestamp": "2026-08-13T23:00:00Z",
+        "errors_per_minute": 0.37
+      },
+      {
+        "timestamp": "2026-08-14T00:00:00Z",
+        "errors_per_minute": 0.7
+      },
+      {
+        "timestamp": "2026-08-14T01:00:00Z",
+        "errors_per_minute": 0.66
+      },
+      {
+        "timestamp": "2026-08-14T02:00:00Z",
+        "errors_per_minute": 0.79
+      },
+      {
+        "timestamp": "2026-08-14T03:00:00Z",
+        "errors_per_minute": 0.37
+      },
+      {
+        "timestamp": "2026-08-14T04:00:00Z",
+        "errors_per_minute": 2.47
+      },
+      {
+        "timestamp": "2026-08-14T05:00:00Z",
+        "errors_per_minute": 0.15
+      },
+      {
+        "timestamp": "2026-08-14T06:00:00Z",
+        "errors_per_minute": 0.29
+      },
+      {
+        "timestamp": "2026-08-14T07:00:00Z",
+        "errors_per_minute": 0.39
+      },
+      {
+        "timestamp": "2026-08-14T08:00:00Z",
+        "errors_per_minute": 0.35
+      },
+      {
+        "timestamp": "2026-08-14T09:00:00Z",
+        "errors_per_minute": 0.38
+      },
+      {
+        "timestamp": "2026-08-14T10:00:00Z",
+        "errors_per_minute": 0.15
+      },
+      {
+        "timestamp": "2026-08-14T11:00:00Z",
+        "errors_per_minute": 0.06
+      },
+      {
+        "timestamp": "2026-08-14T12:00:00Z",
+        "errors_per_minute": 0.19
+      },
+      {
+        "timestamp": "2026-08-14T13:00:00Z",
+        "errors_per_minute": 0.43
+      },
+      {
+        "timestamp": "2026-08-14T14:00:00Z",
+        "errors_per_minute": 0.68
+      },
+      {
+        "timestamp": "2026-08-14T15:00:00Z",
+        "errors_per_minute": 0.27
+      },
+      {
+        "timestamp": "2026-08-14T16:00:00Z",
+        "errors_per_minute": 0.36
+      },
+      {
+        "timestamp": "2026-08-14T17:00:00Z",
+        "errors_per_minute": 0.48
+      },
+      {
+        "timestamp": "2026-08-14T18:00:00Z",
+        "errors_per_minute": 0.43
+      },
+      {
+        "timestamp": "2026-08-14T19:00:00Z",
+        "errors_per_minute": 0.46
+      },
+      {
+        "timestamp": "2026-08-14T20:00:00Z",
+        "errors_per_minute": 0.11
+      },
+      {
+        "timestamp": "2026-08-14T21:00:00Z",
+        "errors_per_minute": 0.56
+      },
+      {
+        "timestamp": "2026-08-14T22:00:00Z",
+        "errors_per_minute": 0.29
+      },
+      {
+        "timestamp": "2026-08-14T23:00:00Z",
+        "errors_per_minute": 0.41
+      },
+      {
+        "timestamp": "2026-08-15T00:00:00Z",
+        "errors_per_minute": 0.52
+      },
+      {
+        "timestamp": "2026-08-15T01:00:00Z",
+        "errors_per_minute": 0.32
+      },
+      {
+        "timestamp": "2026-08-15T02:00:00Z",
+        "errors_per_minute": 0.53
+      },
+      {
+        "timestamp": "2026-08-15T03:00:00Z",
+        "errors_per_minute": 0.3
+      },
+      {
+        "timestamp": "2026-08-15T04:00:00Z",
+        "errors_per_minute": 0.27
+      },
+      {
+        "timestamp": "2026-08-15T05:00:00Z",
+        "errors_per_minute": 0.06
+      },
+      {
+        "timestamp": "2026-08-15T06:00:00Z",
+        "errors_per_minute": 0.16
+      },
+      {
+        "timestamp": "2026-08-15T07:00:00Z",
+        "errors_per_minute": 0.4
+      },
+      {
+        "timestamp": "2026-08-15T08:00:00Z",
+        "errors_per_minute": 0.32
+      },
+      {
+        "timestamp": "2026-08-15T09:00:00Z",
+        "errors_per_minute": 0.25
+      },
+      {
+        "timestamp": "2026-08-15T10:00:00Z",
+        "errors_per_minute": 0.54
+      },
+      {
+        "timestamp": "2026-08-15T11:00:00Z",
+        "errors_per_minute": 0.39
+      },
+      {
+        "timestamp": "2026-08-15T12:00:00Z",
+        "errors_per_minute": 0.21
+      },
+      {
+        "timestamp": "2026-08-15T13:00:00Z",
+        "errors_per_minute": 0.38
+      },
+      {
+        "timestamp": "2026-08-15T14:00:00Z",
+        "errors_per_minute": 1.03
+      },
+      {
+        "timestamp": "2026-08-15T15:00:00Z",
+        "errors_per_minute": 2.07
+      },
+      {
+        "timestamp": "2026-08-15T16:00:00Z",
+        "errors_per_minute": 0.59
+      },
+      {
+        "timestamp": "2026-08-15T17:00:00Z",
+        "errors_per_minute": 0.81
+      },
+      {
+        "timestamp": "2026-08-15T18:00:00Z",
+        "errors_per_minute": 0.36
+      },
+      {
+        "timestamp": "2026-08-15T19:00:00Z",
+        "errors_per_minute": 0.7
+      },
+      {
+        "timestamp": "2026-08-15T20:00:00Z",
+        "errors_per_minute": 0.44
+      },
+      {
+        "timestamp": "2026-08-15T21:00:00Z",
+        "errors_per_minute": 0.33
+      },
+      {
+        "timestamp": "2026-08-15T22:00:00Z",
+        "errors_per_minute": 0.28
+      },
+      {
+        "timestamp": "2026-08-15T23:00:00Z",
+        "errors_per_minute": 0.06
+      },
+      {
+        "timestamp": "2026-08-16T00:00:00Z",
+        "errors_per_minute": 0.49
+      },
+      {
+        "timestamp": "2026-08-16T01:00:00Z",
+        "errors_per_minute": 0.56
+      },
+      {
+        "timestamp": "2026-08-16T02:00:00Z",
+        "errors_per_minute": 0.59
+      },
+      {
+        "timestamp": "2026-08-16T03:00:00Z",
+        "errors_per_minute": 0.44
+      },
+      {
+        "timestamp": "2026-08-16T04:00:00Z",
+        "errors_per_minute": 0.28
+      },
+      {
+        "timestamp": "2026-08-16T05:00:00Z",
+        "errors_per_minute": 0.51
+      },
+      {
+        "timestamp": "2026-08-16T06:00:00Z",
+        "errors_per_minute": 0.35
+      },
+      {
+        "timestamp": "2026-08-16T07:00:00Z",
+        "errors_per_minute": 0.41
+      },
+      {
+        "timestamp": "2026-08-16T08:00:00Z",
+        "errors_per_minute": 0.58
+      },
+      {
+        "timestamp": "2026-08-16T09:00:00Z",
+        "errors_per_minute": 0.38
+      },
+      {
+        "timestamp": "2026-08-16T10:00:00Z",
+        "errors_per_minute": 0.3
+      },
+      {
+        "timestamp": "2026-08-16T11:00:00Z",
+        "errors_per_minute": 0.58
+      },
+      {
+        "timestamp": "2026-08-16T12:00:00Z",
+        "errors_per_minute": 0.46
+      },
+      {
+        "timestamp": "2026-08-16T13:00:00Z",
+        "errors_per_minute": 0.6
+      },
+      {
+        "timestamp": "2026-08-16T14:00:00Z",
+        "errors_per_minute": 0.46
+      },
+      {
+        "timestamp": "2026-08-16T15:00:00Z",
+        "errors_per_minute": 0.46
+      },
+      {
+        "timestamp": "2026-08-16T16:00:00Z",
+        "errors_per_minute": 0.25
+      },
+      {
+        "timestamp": "2026-08-16T17:00:00Z",
+        "errors_per_minute": 0.77
+      },
+      {
+        "timestamp": "2026-08-16T18:00:00Z",
+        "errors_per_minute": 0.42
+      },
+      {
+        "timestamp": "2026-08-16T19:00:00Z",
+        "errors_per_minute": 0.61
+      },
+      {
+        "timestamp": "2026-08-16T20:00:00Z",
+        "errors_per_minute": 0.15
+      },
+      {
+        "timestamp": "2026-08-16T21:00:00Z",
+        "errors_per_minute": 0.41
+      },
+      {
+        "timestamp": "2026-08-16T22:00:00Z",
+        "errors_per_minute": 0.45
+      }
+    ],
+    "fatal_logs": [
+      {
+        "id": "DEMO-0221",
+        "timestamp": "2026-08-16T22:00:00Z",
+        "minutes_ago": 0,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "admin",
+        "ip": "203.0.113.230",
+        "message": "FATAL: password authentication failed for user \"admin\" from 203.0.113.230",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0341",
+        "timestamp": "2026-08-16T12:14:00Z",
+        "minutes_ago": 586,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "unknown",
+        "ip": "198.51.100.202",
+        "message": "FATAL: password authentication failed for user \"unknown\" from 198.51.100.202",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0336",
+        "timestamp": "2026-08-16T01:18:00Z",
+        "minutes_ago": 1242,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "admin",
+        "ip": "203.0.113.155",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0265",
+        "timestamp": "2026-08-15T20:21:00Z",
+        "minutes_ago": 1539,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "monitor",
+        "ip": "192.0.2.170",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0327",
+        "timestamp": "2026-08-15T18:06:00Z",
+        "minutes_ago": 1674,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "deploy",
+        "ip": "198.51.100.74",
+        "message": "FATAL: password authentication failed for user \"deploy\" from 198.51.100.74",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0167",
+        "timestamp": "2026-08-15T17:31:00Z",
+        "minutes_ago": 1709,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "deploy",
+        "ip": "203.0.113.192",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "resolved"
+      },
+      {
+        "id": "DEMO-0055",
+        "timestamp": "2026-08-15T07:06:00Z",
+        "minutes_ago": 2334,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "unknown",
+        "ip": "203.0.113.234",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0102",
+        "timestamp": "2026-08-15T03:17:00Z",
+        "minutes_ago": 2563,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "admin",
+        "ip": "192.0.2.38",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0196",
+        "timestamp": "2026-08-15T02:16:00Z",
+        "minutes_ago": 2624,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "postgres",
+        "ip": "192.0.2.50",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0335",
+        "timestamp": "2026-08-14T22:46:00Z",
+        "minutes_ago": 2834,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "unknown",
+        "ip": "192.0.2.203",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0321",
+        "timestamp": "2026-08-14T20:43:00Z",
+        "minutes_ago": 2957,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "backup",
+        "ip": "198.51.100.6",
+        "message": "FATAL: password authentication failed for user \"backup\" from 198.51.100.6",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0023",
+        "timestamp": "2026-08-14T17:21:00Z",
+        "minutes_ago": 3159,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "unknown",
+        "ip": "192.0.2.214",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0086",
+        "timestamp": "2026-08-14T17:01:00Z",
+        "minutes_ago": 3179,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "unknown",
+        "ip": "192.0.2.123",
+        "message": "FATAL: password authentication failed for user \"unknown\" from 192.0.2.123",
+        "review": "false_positive"
+      },
+      {
+        "id": "DEMO-0036",
+        "timestamp": "2026-08-14T14:42:00Z",
+        "minutes_ago": 3318,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "postgres",
+        "ip": "203.0.113.201",
+        "message": "FATAL: password authentication failed for user \"postgres\" from 203.0.113.201",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0034",
+        "timestamp": "2026-08-13T10:54:00Z",
+        "minutes_ago": 4986,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "deploy",
+        "ip": "203.0.113.126",
+        "message": "FATAL: password authentication failed for user \"deploy\" from 203.0.113.126",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0154",
+        "timestamp": "2026-08-13T08:17:00Z",
+        "minutes_ago": 5143,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "admin",
+        "ip": "203.0.113.172",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0301",
+        "timestamp": "2026-08-12T18:08:00Z",
+        "minutes_ago": 5992,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "deploy",
+        "ip": "198.51.100.240",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0334",
+        "timestamp": "2026-08-12T06:49:00Z",
+        "minutes_ago": 6671,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "monitor",
+        "ip": "192.0.2.36",
+        "message": "FATAL: password authentication failed for user \"monitor\" from 192.0.2.36",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0344",
+        "timestamp": "2026-08-11T22:18:00Z",
+        "minutes_ago": 7182,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "monitor",
+        "ip": "198.51.100.117",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "resolved"
+      },
+      {
+        "id": "DEMO-0160",
+        "timestamp": "2026-08-11T06:19:00Z",
+        "minutes_ago": 8141,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "monitor",
+        "ip": "192.0.2.148",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0264",
+        "timestamp": "2026-08-10T23:44:00Z",
+        "minutes_ago": 8536,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "postgres",
+        "ip": "198.51.100.112",
+        "message": "FATAL: password authentication failed for user \"postgres\" from 198.51.100.112",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0189",
+        "timestamp": "2026-08-10T23:20:00Z",
+        "minutes_ago": 8560,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "monitor",
+        "ip": "203.0.113.2",
+        "message": "FATAL: password authentication failed for user \"monitor\" from 203.0.113.2",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0179",
+        "timestamp": "2026-08-10T14:03:00Z",
+        "minutes_ago": 9117,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "admin",
+        "ip": "192.0.2.219",
+        "message": "FATAL: password authentication failed for user \"admin\" from 192.0.2.219",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0010",
+        "timestamp": "2026-08-10T00:50:00Z",
+        "minutes_ago": 9910,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "deploy",
+        "ip": "203.0.113.63",
+        "message": "FATAL: password authentication failed for user \"deploy\" from 203.0.113.63",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0316",
+        "timestamp": "2026-08-09T13:01:00Z",
+        "minutes_ago": 10619,
+        "source": "postgresql",
+        "category": "database authentication",
+        "severity": "medium",
+        "actor": "backup",
+        "ip": "192.0.2.130",
+        "message": "FATAL: password authentication failed for user \"backup\" from 192.0.2.130",
+        "review": "resolved"
+      },
+      {
+        "id": "DEMO-0354",
+        "timestamp": "2026-08-09T08:17:00Z",
+        "minutes_ago": 10903,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "backup",
+        "ip": "203.0.113.186",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "reviewed"
+      },
+      {
+        "id": "DEMO-0291",
+        "timestamp": "2026-08-09T08:15:00Z",
+        "minutes_ago": 10905,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "monitor",
+        "ip": "203.0.113.225",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0113",
+        "timestamp": "2026-08-09T01:22:00Z",
+        "minutes_ago": 11318,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "backup",
+        "ip": "203.0.113.231",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0026",
+        "timestamp": "2026-08-08T04:47:00Z",
+        "minutes_ago": 12553,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "deploy",
+        "ip": "198.51.100.91",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "pending"
+      },
+      {
+        "id": "DEMO-0103",
+        "timestamp": "2026-08-07T23:27:00Z",
+        "minutes_ago": 12873,
+        "source": "postgresql",
+        "category": "database",
+        "severity": "high",
+        "actor": "deploy",
+        "ip": "192.0.2.230",
+        "message": "FATAL: remaining connection slots are reserved for administrative roles",
+        "review": "resolved"
+      }
+    ],
+    "top_users": [
+      {
+        "actor": "backup",
+        "count": 5
+      },
+      {
+        "actor": "admin",
+        "count": 4
+      },
+      {
+        "actor": "deploy",
+        "count": 4
+      },
+      {
+        "actor": "monitor",
+        "count": 3
+      },
+      {
+        "actor": "unknown",
+        "count": 3
+      },
+      {
+        "actor": "postgres",
+        "count": 2
+      }
+    ],
+    "top_ips": [
+      {
+        "ip": "192.0.2.118",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.123",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.129",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.130",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.155",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.219",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.36",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.37",
+        "count": 1
+      },
+      {
+        "ip": "192.0.2.55",
+        "count": 1
+      },
+      {
+        "ip": "198.51.100.112",
+        "count": 1
+      },
+      {
+        "ip": "198.51.100.168",
+        "count": 1
+      },
+      {
+        "ip": "198.51.100.202",
+        "count": 1
+      },
+      {
+        "ip": "198.51.100.227",
+        "count": 1
+      },
+      {
+        "ip": "198.51.100.6",
+        "count": 1
+      },
+      {
+        "ip": "198.51.100.74",
+        "count": 1
+      },
+      {
+        "ip": "203.0.113.126",
+        "count": 1
+      },
+      {
+        "ip": "203.0.113.2",
+        "count": 1
+      },
+      {
+        "ip": "203.0.113.201",
+        "count": 1
+      },
+      {
+        "ip": "203.0.113.230",
+        "count": 1
+      },
+      {
+        "ip": "203.0.113.33",
+        "count": 1
+      },
+      {
+        "ip": "203.0.113.63",
+        "count": 1
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "dashboard",
+      "name": "Security Dashboard",
+      "enabled": true,
+      "depends_on": []
+    },
+    {
+      "id": "postgresql",
+      "name": "PostgreSQL Security Analytics",
+      "enabled": true,
+      "depends_on": [
+        "dashboard"
+      ]
+    },
+    {
+      "id": "operations",
+      "name": "Security Event Center",
+      "enabled": true,
+      "depends_on": [
+        "dashboard",
+        "postgresql"
+      ]
+    },
+    {
+      "id": "automation",
+      "name": "Retention, Alerts, and Archives",
+      "enabled": true,
+      "depends_on": [
+        "operations"
+      ]
+    },
+    {
+      "id": "scanners",
+      "name": "On-demand Security Scanners",
+      "enabled": false,
+      "depends_on": [
+        "dashboard"
+      ]
+    },
+    {
+      "id": "ssh_keys",
+      "name": "SSH Key and SPA Manager",
+      "enabled": false,
+      "depends_on": [
+        "dashboard"
+      ]
+    }
+  ]
+}

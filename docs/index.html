@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Public interactive preview of Ubuntu Personal Server Security Console using synthetic data.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>Ubuntu Personal Server Security Console — Public Demo</title>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+  <section id="login-screen" class="login-screen">
+    <div class="login-orb orb-one"></div><div class="login-orb orb-two"></div>
+    <article class="login-card" aria-labelledby="login-title">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="eyebrow">PUBLIC INTERACTIVE PREVIEW</p>
+      <h1 id="login-title">Ubuntu Personal Server<br>Security Console</h1>
+      <p class="login-copy">Explore the complete Cockpit security experience with a repository-hosted synthetic dataset. No live server is connected.</p>
+      <aside class="demo-credentials" aria-label="Public demo credentials">
+        <div><small>DEMO USERNAME</small><code>visitor</code></div>
+        <div><small>DEMO PASSWORD</small><code>preview-only</code></div>
+      </aside>
+      <form id="login-form" novalidate>
+        <label>Username<input id="username" name="username" autocomplete="username" spellcheck="false" required></label>
+        <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required></label>
+        <p id="login-error" class="form-error" role="alert"></p>
+        <button class="primary-button" type="submit">Open read-only demo <span>→</span></button>
+        <button id="fill-demo" class="text-button" type="button">Fill demo credentials</button>
+      </form>
+      <p class="demo-warning">These public credentials are a client-side demo gate, not a security boundary. All displayed logs are fictional.</p>
+    </article>
+    <footer class="login-footer"><a href="https://github.com/FullBlackWolf/ubuntu-personal-server-security-console">View source on GitHub</a><span>MIT licensed · v1.0.0</span></footer>
+  </section>
+
+  <div id="demo-app" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand"><div class="brand-mark small"><span></span><span></span><span></span></div><div><strong>Security Console</strong><small>demo-server</small></div></div>
+      <nav id="main-nav" aria-label="Demo navigation">
+        <button data-page="overview" class="active"><span>◫</span>Overview</button>
+        <button data-page="events"><span>≋</span>Event Center</button>
+        <button data-page="postgresql"><span>⌁</span>PostgreSQL</button>
+        <button data-page="risk"><span>△</span>High-risk Operations</button>
+        <button data-page="components"><span>⬡</span>Components</button>
+        <button data-page="settings"><span>⚙</span>Settings &amp; Archives</button>
+      </nav>
+      <div class="sidebar-status"><span></span><div><strong>Synthetic dataset</strong><small>Repository-hosted JSON</small></div></div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div><button id="menu-toggle" class="icon-button" aria-label="Toggle navigation">☰</button><span class="host-pill"><i></i> demo-server.example.invalid</span></div>
+        <div><a class="github-link" href="https://github.com/FullBlackWolf/ubuntu-personal-server-security-console">GitHub</a><button id="logout" class="ghost-button">Exit demo</button></div>
+      </header>
+      <div class="demo-banner"><strong>PUBLIC DEMO</strong><span>Read-only preview using fictional security events. No controls affect a real system.</span><a href="demo-data.json" download>Download synthetic JSON</a></div>
+      <div id="loading" class="loading-state"><span></span><p>Loading synthetic security dataset…</p></div>
+      <div id="load-error" class="error-state" hidden><h2>Demo data could not be loaded</h2><p>Refresh this page or inspect the repository-hosted JSON file.</p></div>
+
+      <section id="page-overview" class="page active" data-page-panel="overview" hidden>
+        <div class="page-heading"><div><p class="eyebrow">SECURITY POSTURE</p><h2>Server Security Overview</h2><p id="dataset-time"></p></div><span class="read-only-pill">● Read only</span></div>
+        <div id="summary-cards" class="summary-grid"></div>
+        <div class="dashboard-grid">
+          <article class="panel chart-panel"><div class="panel-title"><div><h3>PostgreSQL Errors per Minute</h3><p>Hourly buckets · last 72 hours of the demo dataset</p></div><span class="legend"><i></i>errors/min</span></div><div id="overview-chart" class="line-chart"></div></article>
+          <article class="panel"><div class="panel-title"><div><h3>Log Source Health</h3><p>Collector and integrity status</p></div></div><div id="health-list" class="health-list"></div></article>
+          <article class="panel alerts-panel"><div class="panel-title"><div><h3>Active Alerts</h3><p>Rule results from synthetic events</p></div><button data-jump="events" class="inline-button">Open timeline</button></div><div id="alert-list" class="alert-list"></div></article>
+          <article class="panel source-panel"><div class="panel-title"><div><h3>Events by Source</h3><p>Current 30-day simulated window</p></div></div><div id="source-bars" class="source-bars"></div></article>
+        </div>
+      </section>
+
+      <section id="page-events" class="page" data-page-panel="events" hidden>
+        <div class="page-heading"><div><p class="eyebrow">UNIFIED AUDIT</p><h2>Security Event Center</h2><p>Normalized timeline across system, database, network, and imported sources.</p></div><button id="export-filtered" class="secondary-button">Export filtered JSON</button></div>
+        <div class="filter-bar"><label>Search<input id="event-search" placeholder="actor, source, address, or message"></label><label>Source<select id="event-source"><option value="all">All sources</option></select></label><label>Severity<select id="event-severity"><option value="all">All severities</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label><label>Review<select id="event-review"><option value="all">All reviews</option><option value="pending">Pending</option><option value="reviewed">Reviewed</option><option value="resolved">Resolved</option><option value="false_positive">False positive</option></select></label></div>
+        <article class="panel table-panel"><div class="panel-title"><div><h3>Normalized event timeline</h3><p id="event-count"></p></div><span class="synthetic-tag">SYNTHETIC</span></div><div class="table-scroll"><table><thead><tr><th>Time</th><th>Severity</th><th>Source</th><th>Actor / IP</th><th>Event</th><th>Review</th></tr></thead><tbody id="event-rows"></tbody></table></div></article>
+      </section>
+
+      <section id="page-postgresql" class="page" data-page-panel="postgresql" hidden>
+        <div class="page-heading"><div><p class="eyebrow">DATABASE SECURITY</p><h2>PostgreSQL Security Analytics</h2><p>Authentication failures, hourly error rate, FATAL messages, and ranked login targets.</p></div><span class="read-only-pill">30-day retention</span></div>
+        <div id="pg-cards" class="summary-grid compact"></div>
+        <article class="panel wide-chart"><div class="panel-title"><div><h3>PostgreSQL Errors per Minute</h3><p>X-axis uses hourly buckets and can preview multiple days.</p></div><div class="range-pills"><button data-hours="24">1 day</button><button data-hours="72" class="active">3 days</button><button data-hours="168">7 days</button></div></div><div id="postgres-chart" class="line-chart large"></div></article>
+        <div class="three-column">
+          <article class="panel table-panel"><div class="panel-title"><div><h3>Recent PostgreSQL FATAL logs</h3><p>Latest synthetic entries</p></div></div><div class="compact-list" id="fatal-list"></div></article>
+          <article class="panel table-panel"><div class="panel-title"><div><h3>Failed Login Users</h3><p>Top 100</p></div></div><div class="rank-list" id="user-ranks"></div></article>
+          <article class="panel table-panel"><div class="panel-title"><div><h3>Failed Login IP</h3><p>Top 100 · documentation ranges</p></div></div><div class="rank-list" id="ip-ranks"></div></article>
+        </div>
+      </section>
+
+      <section id="page-risk" class="page" data-page-panel="risk" hidden>
+        <div class="page-heading"><div><p class="eyebrow">PRIVILEGED ACTIVITY</p><h2>High-risk Operations</h2><p>Investigation queue with server-side review states represented by demo data.</p></div><span id="risk-total" class="read-only-pill"></span></div>
+        <div id="risk-cards" class="summary-grid compact"></div>
+        <article class="panel table-panel"><div class="panel-title"><div><h3>Investigation queue</h3><p>High-severity audit, authentication, and configuration events</p></div></div><div class="table-scroll"><table><thead><tr><th>Time</th><th>Category</th><th>Actor</th><th>Source</th><th>Description</th><th>Status</th></tr></thead><tbody id="risk-rows"></tbody></table></div></article>
+      </section>
+
+      <section id="page-components" class="page" data-page-panel="components" hidden>
+        <div class="page-heading"><div><p class="eyebrow">MODULAR INSTALLATION</p><h2>Optional Components</h2><p>The Ubuntu package detects transitive dependencies before applying a selection.</p></div><a class="secondary-button link-button" href="https://github.com/FullBlackWolf/ubuntu-personal-server-security-console/releases/latest">Download .deb</a></div>
+        <div id="component-grid" class="component-grid"></div>
+        <article class="panel dependency-panel"><div><p class="eyebrow">DEPENDENCY EXAMPLE</p><h3>Retention, Alerts, and Archives</h3><p>Selecting this feature prompts the user to add the complete dependency chain before installation.</p></div><div class="dependency-chain"><span>Dashboard</span><b>→</b><span>PostgreSQL</span><b>→</b><span>Event Center</span><b>→</b><span>Automation</span></div></article>
+      </section>
+
+      <section id="page-settings" class="page" data-page-panel="settings" hidden>
+        <div class="page-heading"><div><p class="eyebrow">POLICY &amp; INTEGRITY</p><h2>Settings and Verified Archives</h2><p>This public preview displays representative settings but does not save changes.</p></div><span class="read-only-pill">Demo mode</span></div>
+        <div class="settings-grid">
+          <article class="panel settings-card"><h3>Log retention</h3><label>Retention days<input value="30" type="number" min="1" max="3650" disabled></label><p>Production installations accept a manually entered value from 1 to 3,650 days. The default is 30.</p><button class="disabled-button" disabled>Save in production</button></article>
+          <article class="panel settings-card"><h3>Alert delivery</h3><label class="switch-row"><span>Browser notifications</span><input type="checkbox" checked disabled></label><label class="switch-row"><span>HTTPS webhook</span><input type="checkbox" disabled></label><label class="switch-row"><span>Local sendmail</span><input type="checkbox" disabled></label><p>External delivery is disabled by default and sends summaries rather than raw logs.</p></article>
+          <article class="panel settings-card archive-card"><h3>Verified archives</h3><div class="archive-item"><span>✓</span><div><strong>security-daily-demo.json</strong><small>SHA-256 verified · synthetic</small></div></div><div class="archive-item"><span>✓</span><div><strong>security-weekly-demo-summary.md</strong><small>SHA-256 verified · synthetic</small></div></div><button class="disabled-button" disabled>Create manual archive</button></article>
+          <article class="panel settings-card"><h3>Historical log imports</h3><p>Production imports are copied into managed storage, deduplicated by SHA-256, added to the audit timeline, and removed according to retention policy.</p><div class="import-drop"><strong>4 verified demo imports</strong><small>No browser files are uploaded by this preview.</small></div></article>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="demo.js" defer></script>
+</body>
+</html>

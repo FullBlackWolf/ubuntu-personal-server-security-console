@@ -2,6 +2,10 @@
 
 A modular Cockpit security suite for Ubuntu personal servers. It brings log visibility, PostgreSQL authentication analytics, high-risk operation review, verified security archives, on-demand scanners, and per-key SSH controls into one browser-based console.
 
+**[Open the live public demo](https://fullblackwolf.github.io/ubuntu-personal-server-security-console/)**
+
+Demo credentials: `visitor` / `preview-only`. The preview is a static GitHub Pages deployment backed exclusively by committed synthetic logs.
+
 ![Feature preview](docs/feature-preview.svg)
 
 ### Optional installer preview
@@ -39,6 +43,10 @@ The Debian package contains a dependency-aware optional installer. Installing th
 | SSH Key and SPA Manager | Per-key restrictions and fwknop SPA gating | Security Dashboard | `openssh-server`, `fwknop-server`, `iptables` |
 
 See [Component architecture](docs/components.md) for data flow and privilege boundaries.
+
+## Engineering architecture
+
+The complete engineering specification is available in [ARCHITECTURE.md](ARCHITECTURE.md). It defines the system context, logical components, production and demo data paths, trust boundaries, privilege model, deployment topology, runtime flows, storage contracts, dependency graph, failure behavior, performance assumptions, and CI/release controls.
 
 ## Install on Ubuntu
 
