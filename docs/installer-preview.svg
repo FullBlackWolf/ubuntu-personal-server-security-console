@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Dependency-aware optional installer preview</title>
+  <desc id="desc">An English installation checklist with a dependency confirmation dialog.</desc>
+  <defs><filter id="shadow"><feDropShadow dx="0" dy="12" stdDeviation="18" flood-opacity=".3"/></filter></defs>
+  <rect width="1200" height="620" fill="#e9eef5"/>
+  <rect x="75" y="42" width="1050" height="536" rx="14" fill="#fff" filter="url(#shadow)"/>
+  <rect x="75" y="42" width="1050" height="66" rx="14" fill="#1f2937"/><rect x="75" y="91" width="1050" height="17" fill="#1f2937"/>
+  <text x="110" y="83" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="21" font-weight="700">Ubuntu Personal Server Security Console Installer</text>
+  <text x="112" y="145" fill="#334155" font-family="Inter,Arial,sans-serif" font-size="15">Select the features to install. Dependencies are checked before any privileged change.</text>
+  <g font-family="Inter,Arial,sans-serif">
+    <g transform="translate(112,178)"><rect width="470" height="52" rx="8" fill="#eff6ff" stroke="#93c5fd"/><rect x="16" y="16" width="20" height="20" rx="3" fill="#2563eb"/><path d="M21 26l5 5 9-12" fill="none" stroke="#fff" stroke-width="2.5"/><text x="50" y="24" fill="#0f172a" font-size="14" font-weight="700">Security Dashboard</text><text x="50" y="42" fill="#64748b" font-size="11">Overview and historical log reader</text></g>
+    <g transform="translate(112,239)"><rect width="470" height="52" rx="8" fill="#eff6ff" stroke="#93c5fd"/><rect x="16" y="16" width="20" height="20" rx="3" fill="#2563eb"/><path d="M21 26l5 5 9-12" fill="none" stroke="#fff" stroke-width="2.5"/><text x="50" y="24" fill="#0f172a" font-size="14" font-weight="700">PostgreSQL Security Analytics</text><text x="50" y="42" fill="#64748b" font-size="11">Authentication and error statistics</text></g>
+    <g transform="translate(112,300)"><rect width="470" height="52" rx="8" fill="#eff6ff" stroke="#93c5fd"/><rect x="16" y="16" width="20" height="20" rx="3" fill="#2563eb"/><path d="M21 26l5 5 9-12" fill="none" stroke="#fff" stroke-width="2.5"/><text x="50" y="24" fill="#0f172a" font-size="14" font-weight="700">Security Event Center</text><text x="50" y="42" fill="#64748b" font-size="11">Timeline, reviews, alerts, and correlations</text></g>
+    <g transform="translate(112,361)"><rect width="470" height="52" rx="8" fill="#fff" stroke="#cbd5e1"/><rect x="16" y="16" width="20" height="20" rx="3" fill="#fff" stroke="#94a3b8"/><text x="50" y="24" fill="#0f172a" font-size="14" font-weight="700">Retention, Alerts, and Archives</text><text x="50" y="42" fill="#64748b" font-size="11">Scheduled integrity and retention tasks</text></g>
+    <g transform="translate(112,422)"><rect width="470" height="52" rx="8" fill="#fff" stroke="#cbd5e1"/><rect x="16" y="16" width="20" height="20" rx="3" fill="#fff" stroke="#94a3b8"/><text x="50" y="24" fill="#0f172a" font-size="14" font-weight="700">On-demand Security Scanners</text><text x="50" y="42" fill="#64748b" font-size="11">AIDE, Lynis, debsums, and ClamAV</text></g>
+    <g transform="translate(112,483)"><rect width="470" height="52" rx="8" fill="#fff" stroke="#cbd5e1"/><rect x="16" y="16" width="20" height="20" rx="3" fill="#fff" stroke="#94a3b8"/><text x="50" y="24" fill="#0f172a" font-size="14" font-weight="700">SSH Key and SPA Manager</text><text x="50" y="42" fill="#64748b" font-size="11">Per-key restrictions and fwknop controls</text></g>
+  </g>
+  <rect x="540" y="154" width="535" height="324" rx="13" fill="#fff" stroke="#cbd5e1" filter="url(#shadow)"/>
+  <rect x="540" y="154" width="535" height="58" rx="13" fill="#f8fafc"/><rect x="540" y="198" width="535" height="14" fill="#f8fafc"/>
+  <circle cx="576" cy="183" r="14" fill="#f59e0b"/><text x="571" y="189" fill="#fff" font-family="Arial,sans-serif" font-size="17" font-weight="700">!</text>
+  <text x="603" y="190" fill="#111827" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="700">Component dependencies</text>
+  <text x="578" y="250" fill="#334155" font-family="Inter,Arial,sans-serif" font-size="15">Security Event Center requires:</text>
+  <circle cx="590" cy="287" r="4" fill="#2563eb"/><text x="607" y="292" fill="#0f172a" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="700">Security Dashboard</text>
+  <circle cx="590" cy="322" r="4" fill="#2563eb"/><text x="607" y="327" fill="#0f172a" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="700">PostgreSQL Security Analytics</text>
+  <text x="578" y="368" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="14">Add these dependencies automatically?</text>
+  <rect x="760" y="407" width="128" height="42" rx="7" fill="#fff" stroke="#94a3b8"/><text x="794" y="433" fill="#334155" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="700">Go back</text>
+  <rect x="903" y="407" width="139" height="42" rx="7" fill="#2563eb"/><text x="929" y="433" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="14" font-weight="700">Add and continue</text>
+</svg>

@@ -1,0 +1,682 @@
+#!/usr/bin/python3
+"""Persistent review, configuration, and verified archive controller."""
+
+from __future__ import annotations
+
+import datetime as dt
+import fcntl
+import hashlib
+import json
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import urllib.parse
+import urllib.request
+from contextlib import contextmanager
+from pathlib import Path
+
+
+STATE_DIR = Path("/var/lib/server-security-console")
+STATE_FILE = STATE_DIR / "operations-state.json"
+CHANGE_LOG = STATE_DIR / "review-audit.jsonl"
+LOCK_FILE = STATE_DIR / ".operations-state.lock"
+ARCHIVE_DIR = STATE_DIR / "archives"
+IMPORT_DIR = STATE_DIR / "imported-logs"
+JOURNALD_CONFIG = Path("/etc/systemd/journald.conf.d/60-server-security.conf")
+MAX_INPUT = 256 * 1024
+MAX_REVIEWS = 10_000
+MAX_FILTERS = 50
+ARCHIVE_RETENTION_DAYS = 180
+MAX_IMPORT_BYTES = 64 * 1024 * 1024
+VALID_STATUSES = {"pending", "reviewed", "escalated", "false_positive", "resolved"}
+SAFE_NAME_RE = re.compile(r"[^\w.@:+ -]", re.UNICODE)
+
+
+def default_state() -> dict:
+    return {
+        "version": 1,
+        "reviews": {},
+        "config": {
+            "retention_days": 30,
+            "thresholds": {
+                "auth_failures_10m": 10,
+                "firewall_blocks_10m": 100,
+                "postgres_auth_failures_1h": 5,
+                "new_remote_source": True,
+                "off_hours_root": True,
+                "security_config_change": True,
+            },
+            "off_hours": {"start": 20, "end": 7},
+            "whitelist": {"actors": [], "sources": [], "categories": []},
+            "browser_notifications": True,
+            "notifications": {"webhook_enabled": False, "webhook_url": "", "email_enabled": False, "email_to": ""},
+        },
+        "saved_filters": [],
+        "imports": [],
+        "notification_state": {"delivered_alerts": []},
+    }
+
+
+def ensure_dirs() -> None:
+    STATE_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
+    ARCHIVE_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
+    IMPORT_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(STATE_DIR, 0o700)
+    os.chmod(ARCHIVE_DIR, 0o700)
+    os.chmod(IMPORT_DIR, 0o700)
+
+
+def atomic_json(path: Path, value: dict) -> None:
+    ensure_dirs()
+    descriptor, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(value, stream, ensure_ascii=False, indent=2, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, path)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+
+
+@contextmanager
+def state_lock():
+    ensure_dirs()
+    descriptor = os.open(LOCK_FILE, os.O_RDWR | os.O_CREAT, 0o600)
+    try:
+        fcntl.flock(descriptor, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(descriptor, fcntl.LOCK_UN)
+        os.close(descriptor)
+
+
+def load_state() -> dict:
+    state = default_state()
+    try:
+        saved = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return state
+    if isinstance(saved.get("reviews"), dict):
+        state["reviews"] = saved["reviews"]
+    if isinstance(saved.get("saved_filters"), list):
+        state["saved_filters"] = saved["saved_filters"][:MAX_FILTERS]
+    if isinstance(saved.get("imports"), list):
+        state["imports"] = saved["imports"][:2000]
+    if isinstance(saved.get("notification_state"), dict):
+        state["notification_state"] = saved["notification_state"]
+    config = saved.get("config", {})
+    if isinstance(config, dict):
+        for key in ("thresholds", "off_hours", "whitelist", "notifications"):
+            if isinstance(config.get(key), dict):
+                state["config"][key].update(config[key])
+        if isinstance(config.get("browser_notifications"), bool):
+            state["config"]["browser_notifications"] = config["browser_notifications"]
+        if isinstance(config.get("retention_days"), int) and 1 <= config["retention_days"] <= 3650:
+            state["config"]["retention_days"] = config["retention_days"]
+    return state
+
+
+def read_payload() -> dict:
+    raw = sys.stdin.buffer.read(MAX_INPUT + 1)
+    if len(raw) > MAX_INPUT:
+        raise ValueError("input exceeds 256 KiB")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValueError("invalid JSON input") from error
+    if not isinstance(value, dict):
+        raise ValueError("JSON input must be an object")
+    return value
+
+
+def clean_text(value: object, maximum: int) -> str:
+    return str(value or "").replace("\x00", " ").strip()[:maximum]
+
+
+def clean_identity(value: object, maximum: int = 160) -> str:
+    return SAFE_NAME_RE.sub("", clean_text(value, maximum)) or "unknown"
+
+
+def append_change(action: str, reviewer: str, event_id: str, before: object, after: object) -> None:
+    ensure_dirs()
+    entry = {
+        "timestamp": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+        "action": action,
+        "reviewer": reviewer,
+        "event_id": event_id,
+        "before": before,
+        "after": after,
+    }
+    descriptor = os.open(CHANGE_LOG, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    with os.fdopen(descriptor, "a", encoding="utf-8") as stream:
+        stream.write(json.dumps(entry, ensure_ascii=False, separators=(",", ":")) + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def review_event(payload: dict) -> dict:
+    event_id = clean_text(payload.get("event_id"), 600)
+    status = clean_text(payload.get("status"), 40)
+    if not event_id or status not in VALID_STATUSES:
+        raise ValueError("invalid event id or review status")
+    reviewer = clean_identity(payload.get("reviewer"))
+    note = clean_text(payload.get("note"), 4000)
+    event = payload.get("event") if isinstance(payload.get("event"), dict) else {}
+    snapshot = {
+        key: clean_text(event.get(key), 600)
+        for key in ("timestamp", "category", "title", "actor", "source", "target", "log_source", "log_ref")
+    }
+    with state_lock():
+        state = load_state()
+        previous = state["reviews"].get(event_id)
+        record = {
+            "event_id": event_id,
+            "status": status,
+            "note": note,
+            "reviewer": reviewer,
+            "updated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+            "event": snapshot,
+        }
+        state["reviews"][event_id] = record
+        if len(state["reviews"]) > MAX_REVIEWS:
+            ordered = sorted(state["reviews"].items(), key=lambda item: item[1].get("updated_at", ""), reverse=True)
+            state["reviews"] = dict(ordered[:MAX_REVIEWS])
+        atomic_json(STATE_FILE, state)
+        append_change("review", reviewer, event_id, previous, record)
+    return record
+
+
+def validated_config(payload: dict, current: dict) -> dict:
+    result = json.loads(json.dumps(current))
+    if "retention_days" in payload:
+        retention_days = int(payload["retention_days"])
+        if not 1 <= retention_days <= 3650:
+            raise ValueError("retention days must be between 1 and 3650")
+        result["retention_days"] = retention_days
+    thresholds = payload.get("thresholds", {})
+    allowed_integer = {
+        "auth_failures_10m": (1, 10_000),
+        "firewall_blocks_10m": (1, 100_000),
+        "postgres_auth_failures_1h": (1, 10_000),
+    }
+    for key, limits in allowed_integer.items():
+        if key in thresholds:
+            value = int(thresholds[key])
+            if not limits[0] <= value <= limits[1]:
+                raise ValueError(f"threshold {key} is out of range")
+            result["thresholds"][key] = value
+    for key in ("new_remote_source", "off_hours_root", "security_config_change"):
+        if key in thresholds:
+            result["thresholds"][key] = bool(thresholds[key])
+    off_hours = payload.get("off_hours", {})
+    for key in ("start", "end"):
+        if key in off_hours:
+            value = int(off_hours[key])
+            if not 0 <= value <= 23:
+                raise ValueError("off-hours values must be 0-23")
+            result["off_hours"][key] = value
+    whitelist = payload.get("whitelist", {})
+    for key in ("actors", "sources", "categories"):
+        if key in whitelist:
+            values = whitelist[key]
+            if not isinstance(values, list):
+                raise ValueError("whitelist values must be arrays")
+            result["whitelist"][key] = list(dict.fromkeys(clean_text(value, 200) for value in values if clean_text(value, 200)))[:500]
+    if "browser_notifications" in payload:
+        result["browser_notifications"] = bool(payload["browser_notifications"])
+    notifications = payload.get("notifications", {})
+    if notifications:
+        webhook_url = clean_text(notifications.get("webhook_url"), 1200)
+        if webhook_url:
+            parsed = urllib.parse.urlparse(webhook_url)
+            if parsed.scheme != "https" or not parsed.hostname:
+                raise ValueError("webhook URL must use https")
+        email_to = clean_text(notifications.get("email_to"), 320)
+        if email_to and ("\n" in email_to or "\r" in email_to or "@" not in email_to):
+            raise ValueError("invalid notification email address")
+        result["notifications"] = {
+            "webhook_enabled": bool(notifications.get("webhook_enabled")) and bool(webhook_url),
+            "webhook_url": webhook_url,
+            "email_enabled": bool(notifications.get("email_enabled")) and bool(email_to),
+            "email_to": email_to,
+        }
+    return result
+
+
+def update_config(payload: dict) -> dict:
+    with state_lock():
+        state = load_state()
+        before = state["config"]
+        state["config"] = validated_config(payload, before)
+        if before.get("notifications") != state["config"].get("notifications"):
+            state["notification_state"] = {"delivered_alerts": []}
+        atomic_json(STATE_FILE, state)
+        append_change("config", clean_identity(payload.get("reviewer")), "configuration", redacted_config(before), redacted_config(state["config"]))
+    if before.get("retention_days") != state["config"].get("retention_days"):
+        apply_journald_retention(int(state["config"]["retention_days"]))
+    return state["config"]
+
+
+def redacted_config(config: dict) -> dict:
+    value = json.loads(json.dumps(config))
+    if value.get("notifications", {}).get("webhook_url"):
+        value["notifications"]["webhook_url"] = "[CONFIGURED AND REDACTED]"
+    return value
+
+
+def apply_journald_retention(days: int) -> None:
+    JOURNALD_CONFIG.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+    content = (
+        "[Journal]\nStorage=persistent\nCompress=yes\nSeal=yes\n"
+        "SystemMaxUse=1G\nMaxFileSec=1day\n"
+        f"MaxRetentionSec={days}day\n"
+    )
+    descriptor, temporary = tempfile.mkstemp(prefix=".60-server-security.", dir=JOURNALD_CONFIG.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(temporary, 0o644)
+        os.replace(temporary, JOURNALD_CONFIG)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+    subprocess.run(
+        ["/usr/bin/systemctl", "restart", "systemd-journald.service"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30, check=False,
+        env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8"},
+    )
+
+
+def import_log(name: str) -> dict:
+    raw = sys.stdin.buffer.read(MAX_IMPORT_BYTES + 1)
+    if len(raw) > MAX_IMPORT_BYTES:
+        raise ValueError("imported log exceeds 64 MiB")
+    if not raw:
+        raise ValueError("imported log is empty")
+    original_name = Path(name).name[:240] or "imported.log"
+    digest = hashlib.sha256(raw).hexdigest()
+    now = dt.datetime.now().astimezone()
+    import_id = f"import:{digest[:24]}"
+    with state_lock():
+        state = load_state()
+        for existing in state["imports"]:
+            existing_path = managed_import_path(existing.get("path", ""))
+            if existing.get("sha256") == digest and existing_path and existing_path.exists():
+                return {**existing, "duplicate": True}
+        stored_name = f"{now.strftime('%Y%m%d-%H%M%S')}-{digest[:16]}.log"
+        path = IMPORT_DIR / stored_name
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(descriptor, "wb") as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        record = {
+            "id": import_id,
+            "original_name": original_name,
+            "path": str(path),
+            "bytes": len(raw),
+            "sha256": digest,
+            "imported_at": now.isoformat(timespec="seconds"),
+            "imported_by": clean_identity(os.environ.get("SUDO_USER") or os.environ.get("USER") or "cockpit-admin"),
+        }
+        state["imports"].insert(0, record)
+        state["imports"] = state["imports"][:2000]
+        cleanup_imports_locked(state, now)
+        atomic_json(STATE_FILE, state)
+        append_change("import_log", record["imported_by"], import_id, None, {key: value for key, value in record.items() if key != "path"})
+    return {**record, "duplicate": False}
+
+
+def cleanup_imports_locked(state: dict, now: dt.datetime) -> int:
+    days = int(state["config"].get("retention_days", 30))
+    cutoff = now - dt.timedelta(days=days)
+    kept = []
+    removed = 0
+    for item in state.get("imports", []):
+        try:
+            imported_at = dt.datetime.fromisoformat(item.get("imported_at", ""))
+            if imported_at.tzinfo is None:
+                imported_at = imported_at.replace(tzinfo=now.tzinfo)
+        except ValueError:
+            imported_at = dt.datetime.fromtimestamp(0).astimezone()
+        if imported_at < cutoff:
+            try:
+                path = managed_import_path(item.get("path", ""))
+                if path:
+                    path.unlink()
+            except OSError:
+                pass
+            removed += 1
+        else:
+            kept.append(item)
+    state["imports"] = kept
+    return removed
+
+
+def managed_import_path(value: object) -> Path | None:
+    try:
+        path = Path(str(value)).resolve()
+        return path if path.parent == IMPORT_DIR.resolve() else None
+    except (OSError, ValueError):
+        return None
+
+
+def save_filter(payload: dict) -> list[dict]:
+    name = clean_text(payload.get("name"), 80)
+    filters = payload.get("filters")
+    if not name or not isinstance(filters, dict):
+        raise ValueError("filter name and filters are required")
+    allowed = {key: clean_text(filters.get(key), 200) for key in ("period", "category", "severity", "review", "search")}
+    with state_lock():
+        state = load_state()
+        state["saved_filters"] = [item for item in state["saved_filters"] if item.get("name") != name]
+        state["saved_filters"].insert(0, {"name": name, "filters": allowed})
+        state["saved_filters"] = state["saved_filters"][:MAX_FILTERS]
+        atomic_json(STATE_FILE, state)
+        append_change("save_filter", clean_identity(payload.get("reviewer")), name, None, allowed)
+    return state["saved_filters"]
+
+
+def delete_filter(payload: dict) -> list[dict]:
+    name = clean_text(payload.get("name"), 80)
+    with state_lock():
+        state = load_state()
+        state["saved_filters"] = [item for item in state["saved_filters"] if item.get("name") != name]
+        atomic_json(STATE_FILE, state)
+        append_change("delete_filter", clean_identity(payload.get("reviewer")), name, name, None)
+    return state["saved_filters"]
+
+
+def run_json(command: list[str], timeout: int = 150) -> dict:
+    result = subprocess.run(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+        encoding="utf-8", errors="replace", timeout=timeout, check=False,
+        env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8"},
+    )
+    if result.returncode:
+        raise RuntimeError((result.stderr or "report command failed").strip()[:500])
+    return json.loads(result.stdout)
+
+
+def send_alert_notifications() -> dict:
+    report = run_json(["/usr/local/libexec/security-operations-report", "center"])
+    state = load_state()
+    notification = state["config"].get("notifications", {})
+    delivered = set(state.get("notification_state", {}).get("delivered_alerts", []))
+    alerts = [alert for alert in report.get("alerts", []) if alert.get("id") not in delivered]
+    if not alerts:
+        return {"new_alerts": 0, "webhook": "idle", "email": "idle"}
+    summary = {
+        "schema": "server-security-alert-v1",
+        "generated_at": report.get("generated_at"),
+        "host": os.uname().nodename,
+        "alert_count": len(alerts),
+        "alerts": [{key: alert.get(key) for key in ("id", "severity", "title", "description", "count", "latest_at")} for alert in alerts],
+    }
+    results = {"new_alerts": len(alerts), "webhook": "disabled", "email": "disabled"}
+    success = False
+    if notification.get("webhook_enabled") and notification.get("webhook_url"):
+        try:
+            request = urllib.request.Request(
+                notification["webhook_url"], data=json.dumps(summary, ensure_ascii=False).encode("utf-8"),
+                headers={"Content-Type": "application/json", "User-Agent": "server-security-console/1"}, method="POST",
+            )
+            with urllib.request.urlopen(request, timeout=15) as response:
+                results["webhook"] = f"sent:{response.status}"
+                success = 200 <= response.status < 300
+        except Exception as error:  # The exact transport error is recorded without stopping local auditing.
+            results["webhook"] = f"failed:{str(error)[:180]}"
+    if notification.get("email_enabled") and notification.get("email_to"):
+        sendmail = Path("/usr/sbin/sendmail")
+        if sendmail.exists():
+            subject = f"[Security] {len(alerts)} active alert(s) on {os.uname().nodename}"
+            body = "\n".join(f"- [{alert['severity']}] {alert['title']}: {alert['description']}" for alert in alerts)
+            message = f"To: {notification['email_to']}\nSubject: {subject}\nContent-Type: text/plain; charset=UTF-8\n\n{body}\n"
+            process = subprocess.run([str(sendmail), "-t"], input=message, text=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=20, check=False)
+            results["email"] = "sent" if process.returncode == 0 else f"failed:exit-{process.returncode}"
+            success = success or process.returncode == 0
+        else:
+            results["email"] = "failed:sendmail-not-installed"
+    if success:
+        with state_lock():
+            latest = load_state()
+            known = list(dict.fromkeys(latest.get("notification_state", {}).get("delivered_alerts", []) + [alert["id"] for alert in alerts]))[-1000:]
+            latest["notification_state"] = {"delivered_alerts": known, "last_delivery_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"), "last_result": results}
+            atomic_json(STATE_FILE, latest)
+        append_change("alert_notification", "system", "notifications", None, results)
+    return results
+
+
+def archive_report(kind: str) -> dict:
+    if kind not in {"manual", "daily", "weekly"}:
+        raise ValueError("invalid archive kind")
+    ensure_dirs()
+    now = dt.datetime.now().astimezone()
+    archived_state = load_state()
+    archived_notifications = archived_state.get("config", {}).get("notifications", {})
+    if archived_notifications.get("webhook_url"):
+        archived_notifications["webhook_url"] = "[CONFIGURED AND REDACTED]"
+    payload = {
+        "schema": "server-security-archive-v1",
+        "kind": kind,
+        "created_at": now.isoformat(timespec="seconds"),
+        "high_risk": run_json(["/usr/local/libexec/security-operations-report", "high"]),
+        "suspicious": run_json(["/usr/local/libexec/security-operations-report", "suspicious"]),
+        "security_center": run_json(["/usr/local/libexec/security-operations-report", "center"]),
+        "postgresql": run_json(["/usr/local/libexec/postgresql-security-report"]),
+        "review_state": archived_state,
+    }
+    base = f"security-{kind}-{now.strftime('%Y%m%d-%H%M%S')}"
+    archive_path = ARCHIVE_DIR / f"{base}.json"
+    raw = (json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n").encode("utf-8")
+    digest = write_verified_file(archive_path, raw)
+    center = payload["security_center"]
+    high = payload["high_risk"]
+    suspicious = payload["suspicious"]
+    pg = payload["postgresql"]
+    markdown = (
+        f"# 服务器安全{kind}报告\n\n"
+        f"- 生成时间：{payload['created_at']}\n"
+        f"- 高风险操作（24h / {high['retention_days']}d）：{high['periods']['24h']} / {high['periods']['30d']}\n"
+        f"- 可疑事件（24h / {suspicious['retention_days']}d）：{suspicious['periods']['24h']} / {suspicious['periods']['30d']}\n"
+        f"- PostgreSQL 认证失败（1h / 24h）：{pg.get('auth_failures', {}).get('1h', 0)} / {pg.get('auth_failures', {}).get('24h', 0)}\n"
+        f"- 活动告警：{len(center.get('alerts', []))}\n"
+        f"- 关联事件链：{len(center.get('correlations', []))}\n"
+        f"- auditd 丢失事件：{center.get('health', {}).get('auditd', {}).get('lost', 'unknown')}\n"
+        f"- 归档校验异常：{center.get('health', {}).get('archives', {}).get('invalid', 0)}\n\n"
+        "完整事件、复核状态和校验数据见同名 JSON 归档。\n"
+    ).encode("utf-8")
+    summary_path = ARCHIVE_DIR / f"{base}-summary.md"
+    summary_digest = write_verified_file(summary_path, markdown)
+    cleanup_archives(now, int(load_state()["config"].get("retention_days", 30)))
+    return {"archive": str(archive_path), "checksum": digest, "summary": str(summary_path), "summary_checksum": summary_digest, "bytes": len(raw), "kind": kind}
+
+
+def write_verified_file(path: Path, raw: bytes) -> str:
+    digest = hashlib.sha256(raw).hexdigest()
+    path.write_bytes(raw)
+    os.chmod(path, 0o400)
+    checksum_path = path.with_suffix(path.suffix + ".sha256")
+    checksum_path.write_text(f"{digest}  {path.name}\n", encoding="ascii")
+    os.chmod(checksum_path, 0o400)
+    return digest
+
+
+def cleanup_archives(now: dt.datetime, days: int = ARCHIVE_RETENTION_DAYS) -> None:
+    cutoff = now.timestamp() - days * 86_400
+    for path in ARCHIVE_DIR.glob("security-*.*"):
+        try:
+            if path.stat().st_mtime < cutoff:
+                path.unlink()
+        except OSError:
+            continue
+
+
+def enforce_retention() -> dict:
+    now = dt.datetime.now().astimezone()
+    with state_lock():
+        state = load_state()
+        days = int(state["config"].get("retention_days", 30))
+        removed_imports = cleanup_imports_locked(state, now)
+        review_cutoff = now - dt.timedelta(days=days)
+        before_reviews = len(state["reviews"])
+        state["reviews"] = {
+            event_id: review for event_id, review in state["reviews"].items()
+            if review.get("status") in {"escalated"} or _timestamp_at_or_after(review.get("updated_at"), review_cutoff, now)
+        }
+        removed_reviews = before_reviews - len(state["reviews"])
+        atomic_json(STATE_FILE, state)
+        removed_changes = cleanup_change_log(now, days)
+    subprocess.run(
+        ["/usr/bin/journalctl", "--rotate"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        timeout=60, check=False, env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8"},
+    )
+    subprocess.run(
+        ["/usr/bin/journalctl", f"--vacuum-time={days}d"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        timeout=120, check=False, env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8"},
+    )
+    subprocess.run(
+        ["/usr/sbin/auditctl", "--signal", "rotate"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        timeout=30, check=False, env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8"},
+    )
+    cutoff = now.timestamp() - days * 86_400
+    removed_audit = 0
+    for path in Path("/var/log/audit").glob("audit.log.*"):
+        try:
+            if path.is_file() and path.stat().st_mtime < cutoff:
+                path.unlink()
+                removed_audit += 1
+        except OSError:
+            continue
+    cleanup_archives(now, days)
+    result = {"retention_days": days, "removed_imports": removed_imports, "removed_reviews": removed_reviews, "removed_audit_files": removed_audit, "removed_review_audit_entries": removed_changes}
+    append_change("enforce_retention", "system", "retention", None, result)
+    return result
+
+
+def cleanup_change_log(now: dt.datetime, days: int) -> int:
+    cutoff = now - dt.timedelta(days=days)
+    try:
+        lines = CHANGE_LOG.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return 0
+    kept = []
+    for line in lines:
+        try:
+            entry = json.loads(line)
+            timestamp = dt.datetime.fromisoformat(entry.get("timestamp", ""))
+            if timestamp.tzinfo is None:
+                timestamp = timestamp.replace(tzinfo=now.tzinfo)
+            if timestamp >= cutoff:
+                kept.append(line)
+        except (json.JSONDecodeError, ValueError, AttributeError):
+            kept.append(line)
+    removed = len(lines) - len(kept)
+    if removed:
+        descriptor, temporary = tempfile.mkstemp(prefix=".review-audit.", dir=STATE_DIR)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                stream.write("\n".join(kept) + ("\n" if kept else ""))
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.chmod(temporary, 0o600)
+            os.replace(temporary, CHANGE_LOG)
+        finally:
+            try:
+                os.unlink(temporary)
+            except FileNotFoundError:
+                pass
+    return removed
+
+
+def _timestamp_at_or_after(value: object, cutoff: dt.datetime, now: dt.datetime) -> bool:
+    try:
+        timestamp = dt.datetime.fromisoformat(str(value or ""))
+        if timestamp.tzinfo is None:
+            timestamp = timestamp.replace(tzinfo=now.tzinfo)
+        return timestamp >= cutoff
+    except ValueError:
+        return False
+
+
+def verify_archives() -> list[dict]:
+    ensure_dirs()
+    results = []
+    for checksum_path in sorted(ARCHIVE_DIR.glob("security-*.sha256"), reverse=True)[:400]:
+        try:
+            expected, filename = checksum_path.read_text(encoding="ascii").strip().split(None, 1)
+            archive_path = ARCHIVE_DIR / filename.strip()
+            actual = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+            results.append({
+                "name": archive_path.name,
+                "created_at": dt.datetime.fromtimestamp(archive_path.stat().st_mtime).astimezone().isoformat(timespec="seconds"),
+                "bytes": archive_path.stat().st_size,
+                "valid": actual == expected,
+                "expected": expected,
+                "actual": actual,
+            })
+        except (OSError, ValueError):
+            results.append({"name": checksum_path.stem, "valid": False, "error": "missing or invalid checksum/archive"})
+    return results
+
+
+def response(value: object) -> None:
+    json.dump(value, sys.stdout, ensure_ascii=False, separators=(",", ":"))
+    sys.stdout.write("\n")
+
+
+def main() -> int:
+    if os.geteuid() != 0:
+        print("must run as root", file=sys.stderr)
+        return 1
+    if len(sys.argv) not in {2, 3}:
+        print("usage: security-operations-control state|reviews|review|config|save-filter|delete-filter|import-log <name>|archive [kind]|verify|enforce-retention|notify", file=sys.stderr)
+        return 2
+    action = sys.argv[1]
+    try:
+        if action == "state":
+            state = load_state()
+            state["archives"] = verify_archives()
+            response(state)
+        elif action == "reviews":
+            response({"reviews": load_state()["reviews"]})
+        elif action == "review":
+            response(review_event(read_payload()))
+        elif action == "config":
+            response(update_config(read_payload()))
+        elif action == "save-filter":
+            response(save_filter(read_payload()))
+        elif action == "delete-filter":
+            response(delete_filter(read_payload()))
+        elif action == "import-log" and len(sys.argv) == 3:
+            response(import_log(sys.argv[2]))
+        elif action == "archive":
+            response(archive_report(sys.argv[2] if len(sys.argv) == 3 else "manual"))
+        elif action == "verify":
+            response(verify_archives())
+        elif action == "enforce-retention":
+            response(enforce_retention())
+        elif action == "notify":
+            response(send_alert_notifications())
+        else:
+            raise ValueError("unknown action")
+    except (ValueError, OSError, RuntimeError, subprocess.TimeoutExpired, json.JSONDecodeError) as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

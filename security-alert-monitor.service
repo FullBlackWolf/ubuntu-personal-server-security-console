@@ -1,0 +1,9 @@
+[Unit]
+Description=Evaluate and deliver configured server security alerts
+After=systemd-journald.service auditd.service network-online.target
+
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+ExecStart=/usr/local/sbin/security-operations-control notify

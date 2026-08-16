@@ -1,0 +1,510 @@
+#!/usr/bin/python3
+"""Build a bounded, read-only PostgreSQL security report for Cockpit."""
+
+from __future__ import annotations
+
+import collections
+import csv
+import datetime as dt
+import gzip
+import hashlib
+import ipaddress
+import io
+import json
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+
+STATE_FILE = Path("/var/lib/server-security-console/operations-state.json")
+
+
+def configured_retention_days() -> int:
+    try:
+        value = int(json.loads(STATE_FILE.read_text(encoding="utf-8")).get("config", {}).get("retention_days", 30))
+        return min(3650, max(1, value))
+    except (OSError, ValueError, TypeError, json.JSONDecodeError, AttributeError):
+        return 30
+
+
+RETENTION_DAYS = configured_retention_days()
+ANALYTICS_DAYS = min(30, RETENTION_DAYS)
+FATAL_LIMIT = 100
+TOP_LIMIT = 100
+JOURNAL_LIMIT = 200_000
+FILE_LIMIT = 40
+MAX_LOG_BYTES = 160 * 1024 * 1024
+MAX_LOG_LINES = 1_000_000
+MAX_UPLOAD_BYTES = 64 * 1024 * 1024
+NOW = dt.datetime.now().astimezone()
+CUTOFF = NOW - dt.timedelta(days=RETENTION_DAYS)
+
+TIMESTAMP_RE = re.compile(
+    r"^(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:[+-]\d{2}(?::?\d{2})?)?)"
+)
+PID_RE = re.compile(r"\[(\d+)\]")
+LEVEL_RE = re.compile(r"\b(ERROR|FATAL|PANIC)\s*:", re.I)
+PREFIX_IDENTITY_RE = re.compile(r"\[\d+\]\s+([^@\s]+)@([^\s]+)\s+")
+PREFIX_CLIENT_RE = re.compile(r"\[\d+\].*?\s(\[[0-9a-f:]+\]|[0-9a-f:.]+)(?:\(\d+\)|:\d+)\s+", re.I)
+AUTH_FAILURE_RE = re.compile(
+    r"(?:password|pam|ldap|gssapi|sspi|certificate|peer|ident|radius|scram)[ -]authentication failed"
+    r"|authentication failed for user"
+    r"|no pg_hba\.conf entry"
+    r"|role [\"'][^\"']+[\"'] does not exist"
+    r"|user [\"'][^\"']+[\"'] does not exist",
+    re.I,
+)
+USER_PATTERNS = (
+    re.compile(r"\bfor user\s+[\"']([^\"']+)[\"']", re.I),
+    re.compile(r"\buser[=:]\s*[\"']?([^\s,\"']+)", re.I),
+    re.compile(r"\brole\s+[\"']([^\"']+)[\"']", re.I),
+)
+DB_RE = re.compile(r"\b(?:database|db)[=:]\s*[\"']?([^\s,\"']+)", re.I)
+IP_CONTEXT_RE = re.compile(
+    r"\b(?:host|client|remote|rhost|connection from)\s*[=:]?\s*[\"']?(\[[0-9a-f:]+\]|[0-9a-f:.]+)", re.I
+)
+SECRET_RE = re.compile(
+    r"(?i)\b(password|passwd|passphrase|token|secret|api[_-]?key)"
+    r"(\s*(?:=|:)\s*|\s+)([^\s,;]+)"
+)
+
+
+@dataclass(frozen=True)
+class LogRecord:
+    moment: dt.datetime
+    severity: str
+    message: str
+    pid: str = ""
+    user: str = ""
+    database: str = ""
+    client_ip: str = ""
+    source: str = ""
+
+
+def run(command: list[str], timeout: int = 45) -> str:
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            check=False,
+            env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8"},
+        )
+        return result.stdout
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+
+
+def parse_timestamp(value: str) -> dt.datetime | None:
+    value = value.strip().replace(" ", "T", 1)
+    try:
+        parsed = dt.datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=NOW.tzinfo)
+    return parsed.astimezone()
+
+
+def normalize_ip(value: str) -> str:
+    candidate = value.strip().strip("(),")
+    if candidate.startswith("[") and "]" in candidate:
+        candidate = candidate[1:candidate.index("]")]
+    elif candidate.count(":") == 1 and "." in candidate:
+        candidate = candidate.rsplit(":", 1)[0]
+    candidate = candidate.strip("[]")
+    try:
+        address = ipaddress.ip_address(candidate)
+        if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
+            return str(address.ipv4_mapped)
+        return str(address)
+    except ValueError:
+        return ""
+
+
+def extract_ip(message: str) -> str:
+    match = IP_CONTEXT_RE.search(message)
+    if match:
+        return normalize_ip(match.group(1))
+    prefix = PREFIX_CLIENT_RE.search(message)
+    return normalize_ip(prefix.group(1)) if prefix else ""
+
+
+def extract_user(message: str) -> str:
+    for pattern in USER_PATTERNS:
+        match = pattern.search(message)
+        if match:
+            return match.group(1)[:128]
+    return ""
+
+
+def redact(message: str) -> str:
+    clean = SECRET_RE.sub(lambda match: f"{match.group(1)}{match.group(2)}[REDACTED]", message)
+    return clean.replace("\x00", " ").strip()[:1000]
+
+
+def parse_text_line(
+    line: str,
+    source: str,
+    pid_clients: dict[str, str],
+    cutoff: dt.datetime | None = CUTOFF,
+    ceiling: dt.datetime | None = NOW + dt.timedelta(minutes=5),
+) -> LogRecord | None:
+    timestamp = TIMESTAMP_RE.match(line)
+    if not timestamp:
+        return None
+    moment = parse_timestamp(timestamp.group(1))
+    if not moment or (cutoff and moment < cutoff) or (ceiling and moment > ceiling):
+        return None
+    pid_match = PID_RE.search(line)
+    pid = pid_match.group(1) if pid_match else ""
+    direct_ip = extract_ip(line)
+    if pid and direct_ip and "connection received" in line.lower():
+        pid_clients[pid] = direct_ip
+    level = LEVEL_RE.search(line)
+    if not level:
+        return None
+    message = line[level.end():].strip()
+    identity = PREFIX_IDENTITY_RE.search(line)
+    database_match = DB_RE.search(line)
+    return LogRecord(
+        moment=moment,
+        severity=level.group(1).upper(),
+        message=message,
+        pid=pid,
+        user=extract_user(line) or (identity.group(1)[:128] if identity else ""),
+        database=(database_match.group(1)[:128] if database_match else (identity.group(2)[:128] if identity else "")),
+        client_ip=direct_ip or pid_clients.get(pid, ""),
+        source=source,
+    )
+
+
+def parse_csv_row(
+    row: list[str],
+    source: str,
+    cutoff: dt.datetime | None = CUTOFF,
+    ceiling: dt.datetime | None = NOW + dt.timedelta(minutes=5),
+) -> LogRecord | None:
+    if len(row) < 14:
+        return None
+    moment = parse_timestamp(row[0])
+    if not moment or (cutoff and moment < cutoff) or (ceiling and moment > ceiling):
+        return None
+    severity = row[11].upper()
+    if severity not in {"ERROR", "FATAL", "PANIC"}:
+        return None
+    return LogRecord(
+        moment=moment,
+        severity=severity,
+        message=row[13],
+        pid=row[3],
+        user=row[1][:128],
+        database=row[2][:128],
+        client_ip=normalize_ip(row[4]),
+        source=source,
+    )
+
+
+def parse_json_line(
+    line: str,
+    source: str,
+    cutoff: dt.datetime | None = CUTOFF,
+    ceiling: dt.datetime | None = NOW + dt.timedelta(minutes=5),
+) -> LogRecord | None:
+    try:
+        item = json.loads(line)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(item, dict):
+        return None
+    moment = parse_timestamp(str(item.get("timestamp", "")))
+    if not moment or (cutoff and moment < cutoff) or (ceiling and moment > ceiling):
+        return None
+    severity = str(item.get("error_severity", "")).upper()
+    if severity not in {"ERROR", "FATAL", "PANIC"}:
+        return None
+    return LogRecord(
+        moment=moment,
+        severity=severity,
+        message=str(item.get("message", "")),
+        pid=str(item.get("pid", "")),
+        user=str(item.get("user", ""))[:128],
+        database=str(item.get("dbname", ""))[:128],
+        client_ip=normalize_ip(str(item.get("remote_host", ""))),
+        source=source,
+    )
+
+
+def open_log(path: Path):
+    if path.suffix == ".gz":
+        return gzip.open(path, "rt", encoding="utf-8", errors="replace")
+    return path.open("rt", encoding="utf-8", errors="replace")
+
+
+def recent_log_paths(log_dir: Path = Path("/var/log/postgresql")) -> tuple[list[Path], bool]:
+    try:
+        candidates = [
+            path for path in log_dir.iterdir()
+            if path.is_file() and (".log" in path.name or ".csv" in path.name or ".json" in path.name)
+            and dt.datetime.fromtimestamp(path.stat().st_mtime).astimezone() >= CUTOFF - dt.timedelta(days=1)
+        ]
+    except OSError:
+        return [], False
+    candidates.sort(key=lambda path: path.stat().st_mtime, reverse=True)
+    chosen = []
+    total = 0
+    truncated = False
+    for path in candidates:
+        try:
+            size = path.stat().st_size
+        except OSError:
+            continue
+        if len(chosen) >= FILE_LIMIT or (chosen and total + size > MAX_LOG_BYTES):
+            truncated = True
+            continue
+        chosen.append(path)
+        total += size
+    return chosen, truncated
+
+
+def load_file_records() -> tuple[list[LogRecord], list[str], bool]:
+    paths, truncated = recent_log_paths()
+    records: list[LogRecord] = []
+    sources: list[str] = []
+    lines_read = 0
+    for path in paths:
+        source = str(path)
+        pid_clients: dict[str, str] = {}
+        try:
+            with open_log(path) as stream:
+                if ".csv" in path.name:
+                    for row in csv.reader(stream):
+                        lines_read += 1
+                        if lines_read > MAX_LOG_LINES:
+                            truncated = True
+                            break
+                        record = parse_csv_row(row, source)
+                        if record:
+                            records.append(record)
+                elif ".json" in path.name:
+                    for line in stream:
+                        lines_read += 1
+                        if lines_read > MAX_LOG_LINES:
+                            truncated = True
+                            break
+                        record = parse_json_line(line, source)
+                        if record:
+                            records.append(record)
+                else:
+                    for line in stream:
+                        lines_read += 1
+                        if lines_read > MAX_LOG_LINES:
+                            truncated = True
+                            break
+                        record = parse_text_line(line, source, pid_clients)
+                        if record:
+                            records.append(record)
+            sources.append(source)
+        except (OSError, EOFError, csv.Error):
+            continue
+        if lines_read > MAX_LOG_LINES:
+            break
+    return records, sources, truncated
+
+
+def load_journal_records() -> tuple[list[LogRecord], bool]:
+    fields = "__REALTIME_TIMESTAMP,MESSAGE,_PID,_COMM,SYSLOG_IDENTIFIER,_SYSTEMD_UNIT"
+    matches = ["_COMM=postgres", "_COMM=postmaster", "SYSLOG_IDENTIFIER=postgres", "SYSLOG_IDENTIFIER=postgresql"]
+    records: list[LogRecord] = []
+    truncated = False
+    for match in matches:
+        text = run([
+            "/usr/bin/journalctl", f"--since=-{RETENTION_DAYS}days", "--no-pager",
+            f"--lines={JOURNAL_LIMIT}", "--output=json", f"--output-fields={fields}", match,
+        ])
+        lines = text.splitlines()
+        truncated = truncated or len(lines) >= JOURNAL_LIMIT
+        pid_clients: dict[str, str] = {}
+        for line in lines:
+            try:
+                item = json.loads(line)
+                moment = dt.datetime.fromtimestamp(int(item["__REALTIME_TIMESTAMP"]) / 1_000_000).astimezone()
+            except (json.JSONDecodeError, KeyError, TypeError, ValueError, OverflowError):
+                continue
+            message = str(item.get("MESSAGE", ""))
+            pid_match = PID_RE.search(message)
+            pid = pid_match.group(1) if pid_match else str(item.get("_PID", ""))
+            direct_ip = extract_ip(message)
+            if pid and direct_ip and "connection received" in message.lower():
+                pid_clients[pid] = direct_ip
+            level = LEVEL_RE.search(message)
+            if not level or moment < CUTOFF:
+                continue
+            identity = PREFIX_IDENTITY_RE.search(message)
+            database_match = DB_RE.search(message)
+            records.append(LogRecord(
+                moment=moment,
+                severity=level.group(1).upper(),
+                message=message[level.end():].strip(),
+                pid=pid,
+                user=extract_user(message) or (identity.group(1)[:128] if identity else ""),
+                database=(database_match.group(1)[:128] if database_match else (identity.group(2)[:128] if identity else "")),
+                client_ip=direct_ip or pid_clients.get(pid, ""),
+                source="journald",
+            ))
+    return records, truncated
+
+
+def deduplicate(records: list[LogRecord]) -> list[LogRecord]:
+    unique: dict[str, LogRecord] = {}
+    for record in records:
+        signature = "\x1f".join((
+            record.moment.isoformat(timespec="milliseconds"), record.pid,
+            record.severity, record.message, record.user, record.client_ip,
+        ))
+        unique[hashlib.sha256(signature.encode("utf-8", "replace")).hexdigest()] = record
+    return sorted(unique.values(), key=lambda item: item.moment, reverse=True)
+
+
+def is_auth_failure(record: LogRecord) -> bool:
+    return record.severity == "FATAL" and bool(AUTH_FAILURE_RE.search(record.message))
+
+
+def build_hourly_series(records: list[LogRecord], now: dt.datetime = NOW) -> list[dict]:
+    current_hour = now.replace(minute=0, second=0, microsecond=0)
+    first_hour = current_hour - dt.timedelta(hours=ANALYTICS_DAYS * 24 - 1)
+    counts = collections.Counter(
+        record.moment.replace(minute=0, second=0, microsecond=0)
+        for record in records if record.moment >= first_hour
+    )
+    result = []
+    for offset in range(ANALYTICS_DAYS * 24):
+        hour = first_hour + dt.timedelta(hours=offset)
+        minutes = max(1.0, min(60.0, (now - hour).total_seconds() / 60)) if hour == current_hour else 60.0
+        count = counts[hour]
+        result.append({
+            "hour": hour.isoformat(timespec="seconds"),
+            "count": count,
+            "minutes": round(minutes, 2),
+            "per_minute": round(count / minutes, 4),
+        })
+    return result
+
+
+def aggregate(
+    records: list[LogRecord],
+    sources: list[str],
+    truncated: bool,
+    now: dt.datetime = NOW,
+    imported: bool = False,
+) -> dict:
+    records = deduplicate(records)
+    range_cutoff = now - dt.timedelta(days=RETENTION_DAYS)
+    records = [record for record in records if range_cutoff <= record.moment <= now + dt.timedelta(minutes=5)]
+    auth_records = [record for record in records if is_auth_failure(record)]
+    cutoff_1h = now - dt.timedelta(hours=1)
+    cutoff_24h = now - dt.timedelta(hours=24)
+    cutoff_30d = now - dt.timedelta(days=30)
+    users = collections.Counter(record.user or extract_user(record.message) for record in auth_records)
+    ips = collections.Counter(record.client_ip or extract_ip(record.message) for record in auth_records)
+    users.pop("", None)
+    ips.pop("", None)
+
+    fatal_logs = []
+    for record in records:
+        if record.severity != "FATAL" or len(fatal_logs) >= FATAL_LIMIT:
+            continue
+        fatal_logs.append({
+            "timestamp": record.moment.isoformat(timespec="seconds"),
+            "user": record.user or extract_user(record.message) or "—",
+            "database": record.database or "—",
+            "ip": record.client_ip or extract_ip(record.message) or "—",
+            "message": redact(record.message),
+        })
+
+    return {
+        "generated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+        "range_end": now.isoformat(timespec="seconds"),
+        "imported": imported,
+        "retention_days": RETENTION_DAYS,
+        "auth_failures": {
+            "1h": sum(record.moment >= cutoff_1h for record in auth_records),
+            "24h": sum(record.moment >= cutoff_24h for record in auth_records),
+            "30d": sum(record.moment >= cutoff_30d for record in auth_records),
+        },
+        "error_series": build_hourly_series(records, now),
+        "fatal_logs": fatal_logs,
+        "failed_login_users": [{"name": name, "count": count} for name, count in users.most_common(TOP_LIMIT)],
+        "failed_login_ips": [{"name": name, "count": count} for name, count in ips.most_common(TOP_LIMIT)],
+        "sources": sources,
+        "data_limited": truncated,
+    }
+
+
+def load_uploaded_records(name: str, text: str) -> tuple[list[LogRecord], bool]:
+    records: list[LogRecord] = []
+    truncated = False
+    stream = io.StringIO(text)
+    safe_name = Path(name).name[:240] or "uploaded.log"
+    lower_name = safe_name.lower()
+    if ".csv" in lower_name:
+        for index, row in enumerate(csv.reader(stream), start=1):
+            if index > MAX_LOG_LINES:
+                truncated = True
+                break
+            record = parse_csv_row(row, safe_name, cutoff=None, ceiling=None)
+            if record:
+                records.append(record)
+    elif ".json" in lower_name:
+        for index, line in enumerate(stream, start=1):
+            if index > MAX_LOG_LINES:
+                truncated = True
+                break
+            record = parse_json_line(line, safe_name, cutoff=None, ceiling=None)
+            if record:
+                records.append(record)
+    else:
+        pid_clients: dict[str, str] = {}
+        for index, line in enumerate(stream, start=1):
+            if index > MAX_LOG_LINES:
+                truncated = True
+                break
+            record = parse_text_line(line, safe_name, pid_clients, cutoff=None, ceiling=None)
+            if record:
+                records.append(record)
+    return records, truncated
+
+
+def main() -> int:
+    if len(sys.argv) == 3 and sys.argv[1] == "--stdin":
+        name = Path(sys.argv[2]).name[:240] or "uploaded.log"
+        raw = sys.stdin.buffer.read(MAX_UPLOAD_BYTES + 1)
+        if len(raw) > MAX_UPLOAD_BYTES:
+            print("uploaded log exceeds 64 MiB", file=sys.stderr)
+            return 2
+        text = raw.decode("utf-8", "replace")
+        records, truncated = load_uploaded_records(name, text)
+        latest = max((record.moment for record in records), default=NOW)
+        report = aggregate(records, [name], truncated, now=latest, imported=True)
+        json.dump(report, sys.stdout, ensure_ascii=False, separators=(",", ":"))
+        sys.stdout.write("\n")
+        return 0
+    if len(sys.argv) != 1:
+        print("usage: postgresql-security-report [--stdin filename]", file=sys.stderr)
+        return 2
+    file_records, sources, file_truncated = load_file_records()
+    journal_records, journal_truncated = load_journal_records()
+    report = aggregate(file_records + journal_records, sources + (["journald"] if journal_records else []), file_truncated or journal_truncated)
+    json.dump(report, sys.stdout, ensure_ascii=False, separators=(",", ":"))
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

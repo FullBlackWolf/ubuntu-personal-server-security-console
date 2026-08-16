@@ -1,0 +1,164 @@
+#!/bin/sh
+set -eu
+
+SYSTEMCTL=/usr/bin/systemctl
+
+usage() {
+    echo "usage: security-heavy-control status|set-auto TASK on|off|run TASK|stop TASK|logs TASK" >&2
+    exit 2
+}
+
+require_root() {
+    if [ "$(id -u)" -ne 0 ]; then
+        echo "此操作需要管理员授权。" >&2
+        exit 1
+    fi
+}
+
+valid_task() {
+    case "${1:-}" in
+        aide|lynis|debsums|clam-scan|clamd) return 0 ;;
+        *) echo "不支持的任务：${1:-}" >&2; exit 2 ;;
+    esac
+}
+
+unit_enabled() {
+    [ "$($SYSTEMCTL is-enabled "$1" 2>/dev/null || true)" = "enabled" ]
+}
+
+unit_active() {
+    [ "$($SYSTEMCTL is-active "$1" 2>/dev/null || true)" = "active" ]
+}
+
+process_active() {
+    /usr/bin/pgrep -x "$1" >/dev/null 2>&1
+}
+
+on_or_off() {
+    if "$@"; then printf 'on'; else printf 'off'; fi
+}
+
+running_or_not() {
+    if "$@"; then printf 'running'; else printf 'stopped'; fi
+}
+
+aide_running() {
+    unit_active dailyaidecheck.service || unit_active security-aide-manual.service || process_active aide
+}
+
+debsums_running() {
+    unit_active security-debsums-manual.service || process_active debsums
+}
+
+show_status() {
+    aide_auto=off
+    if grep -q '^CRON_DAILY_RUN=yes$' /etc/default/aide 2>/dev/null && unit_enabled dailyaidecheck.timer; then aide_auto=on; fi
+    aide_detail='基线未创建；首次运行将初始化基线'
+    if [ -f /var/lib/aide/aide.db ] || [ -f /var/lib/aide/aide.db.gz ]; then aide_detail='基线已就绪；运行时执行完整性校验'; fi
+    printf 'aide|%s|%s|%s\n' "$aide_auto" "$(running_or_not aide_running)" "$aide_detail"
+
+    printf 'lynis|%s|%s|每日计划，默认关闭\n' "$(on_or_off unit_enabled lynis.timer)" "$(running_or_not unit_active lynis.service)"
+
+    debsums_auto=off
+    if grep -Eq '^CRON_CHECK=(daily|weekly|monthly)$' /etc/default/debsums 2>/dev/null; then debsums_auto=on; fi
+    printf 'debsums|%s|%s|启用后每周校验已安装软件包\n' "$debsums_auto" "$(running_or_not debsums_running)"
+
+    printf 'clam-scan|%s|%s|每周一 02:00，默认关闭\n' "$(on_or_off unit_enabled clamav-weekly-scan.timer)" "$(running_or_not unit_active clamav-weekly-scan.service)"
+
+    clamd_auto=off
+    if unit_enabled clamav-daemon.service || unit_enabled clamav-daemon.socket; then clamd_auto=on; fi
+    printf 'clamd|%s|%s|常驻内存扫描引擎，默认关闭\n' "$clamd_auto" "$(running_or_not unit_active clamav-daemon.service)"
+}
+
+set_config_value() {
+    file=$1
+    key=$2
+    value=$3
+    if grep -q "^${key}=" "$file"; then
+        /usr/bin/sed -i -E "s|^${key}=.*|${key}=${value}|" "$file"
+    else
+        printf '%s=%s\n' "$key" "$value" >> "$file"
+    fi
+}
+
+set_auto() {
+    task=$1
+    setting=$2
+    case "$setting" in on|off) ;; *) usage ;; esac
+    case "$task:$setting" in
+        aide:on)
+            if ! [ -f /var/lib/aide/aide.db ] && ! [ -f /var/lib/aide/aide.db.gz ]; then
+                echo 'AIDE 基线尚未创建。请先使用“立即运行”完成基线初始化，再启用每日校验。' >&2
+                exit 1
+            fi
+            set_config_value /etc/default/aide CRON_DAILY_RUN yes
+            $SYSTEMCTL enable --now dailyaidecheck.timer
+            echo 'AIDE 每日自动校验已启用。'
+            ;;
+        aide:off)
+            set_config_value /etc/default/aide CRON_DAILY_RUN no
+            $SYSTEMCTL disable --now dailyaidecheck.timer
+            echo 'AIDE 每日自动校验已关闭。'
+            ;;
+        lynis:on) $SYSTEMCTL enable --now lynis.timer; echo 'Lynis 每日自动审计已启用。' ;;
+        lynis:off) $SYSTEMCTL disable --now lynis.timer; echo 'Lynis 每日自动审计已关闭。' ;;
+        debsums:on) set_config_value /etc/default/debsums CRON_CHECK weekly; echo 'debsums 每周自动校验已启用。' ;;
+        debsums:off) set_config_value /etc/default/debsums CRON_CHECK never; echo 'debsums 自动校验已关闭。' ;;
+        clam-scan:on) $SYSTEMCTL enable --now clamav-weekly-scan.timer; echo 'ClamAV 每周全盘扫描已启用。' ;;
+        clam-scan:off) $SYSTEMCTL disable --now clamav-weekly-scan.timer; echo 'ClamAV 每周全盘扫描已关闭。' ;;
+        clamd:on) $SYSTEMCTL enable --now clamav-daemon.service clamav-daemon.socket; echo 'ClamAV 常驻引擎已启用。' ;;
+        clamd:off) $SYSTEMCTL disable --now clamav-daemon.service clamav-daemon.socket; echo 'ClamAV 常驻引擎已关闭。' ;;
+    esac
+}
+
+run_task() {
+    case "$1" in
+        aide)
+            if [ -f /var/lib/aide/aide.db ] || [ -f /var/lib/aide/aide.db.gz ]; then
+                $SYSTEMCTL start --no-block dailyaidecheck.service
+                echo 'AIDE 完整性校验已在后台启动。'
+            else
+                /usr/bin/systemd-run --collect --unit=security-aide-manual --property=Nice=19 --property=IOSchedulingClass=idle /usr/sbin/aideinit -y
+                echo 'AIDE 基线初始化已在后台启动。'
+            fi
+            ;;
+        lynis) $SYSTEMCTL start --no-block lynis.service; echo 'Lynis 审计已在后台启动。' ;;
+        debsums)
+            /usr/bin/systemd-run --collect --unit=security-debsums-manual --property=Nice=19 --property=IOSchedulingClass=idle /usr/bin/debsums -s
+            echo 'debsums 校验已在后台启动。'
+            ;;
+        clam-scan) $SYSTEMCTL start --no-block clamav-weekly-scan.service; echo 'ClamAV 全盘扫描已在后台启动。' ;;
+        clamd) $SYSTEMCTL start clamav-daemon.service; echo 'ClamAV 常驻引擎已启动；未设置开机启动。' ;;
+    esac
+}
+
+stop_task() {
+    case "$1" in
+        aide) $SYSTEMCTL stop dailyaidecheck.service security-aide-manual.service 2>/dev/null || true ;;
+        lynis) $SYSTEMCTL stop lynis.service ;;
+        debsums) $SYSTEMCTL stop security-debsums-manual.service 2>/dev/null || true ;;
+        clam-scan) $SYSTEMCTL stop clamav-weekly-scan.service ;;
+        clamd) $SYSTEMCTL stop clamav-daemon.service clamav-daemon.socket ;;
+    esac
+    echo '任务已停止；自动运行设置未改变。'
+}
+
+show_logs() {
+    case "$1" in
+        aide) /usr/bin/journalctl -u dailyaidecheck.service -u security-aide-manual.service -n 80 --no-pager -o short-iso ;;
+        lynis) /usr/bin/journalctl -u lynis.service -n 80 --no-pager -o short-iso ;;
+        debsums) /usr/bin/journalctl -u security-debsums-manual.service -n 80 --no-pager -o short-iso ;;
+        clam-scan) /usr/bin/journalctl -u clamav-weekly-scan.service -n 80 --no-pager -o short-iso ;;
+        clamd) /usr/bin/journalctl -u clamav-daemon.service -n 80 --no-pager -o short-iso ;;
+    esac
+}
+
+command=${1:-}
+case "$command" in
+    status) [ "$#" -eq 1 ] || usage; show_status ;;
+    set-auto) [ "$#" -eq 3 ] || usage; valid_task "$2"; require_root; set_auto "$2" "$3" ;;
+    run) [ "$#" -eq 2 ] || usage; valid_task "$2"; require_root; run_task "$2" ;;
+    stop) [ "$#" -eq 2 ] || usage; valid_task "$2"; require_root; stop_task "$2" ;;
+    logs) [ "$#" -eq 2 ] || usage; valid_task "$2"; require_root; show_logs "$2" ;;
+    *) usage ;;
+esac

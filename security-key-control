@@ -1,0 +1,586 @@
+#!/usr/bin/python3
+"""Restricted root helper for the Cockpit SSH public-key manager."""
+
+from __future__ import annotations
+
+import base64
+import datetime as dt
+import hashlib
+import ipaddress
+import json
+import os
+import pwd
+import re
+import shutil
+import stat
+import subprocess
+import sys
+from dataclasses import dataclass
+
+
+DISABLED_PREFIX = "# key-manager-disabled "
+GATE_COMMAND = "/usr/local/libexec/security-key-session-gate"
+CONTROLLED_OPTIONS = {
+    "agent-forwarding", "command", "expiry-time", "from", "no-agent-forwarding",
+    "no-port-forwarding", "no-pty", "no-user-rc", "no-X11-forwarding",
+    "port-forwarding", "pty", "restrict", "user-rc", "verify-required", "X11-forwarding",
+}
+KEY_PATTERN = re.compile(
+    r"(?<!\S)(?P<type>(?:ssh-(?:rsa|dss|ed25519)|ecdsa-sha2-nistp\d+|sk-(?:ssh-ed25519|ecdsa-sha2-nistp\d+)@openssh\.com))"
+    r"\s+(?P<blob>[A-Za-z0-9+/]+={0,3})(?:\s+(?P<comment>.*))?$"
+)
+SAFE_USER = re.compile(r"^[a-z_][a-z0-9_-]{0,31}$")
+TYPE_LABELS = {
+    "ssh-ed25519": "ED25519",
+    "ssh-rsa": "RSA",
+    "ssh-dss": "DSA",
+    "ecdsa-sha2-nistp256": "ECDSA P-256",
+    "ecdsa-sha2-nistp384": "ECDSA P-384",
+    "ecdsa-sha2-nistp521": "ECDSA P-521",
+    "sk-ssh-ed25519@openssh.com": "FIDO2 ED25519",
+    "sk-ecdsa-sha2-nistp256@openssh.com": "FIDO2 ECDSA",
+}
+
+
+class UserError(Exception):
+    pass
+
+
+@dataclass
+class Account:
+    name: str
+    uid: int
+    gid: int
+    home: str
+
+
+@dataclass
+class ParsedKey:
+    line_index: int
+    enabled: bool
+    options: list[tuple[str, str | None]]
+    key_type: str
+    blob: str
+    comment: str
+    fingerprint: str
+    gate_id: str
+
+
+def accounts() -> list[Account]:
+    result = []
+    for entry in pwd.getpwall():
+        if entry.pw_uid != 0 and not (1000 <= entry.pw_uid < 60000):
+            continue
+        if not SAFE_USER.fullmatch(entry.pw_name) or not os.path.isabs(entry.pw_dir):
+            continue
+        if entry.pw_shell.endswith(("nologin", "false")):
+            continue
+        result.append(Account(entry.pw_name, entry.pw_uid, entry.pw_gid, entry.pw_dir))
+    return sorted(result, key=lambda item: (item.uid != 0, item.uid, item.name))
+
+
+def account_for(name: str) -> Account:
+    for item in accounts():
+        if item.name == name:
+            return item
+    raise UserError("账号不存在或不允许管理。")
+
+
+def authorized_path(account: Account) -> str:
+    return os.path.join(account.home, ".ssh", "authorized_keys")
+
+
+def read_lines(account: Account) -> list[str]:
+    home_fd = None
+    ssh_fd = None
+    descriptor = None
+    try:
+        home_fd = os.open(account.home, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        ssh_fd = os.open(".ssh", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=home_fd)
+        descriptor = os.open("authorized_keys", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=ssh_fd)
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_uid not in (0, account.uid):
+            raise UserError(f"{account.name} 的 authorized_keys 类型或所有者异常。")
+        if info.st_size > 1024 * 1024:
+            raise UserError(f"{account.name} 的 authorized_keys 超过 1 MiB，已拒绝读取。")
+        with os.fdopen(descriptor, "r", encoding="utf-8", errors="strict") as handle:
+            descriptor = None
+            return handle.read().splitlines()
+    except FileNotFoundError:
+        return []
+    except (UnicodeError, OSError) as error:
+        raise UserError(f"无法读取 {account.name} 的 authorized_keys：{error}") from error
+    finally:
+        if descriptor is not None:
+            os.close(descriptor)
+        if ssh_fd is not None:
+            os.close(ssh_fd)
+        if home_fd is not None:
+            os.close(home_fd)
+
+
+def parse_option_list(text: str) -> list[tuple[str, str | None]]:
+    if not text:
+        return []
+    fields: list[str] = []
+    current: list[str] = []
+    quoted = False
+    escaped = False
+    for char in text:
+        if escaped:
+            current.append(char)
+            escaped = False
+        elif char == "\\" and quoted:
+            current.append(char)
+            escaped = True
+        elif char == '"':
+            current.append(char)
+            quoted = not quoted
+        elif char == "," and not quoted:
+            fields.append("".join(current))
+            current = []
+        else:
+            current.append(char)
+    if quoted or escaped:
+        raise UserError("公钥选项中的引号或转义不完整。")
+    fields.append("".join(current))
+    result = []
+    for field in fields:
+        if not field:
+            raise UserError("公钥选项中存在空项目。")
+        if "=" in field:
+            name, value = field.split("=", 1)
+            if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
+                value = value[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+            result.append((name, value))
+        else:
+            result.append((field, None))
+    return result
+
+
+def decode_blob(key_type: str, blob: str) -> bytes:
+    try:
+        raw = base64.b64decode(blob.encode("ascii"), validate=True)
+    except (ValueError, UnicodeError) as error:
+        raise UserError("公钥的 Base64 内容无效。") from error
+    if len(raw) < 8:
+        raise UserError("公钥内容过短。")
+    declared_len = int.from_bytes(raw[:4], "big")
+    declared = raw[4:4 + declared_len].decode("ascii", errors="ignore")
+    if declared != key_type:
+        raise UserError("公钥类型与编码内容不一致。")
+    return raw
+
+
+def identifiers(key_type: str, blob: str) -> tuple[str, str]:
+    digest = hashlib.sha256(decode_blob(key_type, blob)).digest()
+    display = "SHA256:" + base64.b64encode(digest).decode("ascii").rstrip("=")
+    gate_id = base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+    return display, gate_id
+
+
+def parse_key_line(line: str, index: int) -> ParsedKey | None:
+    enabled = True
+    content = line.strip()
+    if content.startswith(DISABLED_PREFIX):
+        enabled = False
+        content = content[len(DISABLED_PREFIX):].lstrip()
+    elif not content or content.startswith("#"):
+        return None
+    match = KEY_PATTERN.search(content)
+    if not match:
+        return None
+    prefix = content[:match.start()].strip()
+    key_type = match.group("type")
+    blob = match.group("blob")
+    fingerprint, gate_id = identifiers(key_type, blob)
+    return ParsedKey(
+        line_index=index,
+        enabled=enabled,
+        options=parse_option_list(prefix),
+        key_type=key_type,
+        blob=blob,
+        comment=(match.group("comment") or "").strip(),
+        fingerprint=fingerprint,
+        gate_id=gate_id,
+    )
+
+
+def option_map(options: list[tuple[str, str | None]]) -> dict[str, list[str | None]]:
+    result: dict[str, list[str | None]] = {}
+    for name, value in options:
+        result.setdefault(name, []).append(value)
+    return result
+
+
+def key_policy(key: ParsedKey, account: Account) -> dict[str, object]:
+    options = option_map(key.options)
+    restricted = "restrict" in options
+    commands = [value or "" for value in options.get("command", [])]
+    managed_command = f"{GATE_COMMAND} {key.gate_id}"
+    knock_required = managed_command in commands
+    expires_raw = (options.get("expiry-time") or [""])[-1] or ""
+    expires = ""
+    if re.fullmatch(r"\d{8}(?:\d{6})?Z?", expires_raw):
+        expires = f"{expires_raw[:4]}-{expires_raw[4:6]}-{expires_raw[6:8]}"
+
+    def allowed(negative: str, positive: str) -> bool:
+        if positive in options:
+            return True
+        return not restricted and negative not in options
+
+    return {
+        "user": account.name,
+        "fingerprint": key.fingerprint,
+        "type": key.key_type,
+        "type_label": TYPE_LABELS.get(key.key_type, key.key_type),
+        "comment": key.comment,
+        "enabled": key.enabled,
+        "allow_from": ((options.get("from") or [""])[-1] or ""),
+        "expires": expires,
+        "knock_required": knock_required,
+        "command_conflict": any(command != managed_command for command in commands),
+        "agent_forwarding": allowed("no-agent-forwarding", "agent-forwarding"),
+        "port_forwarding": allowed("no-port-forwarding", "port-forwarding"),
+        "pty": allowed("no-pty", "pty"),
+        "user_rc": allowed("no-user-rc", "user-rc"),
+        "x11_forwarding": allowed("no-X11-forwarding", "X11-forwarding"),
+        "touch_required": "verify-required" in options,
+    }
+
+
+def all_keys() -> list[dict[str, object]]:
+    result = []
+    for account in accounts():
+        for index, line in enumerate(read_lines(account)):
+            key = parse_key_line(line, index)
+            if key:
+                result.append(key_policy(key, account))
+    return result
+
+
+def active_service() -> tuple[str, bool]:
+    candidates = ("fwknop-server.service", "fwknopd.service")
+    for unit in candidates:
+        check = subprocess.run(
+            ["/usr/bin/systemctl", "is-active", unit], text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=4, check=False,
+        )
+        if check.returncode == 0:
+            return unit, True
+    return candidates[0], False
+
+
+def knock_status() -> dict[str, object]:
+    installed = os.path.isfile("/usr/sbin/fwknopd") and os.path.isfile("/usr/bin/fwknop")
+    unit, active = active_service() if installed else ("fwknop-server.service", False)
+    configured = False
+    try:
+        with open("/etc/fwknop/access.conf", "r", encoding="utf-8", errors="replace") as handle:
+            access = handle.read()
+        configured = bool(re.search(r"(?mi)^\s*SOURCE\s+\S+", access)) and bool(
+            re.search(r"(?mi)^\s*(?:KEY|KEY_BASE64|GPG_DECRYPT_ID)\s+\S+", access)
+            or re.search(r"(?mi)^\s*%include(?:_folder|_keys)?\s+\S+", access)
+        )
+    except OSError:
+        pass
+    return {
+        "installed": installed,
+        "active": active,
+        "unit": unit,
+        "access_configured": configured,
+        "gate_installed": os.path.isfile(GATE_COMMAND) and os.path.isfile("/usr/local/libexec/security-key-knock-check"),
+    }
+
+
+def validate_comment(value: object) -> str:
+    if not isinstance(value, str):
+        raise UserError("公钥名称必须是文本。")
+    value = value.strip()
+    if len(value) > 160 or any(ord(char) < 32 or ord(char) == 127 for char in value):
+        raise UserError("公钥名称最多 160 个字符，且不能包含控制字符。")
+    return value
+
+
+def validate_sources(value: object) -> str:
+    if not isinstance(value, str):
+        raise UserError("来源地址必须是文本。")
+    value = value.replace(" ", "")
+    if not value:
+        return ""
+    if len(value) > 512:
+        raise UserError("来源地址列表过长。")
+    items = value.split(",")
+    if all(item.startswith("!") for item in items):
+        raise UserError("来源地址至少需要一个非排除项。")
+    for item in items:
+        candidate = item[1:] if item.startswith("!") else item
+        if not candidate:
+            raise UserError("来源地址列表包含空项目。")
+        try:
+            ipaddress.ip_network(candidate, strict=False)
+        except ValueError as error:
+            raise UserError(f"来源地址无效：{item}") from error
+    return value
+
+
+def validate_expiry(value: object) -> str:
+    if not isinstance(value, str):
+        raise UserError("失效日期必须是文本。")
+    if not value:
+        return ""
+    try:
+        parsed = dt.date.fromisoformat(value)
+    except ValueError as error:
+        raise UserError("失效日期格式无效。") from error
+    return parsed.strftime("%Y%m%d")
+
+
+def bool_field(payload: dict[str, object], name: str, default: bool = False) -> bool:
+    value = payload.get(name, default)
+    if not isinstance(value, bool):
+        raise UserError(f"{name} 必须是布尔值。")
+    return value
+
+
+def quote_option(name: str, value: str | None) -> str:
+    if value is None:
+        return name
+    if any(char in value for char in ("\n", "\r")):
+        raise UserError(f"{name} 包含不允许的字符。")
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    return f'{name}="{escaped}"'
+
+
+def build_line(key: ParsedKey, payload: dict[str, object]) -> str:
+    comment = validate_comment(payload.get("comment", key.comment))
+    allow_from = validate_sources(payload.get("allow_from", ""))
+    expiry = validate_expiry(payload.get("expires", ""))
+    enabled = bool_field(payload, "enabled", key.enabled)
+    knock = bool_field(payload, "knock_required")
+    touch = bool_field(payload, "touch_required") and key.key_type.startswith("sk-")
+
+    preserved = [(name, value) for name, value in key.options if name not in CONTROLLED_OPTIONS]
+    existing_commands = [(name, value) for name, value in key.options if name == "command"]
+    managed = f"{GATE_COMMAND} {key.gate_id}"
+    conflict = [value for _, value in existing_commands if value != managed]
+    if knock and conflict:
+        raise UserError("这把公钥已有自定义强制命令，无法同时启用敲门门禁。")
+    if not knock:
+        preserved.extend(("command", value) for value in conflict)
+
+    options = preserved
+    if allow_from:
+        options.append(("from", allow_from))
+    if expiry:
+        options.append(("expiry-time", expiry))
+    if knock:
+        options.append(("command", managed))
+    if not bool_field(payload, "agent_forwarding"):
+        options.append(("no-agent-forwarding", None))
+    if not bool_field(payload, "port_forwarding"):
+        options.append(("no-port-forwarding", None))
+    if not bool_field(payload, "x11_forwarding"):
+        options.append(("no-X11-forwarding", None))
+    if not bool_field(payload, "pty", True):
+        options.append(("no-pty", None))
+    if not bool_field(payload, "user_rc"):
+        options.append(("no-user-rc", None))
+    if touch:
+        options.append(("verify-required", None))
+
+    prefix = ",".join(quote_option(name, value) for name, value in options)
+    parts = ([prefix] if prefix else []) + [key.key_type, key.blob]
+    if comment:
+        parts.append(comment)
+    line = " ".join(parts)
+    return line if enabled else DISABLED_PREFIX + line
+
+
+def locate_key(account: Account, fingerprint: object) -> tuple[list[str], ParsedKey]:
+    if not isinstance(fingerprint, str) or not fingerprint.startswith("SHA256:"):
+        raise UserError("公钥指纹无效。")
+    lines = read_lines(account)
+    found = []
+    for index, line in enumerate(lines):
+        key = parse_key_line(line, index)
+        if key and key.fingerprint == fingerprint:
+            found.append(key)
+    if not found:
+        raise UserError("没有找到这把公钥；请刷新页面后重试。")
+    if len(found) > 1:
+        raise UserError("该账号存在重复公钥，请先手动清理重复项。")
+    return lines, found[0]
+
+
+def backup(account: Account, content: str) -> None:
+    root = "/var/backups/security-key-manager"
+    os.makedirs(root, mode=0o700, exist_ok=True)
+    os.chmod(root, 0o700)
+    stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
+    path = os.path.join(root, f"{account.name}-authorized_keys-{stamp}")
+    descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        os.write(descriptor, content.encode("utf-8"))
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def write_lines(account: Account, lines: list[str]) -> None:
+    old_content = "\n".join(read_lines(account))
+    if old_content:
+        old_content += "\n"
+    backup(account, old_content)
+
+    home_fd = os.open(account.home, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        try:
+            ssh_fd = os.open(".ssh", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=home_fd)
+        except FileNotFoundError:
+            os.mkdir(".ssh", 0o700, dir_fd=home_fd)
+            os.chown(".ssh", account.uid, account.gid, dir_fd=home_fd, follow_symlinks=False)
+            ssh_fd = os.open(".ssh", os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=home_fd)
+        try:
+            info = os.fstat(ssh_fd)
+            if not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0, account.uid):
+                raise UserError(".ssh 目录所有者异常，已拒绝写入。")
+            os.fchmod(ssh_fd, 0o700)
+            temporary = f".authorized_keys.tmp.{os.getpid()}"
+            descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=ssh_fd)
+            try:
+                content = "\n".join(lines)
+                if content:
+                    content += "\n"
+                os.write(descriptor, content.encode("utf-8"))
+                os.fchown(descriptor, account.uid, account.gid)
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+            os.rename(temporary, "authorized_keys", src_dir_fd=ssh_fd, dst_dir_fd=ssh_fd)
+            os.fsync(ssh_fd)
+        finally:
+            os.close(ssh_fd)
+    finally:
+        os.close(home_fd)
+
+
+def add_key(payload: dict[str, object]) -> None:
+    account = account_for(str(payload.get("user", "")))
+    public_key = payload.get("public_key")
+    if not isinstance(public_key, str) or len(public_key) > 16384 or "PRIVATE KEY" in public_key:
+        raise UserError("请粘贴一行有效的 OpenSSH 公钥，不要粘贴私钥。")
+    meaningful = [line.strip() for line in public_key.splitlines() if line.strip() and not line.lstrip().startswith("#")]
+    if len(meaningful) != 1:
+        raise UserError("每次只能添加一把公钥。")
+    parsed = parse_key_line(meaningful[0], 0)
+    if not parsed:
+        raise UserError("无法识别该 OpenSSH 公钥。")
+    if any(name for name, _ in parsed.options):
+        raise UserError("新增公钥不能自带 authorized_keys 选项，请只粘贴公钥类型、内容和备注。")
+    for key in all_keys():
+        if key["user"] == account.name and key["fingerprint"] == parsed.fingerprint:
+            raise UserError("该账号已经安装了这把公钥。")
+    comment = validate_comment(payload.get("comment", "")) or parsed.comment
+    settings: dict[str, object] = {
+        "comment": comment,
+        "enabled": True,
+        "allow_from": "",
+        "expires": "",
+        "knock_required": bool_field(payload, "knock_required", True),
+        "agent_forwarding": False,
+        "port_forwarding": False,
+        "x11_forwarding": False,
+        "pty": True,
+        "user_rc": False,
+        "touch_required": False,
+    }
+    lines = read_lines(account)
+    lines.append(build_line(parsed, settings))
+    write_lines(account, lines)
+
+
+def update_key(payload: dict[str, object]) -> None:
+    account = account_for(str(payload.get("user", "")))
+    lines, key = locate_key(account, payload.get("fingerprint"))
+    lines[key.line_index] = build_line(key, payload)
+    write_lines(account, lines)
+
+
+def delete_key(payload: dict[str, object]) -> None:
+    account = account_for(str(payload.get("user", "")))
+    lines, key = locate_key(account, payload.get("fingerprint"))
+    del lines[key.line_index]
+    write_lines(account, lines)
+
+
+def load_payload() -> dict[str, object]:
+    raw = sys.stdin.buffer.read(65537)
+    if len(raw) > 65536:
+        raise UserError("请求内容过大。")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as error:
+        raise UserError("请求不是有效的 JSON。") from error
+    if not isinstance(value, dict):
+        raise UserError("请求格式无效。")
+    return value
+
+
+def mutate() -> None:
+    if os.geteuid() != 0:
+        raise UserError("此操作需要管理员授权。")
+    payload = load_payload()
+    action = payload.get("action")
+    if action == "add":
+        add_key(payload)
+    elif action == "update":
+        update_key(payload)
+    elif action == "delete":
+        delete_key(payload)
+    else:
+        raise UserError("不支持的变更操作。")
+    print(json.dumps({"ok": True}, ensure_ascii=False))
+
+
+def list_data() -> None:
+    print(json.dumps({
+        "users": [{"name": item.name, "home": item.home} for item in accounts()],
+        "keys": all_keys(),
+        "knock": knock_status(),
+    }, ensure_ascii=False))
+
+
+def knock_logs() -> None:
+    if os.geteuid() != 0:
+        raise UserError("读取敲门日志需要管理员授权。")
+    command = [
+        "/usr/bin/journalctl", "-n", "120", "--no-pager", "-o", "short-iso",
+        "-u", "fwknop-server.service", "-u", "fwknopd.service", "-t", "fwknopd",
+    ]
+    result = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=8, check=False)
+    print(result.stdout.strip() or "没有近期 fwknop 日志。")
+
+
+def main() -> int:
+    if len(sys.argv) != 2 or sys.argv[1] not in {"list", "mutate", "knock-logs"}:
+        print("用法：security-key-control {list|mutate|knock-logs}", file=sys.stderr)
+        return 2
+    try:
+        if sys.argv[1] == "list":
+            list_data()
+        elif sys.argv[1] == "mutate":
+            mutate()
+        else:
+            knock_logs()
+        return 0
+    except UserError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    except (OSError, subprocess.SubprocessError) as error:
+        print(f"系统操作失败：{error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

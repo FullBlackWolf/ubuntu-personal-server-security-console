@@ -1,0 +1,31 @@
+{
+  "version": 0,
+  "requires": {
+    "cockpit": "300"
+  },
+  "menu": {
+    "security-center": {
+      "label": "安全事件中心",
+      "order": 7,
+      "keywords": [
+        { "matches": ["security", "incident", "timeline", "alert", "integrity", "安全事件", "告警", "时间线"] }
+      ]
+    },
+    "high-risk-operations": {
+      "label": "高风险操作统计",
+      "order": 8,
+      "keywords": [
+        { "matches": ["security", "audit", "sudo", "pkexec", "high risk", "高风险", "审计"] }
+      ]
+    },
+    "suspicious-operations": {
+      "label": "可疑操作",
+      "order": 9,
+      "keywords": [
+        { "matches": ["security", "suspicious", "ufw", "fail2ban", "ssh", "可疑", "异常"] }
+      ]
+    }
+  },
+  "content-security-policy": "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'self'",
+  "translate": false
+}

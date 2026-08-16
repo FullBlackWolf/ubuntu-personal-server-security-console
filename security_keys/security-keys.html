@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>公钥与敲门</title>
+  <link rel="stylesheet" href="security-keys.css">
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">SSH ACCESS CONTROL</p>
+        <h1>公钥与敲门</h1>
+        <p class="subtitle">管理本机 SSH 公钥，并为每把钥匙分别限制来源、有效期、转发能力和 SPA 敲门要求。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="button secondary" data-jump="/security_dashboard/security-dashboard" type="button">返回安全概览</button>
+        <button id="refresh" class="button secondary" type="button">刷新</button>
+        <button id="add-key" class="button primary" type="button">添加公钥</button>
+      </div>
+    </header>
+
+    <section id="knock-card" class="knock-card" aria-live="polite">
+      <div class="knock-symbol">K</div>
+      <div class="knock-copy">
+        <div class="status-line">
+          <strong>SPA 敲门服务</strong>
+          <span id="knock-badge" class="badge loading">检查中</span>
+        </div>
+        <p id="knock-description">正在检查本机 fwknop 和 SSH 门禁状态…</p>
+      </div>
+      <button id="knock-logs" class="inline-button" type="button">最近日志</button>
+    </section>
+
+    <section class="toolbar" aria-label="筛选公钥">
+      <label class="search">
+        <span>搜索</span>
+        <input id="search" type="search" placeholder="名称、指纹、账号或类型">
+      </label>
+      <label>
+        <span>账号</span>
+        <select id="user-filter"><option value="">全部账号</option></select>
+      </label>
+      <div class="count"><strong id="key-count">0</strong><span>把公钥</span></div>
+    </section>
+
+    <section id="key-list" class="key-list" aria-live="polite"></section>
+
+    <section id="empty" class="empty" hidden>
+      <div class="empty-icon">＋</div>
+      <h2>还没有 SSH 公钥</h2>
+      <p>添加第一把公钥后，可以单独启用敲门、来源限制和最小权限。</p>
+      <button class="button primary" data-open-add type="button">添加公钥</button>
+    </section>
+  </main>
+
+  <dialog id="settings-dialog">
+    <form id="settings-form" method="dialog">
+      <div class="dialog-head">
+        <div>
+          <p class="eyebrow">PER-KEY POLICY</p>
+          <h2 id="settings-title">公钥安全设置</h2>
+          <p id="settings-fingerprint" class="mono muted"></p>
+        </div>
+        <button class="icon-button" data-close type="button" aria-label="关闭">×</button>
+      </div>
+
+      <div class="form-body">
+        <label class="field full"><span>名称 / 备注</span><input name="comment" maxlength="160" placeholder="例如：办公室 MacBook"></label>
+        <div class="field-row">
+          <label class="field"><span>允许的来源地址</span><input name="allow_from" placeholder="留空为任意；例如 192.0.2.0/24"></label>
+          <label class="field"><span>失效日期</span><input name="expires" type="date"></label>
+        </div>
+
+        <div class="setting featured">
+          <div>
+            <strong>连接前必须 SPA 敲门</strong>
+            <p>只有来源地址仍处于 fwknop 临时放行窗口时，这把公钥才能建立会话。</p>
+          </div>
+          <label class="switch"><input name="knock_required" type="checkbox"><span></span></label>
+        </div>
+
+        <div class="setting danger-soft">
+          <div><strong>启用这把公钥</strong><p>关闭后保留配置，但 SSH 会立即拒绝此公钥。</p></div>
+          <label class="switch"><input name="enabled" type="checkbox"><span></span></label>
+        </div>
+
+        <h3>会话能力</h3>
+        <div class="settings-grid">
+          <div class="setting"><div><strong>交互终端（PTY）</strong><p>允许打开 Shell 或终端会话。</p></div><label class="switch"><input name="pty" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>端口转发</strong><p>允许 SSH 隧道与端口映射。</p></div><label class="switch"><input name="port_forwarding" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>SSH Agent 转发</strong><p>允许远端使用本地 Agent。</p></div><label class="switch"><input name="agent_forwarding" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>X11 转发</strong><p>允许图形应用通过 SSH 转发。</p></div><label class="switch"><input name="x11_forwarding" type="checkbox"><span></span></label></div>
+          <div class="setting"><div><strong>执行 ~/.ssh/rc</strong><p>允许登录时运行用户 SSH rc。</p></div><label class="switch"><input name="user_rc" type="checkbox"><span></span></label></div>
+          <div id="touch-setting" class="setting"><div><strong>硬件触摸验证</strong><p>FIDO 安全密钥每次使用都要求触摸确认。</p></div><label class="switch"><input name="touch_required" type="checkbox"><span></span></label></div>
+        </div>
+        <p id="form-error" class="form-error" role="alert"></p>
+      </div>
+
+      <div class="dialog-actions">
+        <button id="delete-key" class="button danger" type="button">删除公钥</button>
+        <span class="spacer"></span>
+        <button class="button secondary neutral" data-close type="button">取消</button>
+        <button id="save-key" class="button primary" type="submit">保存设置</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="add-dialog">
+    <form id="add-form" method="dialog">
+      <div class="dialog-head">
+        <div><p class="eyebrow">NEW SSH KEY</p><h2>添加公钥</h2></div>
+        <button class="icon-button" data-close type="button" aria-label="关闭">×</button>
+      </div>
+      <div class="form-body">
+        <label class="field full"><span>安装到账号</span><select name="user" required></select></label>
+        <label class="field full"><span>OpenSSH 公钥</span><textarea name="public_key" rows="6" required placeholder="ssh-ed25519 AAAAC3… device-name"></textarea><small>只粘贴公钥；请勿粘贴私钥。</small></label>
+        <label class="field full"><span>名称 / 备注（可选）</span><input name="comment" maxlength="160" placeholder="默认使用公钥末尾的备注"></label>
+        <div class="setting featured">
+          <div><strong>连接前必须 SPA 敲门</strong><p>建议远程管理钥匙启用；客户端需已有 fwknop 配置。</p></div>
+          <label class="switch"><input name="knock_required" type="checkbox" checked><span></span></label>
+        </div>
+        <p id="add-error" class="form-error" role="alert"></p>
+      </div>
+      <div class="dialog-actions">
+        <span class="spacer"></span><button class="button secondary neutral" data-close type="button">取消</button><button id="create-key" class="button primary" type="submit">添加公钥</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="output-dialog" class="output-dialog">
+    <div class="dialog-head"><div><p class="eyebrow">FWKNOP JOURNAL</p><h2>最近敲门日志</h2></div><button class="icon-button" data-close type="button">×</button></div>
+    <pre id="output">正在读取…</pre>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="../base1/cockpit.js"></script>
+  <script src="security-keys.js"></script>
+</body>
+</html>

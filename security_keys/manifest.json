@@ -1,0 +1,17 @@
+{
+  "version": 0,
+  "requires": {
+    "cockpit": "300"
+  },
+  "menu": {
+    "security-keys": {
+      "label": "公钥与敲门",
+      "order": 6,
+      "keywords": [
+        { "matches": ["security", "ssh", "public key", "authorized_keys", "fwknop", "SPA", "公钥", "敲门"] }
+      ]
+    }
+  },
+  "content-security-policy": "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'self'",
+  "translate": false
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly verified server security archive
+
+[Timer]
+OnCalendar=Sun *-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=45m
+
+[Install]
+WantedBy=timers.target

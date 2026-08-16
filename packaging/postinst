@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+if [ "$1" = configure ]; then
+    echo "Ubuntu Personal Server Security Console is ready."
+    echo "Run 'server-security-console-installer' or open its application launcher to select features."
+fi
+
+exit 0

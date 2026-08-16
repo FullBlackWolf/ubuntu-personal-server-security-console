@@ -1,0 +1,9 @@
+[Unit]
+Description=Create weekly verified server security archive
+After=systemd-journald.service auditd.service
+
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+ExecStart=/usr/local/sbin/security-operations-control archive weekly

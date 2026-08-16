@@ -1,0 +1,2 @@
+# The checker is read-only, validates both arguments, and executes only iptables-save.
+ALL ALL=(root) NOPASSWD: /usr/local/libexec/security-key-knock-check *

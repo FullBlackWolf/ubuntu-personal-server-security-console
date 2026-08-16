@@ -1,0 +1,38 @@
+{
+  "dashboard": {
+    "name": "Security Dashboard",
+    "description": "Cockpit overview, maintenance actions, and the universal historical log reader.",
+    "depends_on": [],
+    "system_packages": []
+  },
+  "postgresql": {
+    "name": "PostgreSQL Security Analytics",
+    "description": "Authentication failures, error-rate charts, FATAL logs, and failed-login rankings.",
+    "depends_on": ["dashboard"],
+    "system_packages": []
+  },
+  "operations": {
+    "name": "Security Event Center",
+    "description": "Unified timeline, server-side reviews, correlations, alerts, health checks, and imports.",
+    "depends_on": ["dashboard", "postgresql"],
+    "system_packages": ["auditd"]
+  },
+  "automation": {
+    "name": "Retention, Alerts, and Archives",
+    "description": "Configurable retention plus scheduled alert evaluation and verified daily/weekly archives.",
+    "depends_on": ["operations"],
+    "system_packages": []
+  },
+  "scanners": {
+    "name": "On-demand Security Scanners",
+    "description": "Cockpit controls for AIDE, Lynis, debsums, and ClamAV with all heavy jobs off by default.",
+    "depends_on": ["dashboard"],
+    "system_packages": ["aide", "lynis", "debsums", "clamav"]
+  },
+  "ssh_keys": {
+    "name": "SSH Key and SPA Manager",
+    "description": "Per-key source, expiry, capability, and fwknop Single Packet Authorization controls.",
+    "depends_on": ["dashboard"],
+    "system_packages": ["openssh-server", "fwknop-server", "iptables"]
+  }
+}

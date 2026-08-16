@@ -1,0 +1,17 @@
+{
+  "version": 0,
+  "requires": {
+    "cockpit": "300"
+  },
+  "menu": {
+    "security-heavy": {
+      "label": "高资源防护",
+      "order": 6,
+      "keywords": [
+        { "matches": ["security", "aide", "lynis", "debsums", "clamav", "scan", "high resource"] }
+      ]
+    }
+  },
+  "content-security-policy": "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'self'",
+  "translate": false
+}

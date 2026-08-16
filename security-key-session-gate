@@ -1,0 +1,44 @@
+#!/usr/bin/python3
+"""AuthorizedKeys command wrapper that requires a current fwknop grant."""
+
+import os
+import pwd
+import re
+import subprocess
+import sys
+
+
+CHECKER = "/usr/local/libexec/security-key-knock-check"
+
+
+def deny(message: str) -> None:
+    print(f"SSH 访问被拒绝：{message}", file=sys.stderr)
+    raise SystemExit(126)
+
+
+if len(sys.argv) != 2 or not re.fullmatch(r"[A-Za-z0-9_-]{43}", sys.argv[1]):
+    deny("公钥门禁标识无效。")
+
+connection = os.environ.get("SSH_CONNECTION", "").split()
+if len(connection) != 4:
+    deny("无法确认远程来源地址。")
+remote_ip = connection[0]
+
+try:
+    result = subprocess.run(
+        ["/usr/bin/sudo", "-n", CHECKER, sys.argv[1], remote_ip],
+        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        text=True, timeout=5, check=False,
+    )
+except (OSError, subprocess.SubprocessError):
+    deny("敲门验证器不可用。")
+if result.returncode != 0:
+    deny((result.stderr or "请先完成 SPA 敲门后再连接。").strip())
+
+entry = pwd.getpwuid(os.getuid())
+shell = entry.pw_shell if os.path.isfile(entry.pw_shell) else "/bin/sh"
+original = os.environ.get("SSH_ORIGINAL_COMMAND", "")
+if original:
+    os.execve(shell, [shell, "-c", original], os.environ)
+else:
+    os.execve(shell, ["-" + os.path.basename(shell)], os.environ)

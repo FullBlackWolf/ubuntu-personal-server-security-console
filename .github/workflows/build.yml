@@ -1,0 +1,28 @@
+name: Build Debian package
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source
+        run: |
+          python3 -m py_compile packaging/server-security-console-installer postgresql-security-report security-operations-report security-operations-control security-key-control
+          sh -n packaging/build-deb.sh packaging/postinst packaging/prerm install.sh install-key-manager.sh install-postgresql-dashboard.sh install-security-operations.sh
+          for file in security_dashboard/*.js security_heavy/*.js security_keys/*.js security_operations/*.js; do node --check "$file"; done
+          python3 -m json.tool packaging/components.json >/dev/null
+          python3 -m unittest discover -s tests -v
+      - name: Build package
+        run: ./packaging/build-deb.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-security-console-deb
+          path: dist/*

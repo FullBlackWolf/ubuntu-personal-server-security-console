@@ -1,0 +1,17 @@
+{
+  "version": 0,
+  "requires": {
+    "cockpit": "300"
+  },
+  "menu": {
+    "security-dashboard": {
+      "label": "服务器安全控制台",
+      "order": 5,
+      "keywords": [
+        { "matches": ["security", "ssh", "firewall", "fail2ban", "auditd", "apparmor", "xrdp", "command approval"] }
+      ]
+    }
+  },
+  "content-security-policy": "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data:; style-src 'self'",
+  "translate": false
+}

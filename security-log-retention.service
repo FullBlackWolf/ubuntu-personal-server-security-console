@@ -1,0 +1,9 @@
+[Unit]
+Description=Enforce configured security log retention
+Documentation=man:journalctl(1) man:auditctl(8)
+
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=idle
+ExecStart=/usr/local/sbin/security-operations-control enforce-retention

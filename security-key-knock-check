@@ -1,0 +1,61 @@
+#!/usr/bin/python3
+"""Root-side read-only check for an active fwknop SSH firewall grant."""
+
+import ipaddress
+import re
+import shlex
+import subprocess
+import sys
+
+
+def rule_allows(rules: str, remote: ipaddress._BaseAddress) -> bool:
+    for line in rules.splitlines():
+        if not line.startswith("-A ") or "FWKNOP" not in line.upper():
+            continue
+        try:
+            fields = shlex.split(line)
+            target = fields[fields.index("-j") + 1]
+            port = fields[fields.index("--dport") + 1]
+            source_text = fields[fields.index("-s") + 1]
+        except (ValueError, IndexError):
+            continue
+        if target != "ACCEPT" or port != "22":
+            continue
+        try:
+            source = ipaddress.ip_network(source_text, strict=False)
+        except ValueError:
+            continue
+        if remote.version == source.version and remote in source:
+            return True
+    return False
+
+
+def main() -> int:
+    if len(sys.argv) != 3 or not re.fullmatch(r"[A-Za-z0-9_-]{43}", sys.argv[1]):
+        print("门禁参数无效。", file=sys.stderr)
+        return 2
+    try:
+        remote = ipaddress.ip_address(sys.argv[2])
+    except ValueError:
+        print("远程地址无效。", file=sys.stderr)
+        return 2
+    try:
+        result = subprocess.run(
+            ["/usr/sbin/iptables-save", "-t", "filter"],
+            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+            text=True, timeout=4, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        print("无法读取 fwknop 防火墙状态。", file=sys.stderr)
+        return 1
+    if result.returncode != 0:
+        print("无法读取 fwknop 防火墙状态。", file=sys.stderr)
+        return 1
+    if rule_allows(result.stdout, remote):
+        return 0
+    print("未找到该来源地址仍有效的 fwknop SSH 放行规则；请先敲门。", file=sys.stderr)
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

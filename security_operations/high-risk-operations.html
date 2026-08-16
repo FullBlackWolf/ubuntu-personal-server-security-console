@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>高风险操作统计</title>
+  <link rel="stylesheet" href="security-operations.css">
+</head>
+<body data-mode="high">
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">30-DAY AUDIT</p>
+        <h1>高风险操作统计</h1>
+        <p class="subtitle">统计提权命令、安全配置变更、远程管理登录和临时端口授权。统计表示敏感操作发生，不等同于恶意行为。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="button secondary" data-jump="/security_dashboard/security-dashboard" type="button">返回安全控制台</button>
+        <button id="refresh" class="button primary" type="button">刷新统计</button>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="安全操作页面">
+      <button class="tab" data-jump="/security_operations/security-center" type="button">安全事件中心</button>
+      <button class="tab active" type="button">高风险操作</button>
+      <button class="tab" data-jump="/security_operations/suspicious-operations" type="button">可疑操作</button>
+      <button class="tab" data-jump="/security_dashboard/security-dashboard" type="button">安全控制台</button>
+    </nav>
+
+    <section class="notice">
+      <div><strong>日志范围：最近 30 天</strong><span>数据来自 auditd 与 journald；命令中的密码、令牌和密钥字段会自动遮蔽。</span></div>
+      <div class="source-health" aria-live="polite">
+        <span id="audit-source" class="source-chip">auditd：检查中</span>
+        <span id="journal-source" class="source-chip">journald：检查中</span>
+        <span id="last-event" class="source-chip">最近事件：—</span>
+      </div>
+    </section>
+
+    <section class="summary-grid" aria-live="polite">
+      <article class="summary-card"><span>近 24 小时</span><strong id="count-24h">—</strong></article>
+      <article class="summary-card"><span>近 7 天</span><strong id="count-7d">—</strong></article>
+      <article class="summary-card"><span>近 30 天</span><strong id="count-30d">—</strong></article>
+      <article class="summary-card"><span>高优先级</span><strong id="count-severe">—</strong></article>
+      <article class="summary-card review-summary"><span>待复核（已载入详情）</span><strong id="count-pending">—</strong></article>
+      <article class="summary-card"><span>活跃操作用户</span><strong id="count-actors">—</strong></article>
+    </section>
+
+    <section class="analytics-grid high-analytics">
+      <article class="panel">
+        <div class="panel-heading"><h2>每日趋势</h2><span>最近 30 天</span></div>
+        <div id="daily-chart" class="bar-list"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><h2>操作类别</h2><span>按数量排序</span></div>
+        <div id="category-chart" class="bar-list"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><h2 id="dimension-title">操作用户</h2><span>前 20 项</span></div>
+        <div id="dimension-chart" class="bar-list"></div>
+      </article>
+      <article class="panel focus-panel">
+        <div class="panel-heading"><h2>调查焦点</h2><span>未复核的高优先级事件</span></div>
+        <div id="attention-list" class="attention-list"><p class="empty">等待加载</p></div>
+      </article>
+    </section>
+
+    <section class="panel details-panel">
+      <div class="panel-heading details-heading">
+        <div><h2>详细操作记录</h2><span id="result-count">等待加载</span></div>
+        <div class="filters">
+          <select id="period" aria-label="时间范围"><option value="1h">1 小时</option><option value="1">24 小时</option><option value="7">7 天</option><option value="30" selected>30 天</option></select>
+          <select id="category-filter" aria-label="操作类别"><option value="">全部类别</option></select>
+          <select id="severity-filter" aria-label="优先级"><option value="">全部级别</option><option value="high">高优先级</option><option value="medium">关注</option></select>
+          <select id="review-filter" aria-label="复核状态"><option value="">全部状态</option><option value="pending">待复核</option><option value="reviewed">已复核</option></select>
+          <input id="search" type="search" placeholder="搜索用户、命令、目标…" aria-label="搜索记录">
+          <button id="export-csv" class="filter-button" type="button">导出 CSV</button>
+          <button id="export-json" class="filter-button" type="button">导出 JSON</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>时间</th><th>级别</th><th>类别</th><th>操作用户</th><th>目标/摘要</th><th>复核状态</th><th>日志</th></tr></thead>
+          <tbody id="event-rows"></tbody>
+        </table>
+      </div>
+      <button id="load-more" class="button secondary hidden" type="button">加载更多</button>
+    </section>
+
+    <footer><span id="generated">尚未生成统计</span><button class="link" data-jump="/system/logs" type="button">打开系统日志</button></footer>
+  </main>
+
+  <dialog id="log-dialog">
+    <div class="dialog-heading"><div><p class="eyebrow">LOG DETAIL</p><h2 id="dialog-title">日志详情</h2></div><button id="close-dialog" class="close" type="button" aria-label="关闭">×</button></div>
+    <dl id="dialog-meta"></dl>
+    <pre id="dialog-log"></pre>
+    <section class="review-editor">
+      <div><label for="review-status">处置状态</label><select id="review-status"><option value="pending">待复核</option><option value="reviewed">已复核</option><option value="escalated">升级调查</option><option value="false_positive">误报</option><option value="resolved">已处置</option></select></div>
+      <div class="review-note-field"><label for="review-note">复核备注</label><textarea id="review-note" rows="3" maxlength="4000" placeholder="记录判断依据、处置动作或后续事项…"></textarea></div>
+      <span id="review-meta">尚未保存服务端复核记录</span>
+    </section>
+    <div class="dialog-actions"><button id="toggle-review" class="button review-action" type="button">保存复核记录</button><button class="button secondary" data-jump="/system/logs" type="button">打开系统日志页面</button><button id="close-dialog-bottom" class="button primary" type="button">关闭</button></div>
+  </dialog>
+
+  <script src="../base1/cockpit.js"></script>
+  <script src="security-operations.js"></script>
+</body>
+</html>

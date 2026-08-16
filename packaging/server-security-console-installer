@@ -1,0 +1,428 @@
+#!/usr/bin/python3
+"""Interactive, dependency-aware component installer for the security console."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import json
+import os
+from pathlib import Path
+import shlex
+import shutil
+import subprocess
+import sys
+import tempfile
+
+
+VERSION = "1.0.0"
+PAYLOAD = Path(os.environ.get("SSC_PAYLOAD", "/usr/share/server-security-console/payload"))
+STATE_FILE = Path(os.environ.get("SSC_INSTALL_STATE", "/var/lib/server-security-console-installer/state.json"))
+BACKUP_ROOT = Path(os.environ.get("SSC_BACKUP_ROOT", "/var/backups/server-security-console-installer"))
+
+COMPONENTS = {
+    "dashboard": {
+        "name": "Security Dashboard",
+        "description": "Cockpit overview, maintenance actions, and universal historical log reader",
+        "depends": [],
+        "packages": [],
+        "files": [
+            ("security_dashboard/manifest.json", "/usr/share/cockpit/security_dashboard/manifest.json", 0o644),
+            ("security_dashboard/security-dashboard.html", "/usr/share/cockpit/security_dashboard/security-dashboard.html", 0o644),
+            ("security_dashboard/security-dashboard.js", "/usr/share/cockpit/security_dashboard/security-dashboard.js", 0o644),
+            ("security_dashboard/security-dashboard.css", "/usr/share/cockpit/security_dashboard/security-dashboard.css", 0o644),
+        ],
+    },
+    "postgresql": {
+        "name": "PostgreSQL Security Analytics",
+        "description": "Authentication charts, FATAL logs, and failed-login rankings",
+        "depends": ["dashboard"],
+        "packages": [],
+        "files": [("postgresql-security-report", "/usr/local/libexec/postgresql-security-report", 0o755)],
+    },
+    "operations": {
+        "name": "Security Event Center",
+        "description": "Timeline, reviews, correlations, alerts, health, imports, and exports",
+        "depends": ["dashboard", "postgresql"],
+        "packages": ["auditd"],
+        "files": [
+            ("security_operations/manifest.json", "/usr/share/cockpit/security_operations/manifest.json", 0o644),
+            ("security_operations/high-risk-operations.html", "/usr/share/cockpit/security_operations/high-risk-operations.html", 0o644),
+            ("security_operations/suspicious-operations.html", "/usr/share/cockpit/security_operations/suspicious-operations.html", 0o644),
+            ("security_operations/security-center.html", "/usr/share/cockpit/security_operations/security-center.html", 0o644),
+            ("security_operations/security-operations.css", "/usr/share/cockpit/security_operations/security-operations.css", 0o644),
+            ("security_operations/security-operations.js", "/usr/share/cockpit/security_operations/security-operations.js", 0o644),
+            ("security_operations/security-center.js", "/usr/share/cockpit/security_operations/security-center.js", 0o644),
+            ("security-operations-report", "/usr/local/libexec/security-operations-report", 0o755),
+            ("security-operations-control", "/usr/local/sbin/security-operations-control", 0o755),
+        ],
+    },
+    "automation": {
+        "name": "Retention, Alerts, and Archives",
+        "description": "Retention enforcement, alert checks, and verified daily/weekly archives",
+        "depends": ["operations"],
+        "packages": [],
+        "files": [
+            ("journald-30day.conf", "/etc/systemd/journald.conf.d/60-server-security.conf", 0o644),
+            ("security-log-retention.service", "/etc/systemd/system/security-log-retention.service", 0o644),
+            ("security-log-retention.timer", "/etc/systemd/system/security-log-retention.timer", 0o644),
+            ("security-operations-daily-archive.service", "/etc/systemd/system/security-operations-daily-archive.service", 0o644),
+            ("security-operations-daily-archive.timer", "/etc/systemd/system/security-operations-daily-archive.timer", 0o644),
+            ("security-operations-weekly-archive.service", "/etc/systemd/system/security-operations-weekly-archive.service", 0o644),
+            ("security-operations-weekly-archive.timer", "/etc/systemd/system/security-operations-weekly-archive.timer", 0o644),
+            ("security-alert-monitor.service", "/etc/systemd/system/security-alert-monitor.service", 0o644),
+            ("security-alert-monitor.timer", "/etc/systemd/system/security-alert-monitor.timer", 0o644),
+        ],
+    },
+    "scanners": {
+        "name": "On-demand Security Scanners",
+        "description": "AIDE, Lynis, debsums, and ClamAV controls; heavy jobs remain off by default",
+        "depends": ["dashboard"],
+        "packages": ["aide", "lynis", "debsums", "clamav"],
+        "files": [
+            ("security_heavy/manifest.json", "/usr/share/cockpit/security_heavy/manifest.json", 0o644),
+            ("security_heavy/security-heavy.html", "/usr/share/cockpit/security_heavy/security-heavy.html", 0o644),
+            ("security_heavy/security-heavy.js", "/usr/share/cockpit/security_heavy/security-heavy.js", 0o644),
+            ("security_heavy/security-heavy.css", "/usr/share/cockpit/security_heavy/security-heavy.css", 0o644),
+            ("security-heavy-control", "/usr/local/sbin/security-heavy-control", 0o755),
+        ],
+    },
+    "ssh_keys": {
+        "name": "SSH Key and SPA Manager",
+        "description": "Per-key source, expiry, capability, and fwknop SPA controls",
+        "depends": ["dashboard"],
+        "packages": ["openssh-server", "fwknop-server", "iptables"],
+        "files": [
+            ("security_keys/manifest.json", "/usr/share/cockpit/security_keys/manifest.json", 0o644),
+            ("security_keys/security-keys.html", "/usr/share/cockpit/security_keys/security-keys.html", 0o644),
+            ("security_keys/security-keys.js", "/usr/share/cockpit/security_keys/security-keys.js", 0o644),
+            ("security_keys/security-keys.css", "/usr/share/cockpit/security_keys/security-keys.css", 0o644),
+            ("security-key-control", "/usr/local/sbin/security-key-control", 0o755),
+            ("security-key-session-gate", "/usr/local/libexec/security-key-session-gate", 0o755),
+            ("security-key-knock-check", "/usr/local/libexec/security-key-knock-check", 0o755),
+            ("security-key-knock.sudoers", "/etc/sudoers.d/security-key-knock", 0o440),
+        ],
+    },
+}
+
+TIMERS = [
+    "security-log-retention.timer",
+    "security-operations-daily-archive.timer",
+    "security-operations-weekly-archive.timer",
+    "security-alert-monitor.timer",
+]
+
+
+def command_exists(name: str) -> bool:
+    return shutil.which(name) is not None
+
+
+def current_components() -> set[str]:
+    try:
+        data = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+        return {item for item in data.get("components", []) if item in COMPONENTS}
+    except (OSError, json.JSONDecodeError, TypeError):
+        return set()
+
+
+def parse_components(value: str) -> set[str]:
+    selected = {item.strip() for item in value.split(",") if item.strip()}
+    unknown = selected - set(COMPONENTS)
+    if unknown:
+        raise ValueError(f"Unknown component(s): {', '.join(sorted(unknown))}")
+    return selected
+
+
+def dependency_closure(selected: set[str]) -> set[str]:
+    resolved = set(selected)
+    changed = True
+    while changed:
+        changed = False
+        for component in tuple(resolved):
+            for dependency in COMPONENTS[component]["depends"]:
+                if dependency not in resolved:
+                    resolved.add(dependency)
+                    changed = True
+    return resolved
+
+
+def missing_packages(selected: set[str]) -> list[str]:
+    packages = sorted({package for item in selected for package in COMPONENTS[item]["packages"]})
+    missing = []
+    for package in packages:
+        result = subprocess.run(
+            ["dpkg-query", "-W", "-f=${Status}", package],
+            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, check=False,
+        )
+        if result.stdout.strip() != "install ok installed":
+            missing.append(package)
+    return missing
+
+
+def gui_available() -> bool:
+    return bool(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")) and command_exists("zenity")
+
+
+def choose_components(installed: set[str], force_gui: bool) -> set[str] | None:
+    if (force_gui or gui_available()) and gui_available():
+        command = [
+            "zenity", "--list", "--checklist", "--width=940", "--height=540",
+            "--title=Ubuntu Personal Server Security Console",
+            "--text=Select the features to install. Previously managed selections are preselected.",
+            "--separator=,", "--column=Install", "--column=ID", "--column=Component", "--column=Description",
+        ]
+        for key, value in COMPONENTS.items():
+            command.extend(["TRUE" if key in installed else "FALSE", key, value["name"], value["description"]])
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, check=False)
+        if result.returncode != 0:
+            return None
+        return parse_components(result.stdout.strip())
+    if command_exists("whiptail") and sys.stdin.isatty():
+        command = [
+            "whiptail", "--title", "Ubuntu Personal Server Security Console",
+            "--checklist", "Select features. Space toggles; Enter continues.", "24", "110", "12",
+        ]
+        for key, value in COMPONENTS.items():
+            command.extend([key, f"{value['name']} — {value['description']}", "ON" if key in installed else "OFF"])
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+        if result.returncode != 0:
+            return None
+        return set(shlex.split(result.stderr.strip()))
+    if not sys.stdin.isatty():
+        raise RuntimeError("No interactive display or terminal is available; use --apply with a component list.")
+    print("Select components by number, separated with commas:")
+    keys = list(COMPONENTS)
+    for index, key in enumerate(keys, 1):
+        marker = "*" if key in installed else " "
+        print(f"  {index}. [{marker}] {COMPONENTS[key]['name']}: {COMPONENTS[key]['description']}")
+    raw = input("Selection: ").strip()
+    if not raw:
+        return installed
+    try:
+        return {keys[int(value.strip()) - 1] for value in raw.split(",")}
+    except (ValueError, IndexError) as error:
+        raise ValueError("Invalid selection") from error
+
+
+def ask(title: str, message: str) -> bool:
+    if gui_available():
+        return subprocess.run(
+            ["zenity", "--question", f"--title={title}", f"--text={message}", "--width=620"],
+            check=False,
+        ).returncode == 0
+    if command_exists("whiptail") and sys.stdin.isatty():
+        return subprocess.run(["whiptail", "--title", title, "--yesno", message, "18", "90"], check=False).returncode == 0
+    if not sys.stdin.isatty():
+        return False
+    return input(f"{title}\n{message}\nContinue? [y/N] ").strip().lower() in {"y", "yes"}
+
+
+def notify(title: str, message: str, error: bool = False) -> None:
+    if gui_available():
+        mode = "--error" if error else "--info"
+        subprocess.run(["zenity", mode, f"--title={title}", f"--text={message}", "--width=620"], check=False)
+    else:
+        stream = sys.stderr if error else sys.stdout
+        print(f"{title}: {message}", file=stream)
+
+
+def run_root(command: list[str], check: bool = True) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(command, text=True, check=check)
+
+
+def backup_file(path: Path, backup: Path) -> None:
+    if not path.exists() and not path.is_symlink():
+        return
+    destination = backup / path.relative_to("/")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_dir():
+        shutil.copytree(path, destination, dirs_exist_ok=True, symlinks=True)
+    else:
+        shutil.copy2(path, destination, follow_symlinks=False)
+
+
+def install_file(source_name: str, target_name: str, mode: int, backup: Path) -> None:
+    source = PAYLOAD / source_name
+    target = Path(target_name)
+    if not source.is_file():
+        raise RuntimeError(f"Package payload is missing {source_name}")
+    backup_file(target, backup)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temporary_fd, temporary_name = tempfile.mkstemp(prefix=f".{target.name}.", dir=target.parent)
+    try:
+        with os.fdopen(temporary_fd, "wb") as output, source.open("rb") as input_file:
+            shutil.copyfileobj(input_file, output)
+            output.flush()
+            os.fsync(output.fileno())
+        os.chmod(temporary_name, mode)
+        os.chown(temporary_name, 0, 0)
+        os.replace(temporary_name, target)
+    finally:
+        try:
+            os.unlink(temporary_name)
+        except FileNotFoundError:
+            pass
+
+
+def remove_component(component: str, backup: Path) -> None:
+    if component == "automation":
+        subprocess.run(["systemctl", "disable", "--now", *TIMERS], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+    for _, target_name, _ in reversed(COMPONENTS[component]["files"]):
+        target = Path(target_name)
+        if target.exists() or target.is_symlink():
+            backup_file(target, backup)
+            target.unlink()
+
+
+def write_state(selected: set[str]) -> None:
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    os.chmod(STATE_FILE.parent, 0o755)
+    state = {
+        "schema": 1,
+        "package_version": VERSION,
+        "updated_at": dt.datetime.now().astimezone().isoformat(timespec="seconds"),
+        "components": [key for key in COMPONENTS if key in selected],
+    }
+    descriptor, temporary = tempfile.mkstemp(prefix=".installed-components.", dir=STATE_FILE.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            json.dump(state, stream, indent=2)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.chmod(temporary, 0o644)
+        os.replace(temporary, STATE_FILE)
+    finally:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+
+
+def apply_selection(selected: set[str], install_dependencies: bool) -> None:
+    if os.geteuid() != 0:
+        raise PermissionError("Applying changes requires root privileges.")
+    resolved = dependency_closure(selected)
+    if resolved != selected:
+        raise ValueError("The root apply request is missing required component dependencies.")
+    missing = missing_packages(selected)
+    if missing and not install_dependencies:
+        raise RuntimeError(f"Missing required Ubuntu packages: {', '.join(missing)}")
+    if missing:
+        run_root(["apt-get", "update"])
+        run_root(["apt-get", "install", "-y", "--no-install-recommends", *missing])
+    previous = current_components()
+    stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup = BACKUP_ROOT / stamp
+    backup.mkdir(parents=True, exist_ok=True)
+    os.chmod(backup, 0o700)
+    removal_order = list(reversed(list(COMPONENTS)))
+    for component in removal_order:
+        if component in previous and component not in selected:
+            remove_component(component, backup)
+    for component in COMPONENTS:
+        if component in selected:
+            for source_name, target_name, mode in COMPONENTS[component]["files"]:
+                install_file(source_name, target_name, mode, backup)
+    if "ssh_keys" in selected:
+        run_root(["visudo", "-cf", "/etc/sudoers.d/security-key-knock"])
+    if "automation" in selected:
+        run_root(["systemctl", "daemon-reload"])
+        run_root(["systemctl", "enable", "--now", *TIMERS])
+        run_root(["systemctl", "restart", "systemd-journald"])
+    elif "automation" in previous:
+        run_root(["systemctl", "daemon-reload"])
+    write_state(selected)
+    print("Installed components: " + (", ".join(key for key in COMPONENTS if key in selected) or "none"))
+    print(f"Backups of replaced files: {backup}")
+
+
+def purge_managed_components() -> None:
+    if os.geteuid() != 0:
+        raise PermissionError("Purging components requires root privileges.")
+    previous = current_components()
+    if not previous:
+        return
+    stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
+    backup = BACKUP_ROOT / f"package-removal-{stamp}"
+    backup.mkdir(parents=True, exist_ok=True)
+    os.chmod(backup, 0o700)
+    for component in reversed(list(COMPONENTS)):
+        if component in previous:
+            remove_component(component, backup)
+    subprocess.run(["systemctl", "daemon-reload"], check=False)
+    write_state(set())
+
+
+def interactive(force_gui: bool) -> int:
+    installed = current_components()
+    while True:
+        selected = choose_components(installed, force_gui)
+        if selected is None:
+            return 1
+        resolved = dependency_closure(selected)
+        added = [COMPONENTS[key]["name"] for key in COMPONENTS if key in resolved - selected]
+        if added:
+            message = "The selected features require:\n\n• " + "\n• ".join(added) + "\n\nAdd these dependencies automatically?"
+            if not ask("Component dependencies", message):
+                continue
+            selected = resolved
+        missing = missing_packages(selected)
+        install_dependencies = False
+        if missing:
+            message = (
+                "The selected features require these Ubuntu packages:\n\n• "
+                + "\n• ".join(missing)
+                + "\n\nInstall them with apt before applying the selection?"
+            )
+            if not ask("Ubuntu package dependencies", message):
+                continue
+            install_dependencies = True
+        names = "\n• ".join(COMPONENTS[key]["name"] for key in COMPONENTS if key in selected) or "No optional components"
+        if not ask("Confirm installation", f"The desired installation is:\n\n• {names}\n\nApply these changes with administrator privileges?"):
+            continue
+        command = [sys.executable, str(Path(__file__).resolve()), "--apply", ",".join(key for key in COMPONENTS if key in selected)]
+        if install_dependencies:
+            command.append("--install-system-dependencies")
+        if os.geteuid() != 0:
+            command = ["pkexec", *command]
+        result = subprocess.run(command, check=False)
+        if result.returncode == 0:
+            notify("Installation complete", "The selected security console features are installed. Refresh Cockpit to load them.")
+        else:
+            notify("Installation failed", f"The installer exited with status {result.returncode}. Review the terminal or system journal for details.", True)
+        return result.returncode
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--gui", action="store_true", help="prefer the graphical selector")
+    parser.add_argument("--list", action="store_true", help="list available components")
+    parser.add_argument("--resolve", metavar="IDS", help="print the dependency closure for a comma-separated selection")
+    parser.add_argument("--apply", metavar="IDS", help=argparse.SUPPRESS)
+    parser.add_argument("--install-system-dependencies", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--purge-managed-components", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--version", action="version", version=VERSION)
+    args = parser.parse_args()
+    try:
+        if args.list:
+            for key, value in COMPONENTS.items():
+                print(f"{key}\t{value['name']}\tdepends={','.join(value['depends']) or '-'}\tpackages={','.join(value['packages']) or '-'}")
+            return 0
+        if args.resolve is not None:
+            print(",".join(key for key in COMPONENTS if key in dependency_closure(parse_components(args.resolve))))
+            return 0
+        if args.apply is not None:
+            apply_selection(parse_components(args.apply), args.install_system_dependencies)
+            return 0
+        if args.purge_managed_components:
+            purge_managed_components()
+            return 0
+        return interactive(args.gui)
+    except (OSError, RuntimeError, ValueError, PermissionError) as error:
+        notify("Installer error", str(error), True)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

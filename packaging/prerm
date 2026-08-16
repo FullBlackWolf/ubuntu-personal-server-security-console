@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+
+if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
+    if [ -x /usr/sbin/server-security-console-installer ]; then
+        /usr/sbin/server-security-console-installer --purge-managed-components || true
+    fi
+fi
+
+exit 0

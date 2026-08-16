@@ -1,0 +1,800 @@
+#!/usr/bin/python3
+"""Build a bounded, read-only 30-day security operations report."""
+
+from __future__ import annotations
+
+import collections
+import datetime as dt
+import hashlib
+import ipaddress
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+STATE_FILE = Path("/var/lib/server-security-console/operations-state.json")
+ARCHIVE_DIR = Path("/var/lib/server-security-console/archives")
+IMPORT_DIR = Path("/var/lib/server-security-console/imported-logs")
+
+
+def configured_retention_days() -> int:
+    try:
+        value = int(json.loads(STATE_FILE.read_text(encoding="utf-8")).get("config", {}).get("retention_days", 30))
+        return min(3650, max(1, value))
+    except (OSError, ValueError, TypeError, json.JSONDecodeError, AttributeError):
+        return 30
+
+
+RETENTION_DAYS = configured_retention_days()
+DETAIL_LIMIT = 1500
+QUERY_LIMIT = 20000
+NOW = dt.datetime.now().astimezone()
+CUTOFF = NOW - dt.timedelta(days=RETENTION_DAYS)
+
+AUDIT_CATEGORIES = {
+    "identity": "账户与身份配置",
+    "privilege_config": "管理员权限配置",
+    "sshd_config": "SSH 配置",
+    "xrdp_config": "远程桌面配置",
+    "firewall_config": "防火墙配置",
+    "systemd_config": "系统服务配置",
+}
+
+SECRET_RE = re.compile(
+    r"(?i)\b(password|passwd|passphrase|token|secret|api[_-]?key|hmac[_-]?key|key[_-]?base64)"
+    r"(\s*(?:=|:)\s*|\s+)([^\s,;]+)"
+)
+URL_SECRET_RE = re.compile(r"(https?://[^:/\s]+:)([^@/\s]+)(@)", re.I)
+
+
+def run(command: list[str], timeout: int = 35) -> str:
+    result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=timeout,
+        check=False,
+        env={"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "LANG": "C.UTF-8"},
+    )
+    return result.stdout
+
+
+def redact(value: str) -> str:
+    value = SECRET_RE.sub(lambda m: f"{m.group(1)}{m.group(2)}[REDACTED]", value)
+    value = URL_SECRET_RE.sub(r"\1[REDACTED]\3", value)
+    return value.replace("\x00", " ")
+
+
+def local_datetime(value: str) -> dt.datetime | None:
+    value = value.strip()
+    for fmt in ("%m/%d/%y %H:%M:%S.%f", "%m/%d/%y %H:%M:%S"):
+        try:
+            parsed = dt.datetime.strptime(value, fmt)
+            return parsed.astimezone()
+        except ValueError:
+            continue
+    return None
+
+
+def journal_datetime(record: dict) -> dt.datetime | None:
+    try:
+        return dt.datetime.fromtimestamp(int(record["__REALTIME_TIMESTAMP"]) / 1_000_000).astimezone()
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def first_match(pattern: str, text: str, default: str = "—", flags: int = 0) -> str:
+    match = re.search(pattern, text, flags)
+    return match.group(1) if match else default
+
+
+def source_ip(message: str) -> str:
+    candidates = []
+    for pattern in (
+        r"\bSRC=([^\s]+)",
+        r"\bfrom\s+([0-9a-f:.]+)",
+        r"\brhost=([^\s]+)",
+        r"\bIP:\s*([0-9a-f:.]+)",
+        r"\bBan\s+([0-9a-f:.]+)",
+    ):
+        found = re.search(pattern, message, re.I)
+        if found:
+            candidates.append(found.group(1).strip("[](),"))
+    for candidate in candidates:
+        try:
+            return str(ipaddress.ip_address(candidate))
+        except ValueError:
+            continue
+    return "—"
+
+
+def ufw_target(message: str) -> str:
+    proto = first_match(r"\bPROTO=([^\s]+)", message, "?")
+    port = first_match(r"\bDPT=([^\s]+)", message, "?")
+    return f"{proto}/{port}"
+
+
+def event_record(
+    *,
+    moment: dt.datetime,
+    risk: str,
+    severity: str,
+    category: str,
+    title: str,
+    actor: str = "—",
+    source: str = "—",
+    target: str = "—",
+    detail: str,
+    log_source: str,
+    log_ref: str,
+) -> dict:
+    return {
+        "id": f"{log_source}:{log_ref}",
+        "risk": risk,
+        "severity": severity,
+        "timestamp": moment.isoformat(timespec="seconds"),
+        "epoch_ms": int(moment.timestamp() * 1000),
+        "category": category,
+        "title": redact(title)[:280],
+        "actor": redact(actor)[:120],
+        "source": source[:120],
+        "target": redact(target)[:240],
+        "detail": redact(detail)[:12000],
+        "log_source": log_source,
+        "log_ref": log_ref,
+    }
+
+
+def audit_blocks(text: str):
+    for block in re.split(r"(?m)^----\s*$", text):
+        block = block.strip()
+        if block:
+            yield block
+
+
+def parse_audit_time(block: str) -> tuple[dt.datetime | None, str]:
+    match = re.search(r"msg=audit\((\d{2}/\d{2}/\d{2}\s+\d{2}:\d{2}:\d{2}(?:\.\d+)?):(\d+)\)", block)
+    if not match:
+        return None, "unknown"
+    return local_datetime(match.group(1)), match.group(2)
+
+
+def audit_field(block: str, name: str, default: str = "—") -> str:
+    match = re.search(rf"\b{re.escape(name)}=([^\s]+)", block)
+    return match.group(1).strip('"') if match else default
+
+
+def audit_proctitle(block: str) -> str:
+    match = re.search(r"(?m)^type=PROCTITLE .*? : proctitle=(.*)$", block)
+    return match.group(1).strip() if match else ""
+
+
+def audit_paths(block: str) -> list[str]:
+    paths = re.findall(r"(?m)^type=PATH .*?\bname=([^\s]+)", block)
+    return [path.strip('"') for path in paths if path not in ("(null)", "null")]
+
+
+def mutating_command(command: str) -> bool:
+    lowered = f" {command.lower()} "
+    markers = (
+        " install ", " remove ", " purge ", " rm ", " mv ", " cp ", " chmod ", " chown ",
+        " tee ", " useradd ", " userdel ", " usermod ", " groupadd ", " groupdel ", " passwd ",
+        " enable ", " disable ", " start ", " stop ", " restart ", " reload ", " daemon-reload ",
+        " allow ", " deny ", " delete ", " reset ", " attach ", " detach ", " update ", " upgrade ",
+    )
+    return any(marker in lowered for marker in markers)
+
+
+def load_audit_key(key: str) -> list[dict]:
+    start_date = CUTOFF.strftime("%m/%d/%y")
+    text = run(["/usr/sbin/ausearch", "--start", start_date, "00:00:00", "-k", key, "-i", "--input-logs"])
+    events = []
+    seen = set()
+    for block in audit_blocks(text):
+        moment, serial = parse_audit_time(block)
+        if not moment or moment < CUTOFF or "type=SYSCALL" not in block or "success=yes" not in block:
+            continue
+        command = audit_proctitle(block)
+        comm = audit_field(block, "comm")
+        if comm == "auditctl" or not command:
+            continue
+        actor = audit_field(block, "auid")
+        if actor in ("unset", "4294967295", "—"):
+            actor = audit_field(block, "uid", "system")
+
+        if key == "privileged_exec":
+            category = "提权命令"
+            target = audit_field(block, "exe")
+            severity = "high" if mutating_command(command) else "medium"
+            title = "管理员变更命令" if severity == "high" else "管理员只读/检查命令"
+        else:
+            category = AUDIT_CATEGORIES[key]
+            paths = audit_paths(block)
+            target = max(paths, key=len) if paths else audit_field(block, "exe")
+            severity = "high"
+            title = f"{category}发生变更"
+
+        dedup = (category, actor, command, int(moment.timestamp() // 2))
+        if dedup in seen:
+            continue
+        seen.add(dedup)
+        events.append(event_record(
+            moment=moment,
+            risk="high",
+            severity=severity,
+            category=category,
+            title=title,
+            actor=actor,
+            target=target,
+            detail=block,
+            log_source="auditd",
+            log_ref=f"{serial}@{moment.strftime('%Y%m%d-%H%M%S')}",
+        ))
+    return events
+
+
+JOURNAL_FIELDS = (
+    "__REALTIME_TIMESTAMP,__CURSOR,MESSAGE,SYSLOG_IDENTIFIER,_COMM,_SYSTEMD_UNIT,PRIORITY,_PID"
+)
+
+
+def load_journal(name: str, extra: list[str]) -> tuple[str, list[dict]]:
+    command = [
+        "/usr/bin/journalctl", "--since=-30days", "--no-pager", f"--lines={QUERY_LIMIT}",
+        "--output=json", f"--output-fields={JOURNAL_FIELDS}", *extra,
+    ]
+    records = []
+    for line in run(command).splitlines():
+        try:
+            records.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+    return name, records
+
+
+JOURNAL_QUERIES = {
+    "ufw": ["-k", "--grep=\\[UFW (BLOCK|LIMIT)\\]"],
+    "sshd": ["_COMM=sshd"],
+    "sudo": ["_COMM=sudo"],
+    "fwknop": ["-u", "fwknop-server.service"],
+    "xrdp": ["-u", "xrdp.service", "-u", "xrdp-sesman.service"],
+    "cockpit": ["SYSLOG_IDENTIFIER=cockpit-session"],
+    "polkit": ["SYSLOG_IDENTIFIER=polkit-agent-helper-1"],
+    "fail2ban": ["-u", "fail2ban.service"],
+}
+
+
+def journal_actor(message: str) -> str:
+    for pattern in (
+        r"^([^\s:]+)\s*:\s*TTY=",
+        r"\bfor user\s+([^\s(]+)",
+        r"\bfor (?:invalid user )?([^\s]+)",
+        r"\buser[ =]([^\s]+)",
+        r"\bby\s+([^\s(]+)",
+    ):
+        match = re.search(pattern, message, re.I)
+        if match:
+            return match.group(1)
+    return "—"
+
+
+def classify_high_journal(name: str, record: dict) -> dict | None:
+    message = str(record.get("MESSAGE", ""))
+    lower = message.lower()
+    moment = journal_datetime(record)
+    if not moment or moment < CUTOFF:
+        return None
+    category = title = target = None
+    actor = journal_actor(message)
+    source = source_ip(message)
+    if name == "sshd" and "accepted publickey" in lower:
+        category, title, target = "远程管理会话", "SSH 公钥登录成功", "SSH/22"
+    elif name == "fwknop" and "added access rule" in lower:
+        category, title, target = "临时端口授权", "fwknop 临时开放访问", first_match(r"\b(tcp/\d+)\b", message)
+    elif name == "cockpit" and "session opened" in lower:
+        category, title, target = "控制中心会话", "Cockpit 管理会话建立", "Cockpit/9090"
+    elif name == "xrdp" and ("login successful" in lower or "authentication is successful" in lower):
+        category, title, target = "远程桌面会话", "xrdp 登录成功", "xrdp/3389"
+    if not category:
+        return None
+    cursor = str(record.get("__CURSOR", record.get("__REALTIME_TIMESTAMP", "unknown")))
+    return event_record(
+        moment=moment, risk="high", severity="high", category=category, title=title,
+        actor=actor, source=source, target=target, detail=message,
+        log_source="journald", log_ref=cursor,
+    )
+
+
+def classify_suspicious(name: str, record: dict) -> dict | None:
+    message = str(record.get("MESSAGE", ""))
+    lower = message.lower()
+    moment = journal_datetime(record)
+    if not moment or moment < CUTOFF:
+        return None
+    category = title = target = None
+    severity = "medium"
+    if name == "ufw" and ("[ufw block]" in lower or "[ufw limit]" in lower):
+        category, title, target = "防火墙阻止", "UFW 阻止入站连接", ufw_target(message)
+        severity = "high" if first_match(r"\bDPT=(\d+)", message, "") in {"22", "3389", "9090"} else "medium"
+    elif name == "sshd" and any(token in lower for token in (
+        "failed password", "invalid user", "authentication failure", "maximum authentication attempts",
+        "unable to negotiate", "bad protocol version", "no matching", "error: pam",
+    )):
+        category, title, target = "SSH 认证异常", "SSH 登录或协议异常", "SSH/22"
+        severity = "high"
+    elif name == "sudo" and any(token in lower for token in (
+        "authentication failure", "conversation failed", "auth could not identify", "account temporarily locked",
+        "incorrect password", "not in the sudoers",
+    )):
+        category, title, target = "管理员认证异常", "sudo 认证失败或账户锁定", "sudo/root"
+        severity = "high" if "locked" in lower or "authentication failure" in lower else "medium"
+    elif name == "polkit" and any(token in lower for token in ("failed", "failure", "denied")):
+        category, title, target = "提权认证异常", "Polkit 管理员认证失败", "polkit/root"
+        severity = "high"
+    elif name == "fwknop" and any(token in lower for token in (
+        "invalid", "replay", "decrypt", "not allowed", "no access", "digest", "expired", "reject",
+    )):
+        category, title, target = "SPA 敲门异常", "fwknop 拒绝或无法验证 SPA", "fwknop/62201"
+        severity = "high"
+    elif name == "xrdp" and any(token in lower for token in (
+        "authentication failure", "login failed", "login error", "pam_authenticate failed", "access denied",
+    )):
+        category, title, target = "远程桌面认证异常", "xrdp 登录失败", "xrdp/3389"
+        severity = "high"
+    elif name == "cockpit" and any(token in lower for token in (
+        "authentication failure", "login failed", "pam_authenticate failed", "access denied",
+    )):
+        category, title, target = "控制中心认证异常", "Cockpit 登录失败", "Cockpit/9090"
+        severity = "high"
+    elif name == "fail2ban" and re.search(r"\bban\b", lower) and "unban" not in lower:
+        category, title, target = "自动封禁", "Fail2ban 已封禁来源", "Fail2ban/sshd"
+        severity = "high"
+    if not category:
+        return None
+    cursor = str(record.get("__CURSOR", record.get("__REALTIME_TIMESTAMP", "unknown")))
+    return event_record(
+        moment=moment, risk="suspicious", severity=severity, category=category, title=title,
+        actor=journal_actor(message), source=source_ip(message), target=target, detail=message,
+        log_source="journald", log_ref=cursor,
+    )
+
+
+def load_journal_events(mode: str) -> list[dict]:
+    events = []
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        results = list(pool.map(lambda item: load_journal(item[0], item[1]), JOURNAL_QUERIES.items()))
+    for name, records in results:
+        for record in records:
+            event = classify_high_journal(name, record) if mode == "high" else classify_suspicious(name, record)
+            if event:
+                events.append(event)
+    return events
+
+
+def load_high_events() -> list[dict]:
+    events = load_journal_events("high")
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        batches = list(pool.map(load_audit_key, ["privileged_exec", *AUDIT_CATEGORIES.keys()]))
+    for batch in batches:
+        events.extend(batch)
+    return events
+
+
+def load_center_config() -> dict:
+    defaults = {
+        "thresholds": {
+            "auth_failures_10m": 10,
+            "firewall_blocks_10m": 100,
+            "postgres_auth_failures_1h": 5,
+            "new_remote_source": True,
+            "off_hours_root": True,
+            "security_config_change": True,
+        },
+        "off_hours": {"start": 20, "end": 7},
+        "whitelist": {"actors": [], "sources": [], "categories": []},
+        "browser_notifications": True,
+    }
+    try:
+        saved = json.loads(STATE_FILE.read_text(encoding="utf-8")).get("config", {})
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return defaults
+    for key in ("thresholds", "off_hours", "whitelist"):
+        if isinstance(saved.get(key), dict):
+            defaults[key].update(saved[key])
+    if isinstance(saved.get("browser_notifications"), bool):
+        defaults["browser_notifications"] = saved["browser_notifications"]
+    return defaults
+
+
+def command_status(unit: str) -> str:
+    value = run(["/usr/bin/systemctl", "is-active", unit], timeout=10).strip()
+    return value or "unknown"
+
+
+def key_value_lines(text: str) -> dict[str, str]:
+    values = {}
+    for line in text.splitlines():
+        parts = line.strip().split(None, 1)
+        if len(parts) == 2:
+            values[parts[0]] = parts[1]
+    return values
+
+
+def latest_journal_timestamp() -> str | None:
+    text = run(["/usr/bin/journalctl", "-n", "1", "--no-pager", "--output=json"], timeout=15)
+    try:
+        item = json.loads(text.splitlines()[-1])
+        return dt.datetime.fromtimestamp(int(item["__REALTIME_TIMESTAMP"]) / 1_000_000).astimezone().isoformat(timespec="seconds")
+    except (IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return None
+
+
+def latest_audit_timestamp() -> str | None:
+    candidates = [Path("/var/log/audit/audit.log"), *Path("/var/log/audit").glob("audit.log.*")]
+    existing = []
+    for path in candidates:
+        try:
+            existing.append((path.stat().st_mtime, path))
+        except OSError:
+            continue
+    if not existing:
+        return None
+    return dt.datetime.fromtimestamp(max(existing, key=lambda item: item[0])[0]).astimezone().isoformat(timespec="seconds")
+
+
+def archive_health() -> dict:
+    count = valid = invalid = 0
+    latest = None
+    try:
+        checksum_paths = sorted(ARCHIVE_DIR.glob("security-*.sha256"), reverse=True)
+    except OSError:
+        checksum_paths = []
+    for checksum_path in checksum_paths[:200]:
+        count += 1
+        try:
+            expected, filename = checksum_path.read_text(encoding="ascii").strip().split(None, 1)
+            archive_path = ARCHIVE_DIR / filename.strip()
+            actual = hashlib.sha256(archive_path.read_bytes()).hexdigest()
+            if actual == expected:
+                valid += 1
+            else:
+                invalid += 1
+            stamp = dt.datetime.fromtimestamp(archive_path.stat().st_mtime).astimezone().isoformat(timespec="seconds")
+            latest = max(latest or stamp, stamp)
+        except (OSError, ValueError):
+            invalid += 1
+    return {"count": count, "valid": valid, "invalid": invalid, "latest": latest}
+
+
+def system_health(imports: dict | None = None) -> dict:
+    audit_values = key_value_lines(run(["/usr/sbin/auditctl", "-s"], timeout=15))
+    disk = shutil.disk_usage("/var/log")
+    journal_usage = run(["/usr/bin/journalctl", "--disk-usage", "--no-pager"], timeout=15).strip()
+    ntp = run(["/usr/bin/timedatectl", "show", "--property=NTPSynchronized", "--value"], timeout=10).strip()
+    return {
+        "auditd": {
+            "status": command_status("auditd.service"),
+            "enabled": audit_values.get("enabled", "unknown"),
+            "lost": int(audit_values.get("lost", "0")) if audit_values.get("lost", "0").isdigit() else None,
+            "backlog": int(audit_values.get("backlog", "0")) if audit_values.get("backlog", "0").isdigit() else None,
+            "backlog_limit": int(audit_values.get("backlog_limit", "0")) if audit_values.get("backlog_limit", "0").isdigit() else None,
+            "latest": latest_audit_timestamp(),
+        },
+        "journald": {
+            "status": command_status("systemd-journald.service"),
+            "disk_usage": journal_usage or "unknown",
+            "latest": latest_journal_timestamp(),
+        },
+        "storage": {
+            "total": disk.total,
+            "used": disk.used,
+            "free": disk.free,
+            "percent_used": round(disk.used / max(1, disk.total) * 100, 1),
+        },
+        "clock": {"ntp_synchronized": ntp.lower() == "yes" if ntp else None},
+        "archives": archive_health(),
+        "imports": imports or {"count": 0, "valid": 0, "invalid": 0, "lines_limited": False},
+    }
+
+
+def postgres_report() -> dict:
+    text = run(["/usr/local/libexec/postgresql-security-report"], timeout=90)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return {"auth_failures": {"1h": 0, "24h": 0, "30d": 0}, "fatal_logs": [], "sources": []}
+
+
+def whitelisted(event: dict, config: dict) -> bool:
+    whitelist = config.get("whitelist", {})
+    return (
+        event.get("actor") in whitelist.get("actors", [])
+        or event.get("source") in whitelist.get("sources", [])
+        or event.get("category") in whitelist.get("categories", [])
+    )
+
+
+def alert_record(rule: str, severity: str, title: str, description: str, events: list[dict], count: int | None = None) -> dict:
+    ids = [event["id"] for event in events[:50]]
+    signature = hashlib.sha256((rule + "\x1f" + "\x1f".join(ids)).encode()).hexdigest()[:20]
+    return {
+        "id": f"alert:{signature}",
+        "rule": rule,
+        "severity": severity,
+        "title": title,
+        "description": description,
+        "count": count if count is not None else len(events),
+        "latest_at": max((event["timestamp"] for event in events), default=NOW.isoformat(timespec="seconds")),
+        "event_ids": ids,
+    }
+
+
+def build_alerts(events: list[dict], config: dict, pg: dict) -> list[dict]:
+    clean_events = [event for event in events if not whitelisted(event, config)]
+    thresholds = config["thresholds"]
+    now_ms = int(NOW.timestamp() * 1000)
+    ten_minutes = [event for event in clean_events if event["epoch_ms"] >= now_ms - 600_000]
+    last_day = [event for event in clean_events if event["epoch_ms"] >= now_ms - 86_400_000]
+    alerts = []
+
+    auth_by_source = collections.defaultdict(list)
+    firewall_by_source = collections.defaultdict(list)
+    for event in ten_minutes:
+        if "认证异常" in event["category"] or "登录失败" in event["title"]:
+            auth_by_source[event["source"]].append(event)
+        if event["category"] == "防火墙阻止":
+            firewall_by_source[event["source"]].append(event)
+    for source, matches in auth_by_source.items():
+        if len(matches) >= int(thresholds["auth_failures_10m"]):
+            alerts.append(alert_record("auth_failures_10m", "high", "短时间认证失败激增", f"来源 {source} 在 10 分钟内出现 {len(matches)} 次认证失败。", matches))
+    for source, matches in firewall_by_source.items():
+        if len(matches) >= int(thresholds["firewall_blocks_10m"]):
+            alerts.append(alert_record("firewall_blocks_10m", "medium", "防火墙阻止量异常", f"来源 {source} 在 10 分钟内被阻止 {len(matches)} 次。", matches))
+
+    pg_count = int(pg.get("auth_failures", {}).get("1h", 0) or 0)
+    if pg_count >= int(thresholds["postgres_auth_failures_1h"]):
+        alerts.append(alert_record("postgres_auth_failures_1h", "high", "PostgreSQL 认证失败激增", f"最近 1 小时出现 {pg_count} 次 PostgreSQL 认证失败。", [], pg_count))
+
+    if thresholds.get("off_hours_root"):
+        start, end = int(config["off_hours"]["start"]), int(config["off_hours"]["end"])
+        matches = []
+        for event in last_day:
+            hour = dt.datetime.fromtimestamp(event["epoch_ms"] / 1000).astimezone().hour
+            if event["actor"] == "root" and (hour >= start or hour < end):
+                matches.append(event)
+        if matches:
+            alerts.append(alert_record("off_hours_root", "high", "非工作时间 root 操作", f"非工作时间发现 {len(matches)} 条 root 操作。", matches))
+
+    if thresholds.get("security_config_change"):
+        config_categories = set(AUDIT_CATEGORIES.values())
+        matches = [event for event in last_day if event["category"] in config_categories]
+        if matches:
+            alerts.append(alert_record("security_config_change", "high", "安全配置发生变更", f"最近 24 小时发现 {len(matches)} 条安全配置变更。", matches))
+
+    if thresholds.get("new_remote_source"):
+        old_sources = {
+            event["source"] for event in clean_events
+            if event["epoch_ms"] < now_ms - 86_400_000 and event["source"] not in ("", "—")
+        }
+        new_by_source = collections.defaultdict(list)
+        for event in last_day:
+            if event["risk"] == "high" and event["source"] not in ("", "—") and event["source"] not in old_sources:
+                new_by_source[event["source"]].append(event)
+        for source, matches in new_by_source.items():
+            alerts.append(alert_record("new_remote_source", "medium", "首次出现的远程管理来源", f"最近 30 天首次看到来源 {source} 的成功管理事件。", matches))
+
+    return sorted(alerts, key=lambda item: (item["severity"] == "high", item["latest_at"]), reverse=True)
+
+
+def build_correlations(events: list[dict]) -> list[dict]:
+    grouped = collections.defaultdict(list)
+    for event in events:
+        identities = []
+        if event["source"] not in ("", "—"):
+            identities.append(("来源", event["source"]))
+        if event["actor"] not in ("", "—", "system"):
+            identities.append(("用户", event["actor"]))
+        for identity in identities:
+            grouped[identity].append(event)
+    chains = []
+    for (kind, identity), items in grouped.items():
+        ordered = sorted(items, key=lambda event: event["epoch_ms"])
+        start = 0
+        for end in range(len(ordered)):
+            while ordered[end]["epoch_ms"] - ordered[start]["epoch_ms"] > 1_800_000:
+                start += 1
+            window = ordered[start:end + 1]
+            categories = {event["category"] for event in window}
+            if len(window) >= 2 and len(categories) >= 2:
+                ids = [event["id"] for event in window[-20:]]
+                chains.append({
+                    "id": hashlib.sha256((kind + identity + "".join(ids)).encode()).hexdigest()[:20],
+                    "identity_type": kind,
+                    "identity": identity,
+                    "start_at": window[0]["timestamp"],
+                    "end_at": window[-1]["timestamp"],
+                    "count": len(window),
+                    "categories": sorted(categories),
+                    "event_ids": ids,
+                })
+    unique = {chain["id"]: chain for chain in chains}
+    return sorted(unique.values(), key=lambda item: (item["end_at"], item["count"]), reverse=True)[:50]
+
+
+GENERIC_ISO_RE = re.compile(
+    r"(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}(?::?\d{2})?)?)"
+)
+GENERIC_SYSLOG_RE = re.compile(r"^([A-Z][a-z]{2}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})")
+
+
+def imported_line_time(line: str, imported_at: dt.datetime, offset: int) -> tuple[dt.datetime, str | None]:
+    iso = GENERIC_ISO_RE.search(line)
+    if iso:
+        value = iso.group(1).replace("Z", "+00:00")
+        try:
+            parsed = dt.datetime.fromisoformat(value)
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=NOW.tzinfo)
+            return parsed.astimezone(), iso.group(1)
+        except ValueError:
+            pass
+    syslog = GENERIC_SYSLOG_RE.search(line)
+    if syslog:
+        try:
+            parsed = dt.datetime.strptime(f"{imported_at.year} {syslog.group(1)}", "%Y %b %d %H:%M:%S").replace(tzinfo=NOW.tzinfo)
+            if parsed > imported_at + dt.timedelta(days=2):
+                parsed = parsed.replace(year=parsed.year - 1)
+            return parsed, syslog.group(1)
+        except ValueError:
+            pass
+    return imported_at + dt.timedelta(microseconds=offset), None
+
+
+def load_imported_events() -> tuple[list[dict], dict]:
+    try:
+        imports = json.loads(STATE_FILE.read_text(encoding="utf-8")).get("imports", [])
+    except (OSError, json.JSONDecodeError, AttributeError):
+        imports = []
+    events = []
+    valid = invalid = lines_read = 0
+    for item in imports[:2000]:
+        try:
+            path = Path(str(item.get("path", ""))).resolve()
+            if path.parent != IMPORT_DIR.resolve():
+                invalid += 1
+                continue
+        except (OSError, ValueError):
+            invalid += 1
+            continue
+        try:
+            raw = path.read_bytes()
+            if hashlib.sha256(raw).hexdigest() != item.get("sha256"):
+                invalid += 1
+                continue
+            imported_at = dt.datetime.fromisoformat(item["imported_at"])
+            if imported_at.tzinfo is None:
+                imported_at = imported_at.replace(tzinfo=NOW.tzinfo)
+        except (OSError, ValueError, KeyError):
+            invalid += 1
+            continue
+        valid += 1
+        name = str(item.get("original_name", path.name))[:240]
+        for line_number, line in enumerate(raw.decode("utf-8", "replace").splitlines(), start=1):
+            lines_read += 1
+            if lines_read > 100_000:
+                return events, {"count": len(imports), "valid": valid, "invalid": invalid, "lines_limited": True}
+            text = line.strip()
+            if not text:
+                continue
+            moment, original_timestamp = imported_line_time(text, imported_at, line_number)
+            upper = text.upper()
+            severity = "high" if any(token in upper for token in ("FATAL", "PANIC", "CRITICAL", "ALERT", "EMERG")) else "medium"
+            title = "导入日志高优先级记录" if severity == "high" else "导入日志记录"
+            record = event_record(
+                moment=moment,
+                risk="imported",
+                severity=severity,
+                category="导入日志",
+                title=title,
+                actor=journal_actor(text),
+                source=source_ip(text),
+                target=f"{name}:{line_number}",
+                detail=text,
+                log_source="imported",
+                log_ref=f"{item.get('id', path.stem)}#{line_number}",
+            )
+            record["imported_at"] = imported_at.isoformat(timespec="seconds")
+            record["original_timestamp"] = original_timestamp
+            events.append(record)
+    return events, {"count": len(imports), "valid": valid, "invalid": invalid, "lines_limited": False}
+
+
+def aggregate(mode: str, events: list[dict]) -> dict:
+    unique = {}
+    for event in events:
+        unique[event["id"]] = event
+    events = sorted(unique.values(), key=lambda item: item["epoch_ms"], reverse=True)
+    now_ms = int(NOW.timestamp() * 1000)
+    periods = {"1h": sum(event["epoch_ms"] >= now_ms - 3_600_000 for event in events)}
+    for label, days in (("24h", 1), ("7d", 7), ("30d", 30)):
+        cutoff_ms = now_ms - days * 86_400_000
+        periods[label] = sum(event["epoch_ms"] >= cutoff_ms for event in events)
+
+    daily_counts = collections.Counter(
+        dt.datetime.fromtimestamp(event["epoch_ms"] / 1000).astimezone().date().isoformat()
+        for event in events
+    )
+    daily = []
+    for offset in range(RETENTION_DAYS - 1, -1, -1):
+        day = (NOW.date() - dt.timedelta(days=offset)).isoformat()
+        daily.append({"date": day, "count": daily_counts[day]})
+
+    categories = collections.Counter(event["category"] for event in events)
+    dimension_key = "actor" if mode == "high" else "source"
+    dimension = collections.Counter(
+        event[dimension_key] for event in events if event[dimension_key] not in ("", "—")
+    )
+    severity = collections.Counter(event["severity"] for event in events)
+    log_sources = collections.Counter(event["log_source"] for event in events)
+    actors = {event["actor"] for event in events if event["actor"] not in ("", "—")}
+    remote_sources = {event["source"] for event in events if event["source"] not in ("", "—")}
+    return {
+        "mode": mode,
+        "generated_at": NOW.isoformat(timespec="seconds"),
+        "retention_days": RETENTION_DAYS,
+        "periods": periods,
+        "total": len(events),
+        "severity": dict(severity),
+        "insights": {
+            "unique_actors": len(actors),
+            "unique_sources": len(remote_sources),
+            "last_event_at": events[0]["timestamp"] if events else None,
+            "log_sources": dict(log_sources),
+        },
+        "daily": daily,
+        "categories": [{"name": name, "count": count} for name, count in categories.most_common(20)],
+        "dimension_label": "操作用户" if mode == "high" else "来源 IP",
+        "dimension": [{"name": name, "count": count} for name, count in dimension.most_common(20)],
+        "events": events[:DETAIL_LIMIT],
+        "details_limited": len(events) > DETAIL_LIMIT,
+    }
+
+
+def main() -> int:
+    if len(sys.argv) != 2 or sys.argv[1] not in ("high", "suspicious", "center"):
+        print("usage: security-operations-report high|suspicious|center", file=sys.stderr)
+        return 2
+    mode = sys.argv[1]
+    if mode == "high":
+        report = aggregate(mode, load_high_events())
+    elif mode == "suspicious":
+        report = aggregate(mode, load_journal_events(mode))
+    else:
+        high_events, suspicious_events = load_high_events(), load_journal_events("suspicious")
+        imported_events, import_health = load_imported_events()
+        events = high_events + suspicious_events + imported_events
+        pg = postgres_report()
+        report = aggregate(mode, events)
+        report["health"] = system_health(import_health)
+        report["alerts"] = build_alerts(events, load_center_config(), pg)
+        report["correlations"] = build_correlations(events)
+        report["imported_events"] = sorted(imported_events, key=lambda item: item["epoch_ms"], reverse=True)[:5000]
+        report["postgresql"] = {
+            "auth_failures": pg.get("auth_failures", {}),
+            "fatal_count": len(pg.get("fatal_logs", [])),
+            "sources": pg.get("sources", []),
+        }
+    json.dump(report, sys.stdout, ensure_ascii=False, separators=(",", ":"))
+    sys.stdout.write("\n")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

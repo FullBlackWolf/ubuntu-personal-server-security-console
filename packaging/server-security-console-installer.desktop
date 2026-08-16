@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Ubuntu Personal Server Security Console Installer
+Comment=Select and install Cockpit security console features
+Exec=/usr/sbin/server-security-console-installer --gui
+Icon=security-high
+Terminal=false
+Categories=System;Security;Settings;
+Keywords=Cockpit;Security;Audit;Logs;PostgreSQL;SSH;
