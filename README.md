@@ -4,13 +4,9 @@ A modular Cockpit security suite for Ubuntu personal servers. It brings log visi
 
 **[Open the live public demo](https://fullblackwolf.github.io/ubuntu-personal-server-security-console/)**
 
-Demo credentials: `visitor` / `preview-only`. The preview is a static GitHub Pages deployment backed exclusively by committed synthetic logs.
+Demo credentials: `visitor` / `preview-only`. The preview is generated directly from the production Cockpit HTML, CSS, and JavaScript. Only Cockpit's host transport is replaced by a browser-local adapter backed by committed synthetic logs. The generated [source parity manifest](docs/app/source-manifest.json) records SHA-256 values for every production and preview asset.
 
-![Feature preview](docs/feature-preview.svg)
-
-### Optional installer preview
-
-![Dependency-aware optional installer](docs/installer-preview.svg)
+![Production-faithful Security Event Center preview](docs/security-center-preview.png)
 
 ## Why this project exists
 

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>可疑操作</title>
+  <link rel="stylesheet" href="security-operations.css">
+</head>
+<body data-mode="suspicious">
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">SUSPICIOUS ACTIVITY</p>
+        <h1>可疑操作</h1>
+        <p class="subtitle">汇总认证失败、UFW 阻止、无效 SPA、远程会话异常和 Fail2ban 封禁。可疑事件需要结合详情判断，不代表系统已被入侵。</p>
+      </div>
+      <button id="refresh" class="button primary" type="button">刷新统计</button>
+    </header>
+
+    <nav class="tabs" aria-label="安全操作页面">
+      <button class="tab" data-jump="/security_operations/security-center" type="button">安全事件中心</button>
+      <button class="tab" data-jump="/security_operations/high-risk-operations" type="button">高风险操作</button>
+      <button class="tab active" type="button">可疑操作</button>
+      <button class="tab" data-jump="/security_dashboard/security-dashboard" type="button">安全控制台</button>
+    </nav>
+
+    <section class="notice suspicious">
+      <strong>日志范围：最近 30 天</strong>
+      <span>高风险端口命中会提升优先级；普通网络噪声仍保留为“可疑”，不会误标为成功攻击。</span>
+    </section>
+
+    <section class="summary-grid" aria-live="polite">
+      <article class="summary-card"><span>近 24 小时</span><strong id="count-24h">—</strong></article>
+      <article class="summary-card"><span>近 7 天</span><strong id="count-7d">—</strong></article>
+      <article class="summary-card"><span>近 30 天</span><strong id="count-30d">—</strong></article>
+      <article class="summary-card"><span>高优先级</span><strong id="count-severe">—</strong></article>
+    </section>
+
+    <section class="analytics-grid">
+      <article class="panel">
+        <div class="panel-heading"><h2>每日趋势</h2><span>最近 30 天</span></div>
+        <div id="daily-chart" class="bar-list suspicious-bars"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><h2>可疑类别</h2><span>按数量排序</span></div>
+        <div id="category-chart" class="bar-list suspicious-bars"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><h2 id="dimension-title">来源 IP</h2><span>前 20 项</span></div>
+        <div id="dimension-chart" class="bar-list suspicious-bars"></div>
+      </article>
+    </section>
+
+    <section class="panel details-panel">
+      <div class="panel-heading details-heading">
+        <div><h2>详细可疑记录</h2><span id="result-count">等待加载</span></div>
+        <div class="filters">
+          <select id="period" aria-label="时间范围"><option value="1">24 小时</option><option value="7">7 天</option><option value="30" selected>30 天</option></select>
+          <input id="search" type="search" placeholder="搜索来源、类别、目标…" aria-label="搜索记录">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>时间</th><th>级别</th><th>类别</th><th>来源/用户</th><th>目标/摘要</th><th>日志</th></tr></thead>
+          <tbody id="event-rows"></tbody>
+        </table>
+      </div>
+      <button id="load-more" class="button secondary hidden" type="button">加载更多</button>
+    </section>
+
+    <footer><span id="generated">尚未生成统计</span><button class="link" data-jump="/system/logs" type="button">打开系统日志</button></footer>
+  </main>
+
+  <dialog id="log-dialog">
+    <div class="dialog-heading"><div><p class="eyebrow">LOG DETAIL</p><h2 id="dialog-title">日志详情</h2></div><button id="close-dialog" class="close" type="button" aria-label="关闭">×</button></div>
+    <dl id="dialog-meta"></dl>
+    <pre id="dialog-log"></pre>
+    <div class="dialog-actions"><button class="button secondary" data-jump="/system/logs" type="button">打开系统日志页面</button><button id="close-dialog-bottom" class="button primary" type="button">关闭</button></div>
+  </dialog>
+
+  <script src="../cockpit-demo.js"></script>
+  <script src="security-operations.js"></script>
+</body>
+</html>

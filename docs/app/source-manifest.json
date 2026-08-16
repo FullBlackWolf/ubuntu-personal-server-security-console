@@ -1,0 +1,81 @@
+{
+  "schema": "security-console-demo-source-manifest-v1",
+  "statement": "Generated directly from production Cockpit assets; only the Cockpit transport script URL is replaced.",
+  "files": {
+    "security_dashboard/security-dashboard.css": {
+      "production_sha256": "b6562d6b0d3985e4e5b551ddd1e6028d415263d8dc3a84ddfa2d6b1f65417c55",
+      "demo_sha256": "b6562d6b0d3985e4e5b551ddd1e6028d415263d8dc3a84ddfa2d6b1f65417c55",
+      "transport_patch_only": false
+    },
+    "security_dashboard/security-dashboard.html": {
+      "production_sha256": "7994d0b3125565e38a62ca50b3c73fdd0a87b4adf344f1a4227a918d9dda55ac",
+      "demo_sha256": "cc8a52b7a607be2aa4bd55c4ac7e89a450e53e504dce86ffa0c807be4e063352",
+      "transport_patch_only": true
+    },
+    "security_dashboard/security-dashboard.js": {
+      "production_sha256": "894ea09a8531771d5e1bc0c662ccf6e1126c730bf94f8d48d9d666cb4eeb2a73",
+      "demo_sha256": "894ea09a8531771d5e1bc0c662ccf6e1126c730bf94f8d48d9d666cb4eeb2a73",
+      "transport_patch_only": false
+    },
+    "security_operations/high-risk-operations.html": {
+      "production_sha256": "435831a294bddbf5f3b9ac591bb09d619e71e41e0c9a4318851b7f802bb9d1f7",
+      "demo_sha256": "81d6742c7bbee13a51ecb93633bfd3759e4d87cff2cc8ef03623c3b90ad6db75",
+      "transport_patch_only": true
+    },
+    "security_operations/security-center.html": {
+      "production_sha256": "b9ecef4a66d4c04bfd881688be04e0e8a8deda73a35d4b72d10bb9eef82a50c5",
+      "demo_sha256": "916b47808732763463a252d3a8dbf83a32787ebda3aff02e9bc8751fe7e67612",
+      "transport_patch_only": true
+    },
+    "security_operations/security-center.js": {
+      "production_sha256": "f45e8aa991b76bebefd21b3ec3a9e2a6b5d6609cc3c0118db0f1ab65a7fe538e",
+      "demo_sha256": "f45e8aa991b76bebefd21b3ec3a9e2a6b5d6609cc3c0118db0f1ab65a7fe538e",
+      "transport_patch_only": false
+    },
+    "security_operations/security-operations.css": {
+      "production_sha256": "fd910556341def4283b1259a51b8cb0356defb4c5b78f1621b7da7993627d0ff",
+      "demo_sha256": "fd910556341def4283b1259a51b8cb0356defb4c5b78f1621b7da7993627d0ff",
+      "transport_patch_only": false
+    },
+    "security_operations/security-operations.js": {
+      "production_sha256": "c456d4f23f06da073e3427817c1fac23bdb0d75c46c750ad6dda09829698d10c",
+      "demo_sha256": "c456d4f23f06da073e3427817c1fac23bdb0d75c46c750ad6dda09829698d10c",
+      "transport_patch_only": false
+    },
+    "security_operations/suspicious-operations.html": {
+      "production_sha256": "fbf69b7de0b14c131cb7d369295eb7b5d2cdd18c21bd495f9a53f4e03ea2383f",
+      "demo_sha256": "8e5175c223348c2847c767ef617ac7df498141be19816c9b84d1d0f6b7ad359b",
+      "transport_patch_only": true
+    },
+    "security_heavy/security-heavy.css": {
+      "production_sha256": "f29b217f134a2c34bf5ac29b718c06045e11e2c86e26359e1bf6a151ebdd9abc",
+      "demo_sha256": "f29b217f134a2c34bf5ac29b718c06045e11e2c86e26359e1bf6a151ebdd9abc",
+      "transport_patch_only": false
+    },
+    "security_heavy/security-heavy.html": {
+      "production_sha256": "deefbb249785f5d573b38c04a2aecd4e46a62b01c5f1b9c2ce8fbe0b42f11495",
+      "demo_sha256": "14e3dc29cd771e5523d4385a731779a8cf407ee26456789c3a72619f3a23fbc8",
+      "transport_patch_only": true
+    },
+    "security_heavy/security-heavy.js": {
+      "production_sha256": "edda6efe0484a9dc0aadf590b1de9771ed1191d7b0260843b1a6046a27f91f2d",
+      "demo_sha256": "edda6efe0484a9dc0aadf590b1de9771ed1191d7b0260843b1a6046a27f91f2d",
+      "transport_patch_only": false
+    },
+    "security_keys/security-keys.css": {
+      "production_sha256": "c771252cec01b64ae6280bc9d5841406aa910f425ab055ea5a1ec9f9107a9b2b",
+      "demo_sha256": "c771252cec01b64ae6280bc9d5841406aa910f425ab055ea5a1ec9f9107a9b2b",
+      "transport_patch_only": false
+    },
+    "security_keys/security-keys.html": {
+      "production_sha256": "9cfe0a977ab53fc7ee2f2a7561144903e82992c15e0eab4330de5222734dd7fd",
+      "demo_sha256": "c86098a710d4d58f92062da27e795635163a53c7b1ef45d5f54a6ce66121e293",
+      "transport_patch_only": true
+    },
+    "security_keys/security-keys.js": {
+      "production_sha256": "99a4a7fb5ceeccbe5074d00bcb1a8e992e8f4859a557dfabc023206a47f39cdc",
+      "demo_sha256": "99a4a7fb5ceeccbe5074d00bcb1a8e992e8f4859a557dfabc023206a47f39cdc",
+      "transport_patch_only": false
+    }
+  }
+}

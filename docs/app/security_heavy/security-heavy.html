@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>高资源防护</title>
+  <link rel="stylesheet" href="security-heavy.css">
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">ON-DEMAND / DISABLED BY DEFAULT</p>
+        <h1>高资源防护</h1>
+        <p class="subtitle">这些功能可能长时间占用磁盘、CPU 或内存。系统默认全部关闭，仅在你明确启用或手动运行时工作。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="button secondary" data-jump="/security_dashboard/security-dashboard" type="button">返回安全概览</button>
+        <button id="refresh" class="button primary" type="button">刷新状态</button>
+      </div>
+    </header>
+
+    <section class="warning" aria-label="资源警告">
+      <span class="warning-icon">!</span>
+      <div>
+        <strong>默认不启用</strong>
+        <p>“立即运行”会马上开始高 I/O 任务；“启用自动运行”会创建周期计划。所有变更都需要管理员授权并再次确认。</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">HEAVY TASKS</p>
+          <h2>扫描与审计开关</h2>
+        </div>
+        <span id="updated" class="muted">尚未刷新</span>
+      </div>
+      <div id="task-grid" class="grid" aria-live="polite"></div>
+    </section>
+
+    <section class="output-section">
+      <div class="section-heading compact">
+        <h2>操作输出</h2>
+        <button id="clear-output" class="text-button" type="button">清空</button>
+      </div>
+      <pre id="output">等待操作…</pre>
+    </section>
+  </main>
+  <script src="../cockpit-demo.js"></script>
+  <script src="security-heavy.js"></script>
+</body>
+</html>

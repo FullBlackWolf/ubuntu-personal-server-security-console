@@ -1,0 +1,49 @@
+:root { color-scheme: dark; font-family: Inter, "Noto Sans CJK SC", "Noto Sans SC", system-ui, sans-serif; background: #120c08; color: #fff8ef; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 10% 0%, rgba(255, 153, 61, 0.16), transparent 32rem), radial-gradient(circle at 90% 12%, rgba(194, 59, 72, 0.12), transparent 28rem), #120c08; }
+button { font: inherit; }
+.page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 42px 0 64px; }
+.hero, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+h1, h2, p { margin-top: 0; }
+h1 { margin-bottom: 10px; font-size: clamp(2rem, 4vw, 3.5rem); letter-spacing: -0.04em; }
+h2 { margin-bottom: 0; font-size: 1.25rem; }
+.subtitle { max-width: 740px; color: #c5b6a8; line-height: 1.65; }
+.eyebrow { margin-bottom: 8px; color: #ffad5a; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.18em; }
+.muted { color: #9f8f82; font-size: 0.88rem; }
+.button, .card button, .text-button { border: 0; cursor: pointer; }
+.button { padding: 11px 18px; border-radius: 10px; font-weight: 750; }
+.primary { background: #ff9c45; color: #211006; box-shadow: 0 10px 30px rgba(255, 139, 48, 0.18); }
+.secondary { border: 1px solid #56473a; background: #241b15; color: #f4dfcc; }
+.warning { display: flex; gap: 16px; margin: 28px 0 42px; padding: 18px 20px; border: 1px solid rgba(255, 153, 61, 0.38); border-radius: 14px; background: rgba(119, 64, 18, 0.2); }
+.warning p { margin: 5px 0 0; color: #cbb9a8; line-height: 1.5; }
+.warning-icon { display: grid; place-items: center; flex: 0 0 28px; width: 28px; height: 28px; border-radius: 50%; background: #ff9c45; color: #211006; font-weight: 900; }
+.section-heading { margin-bottom: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 14px; }
+.card { padding: 20px; border: 1px solid #403229; border-radius: 14px; background: rgba(31, 22, 16, 0.9); box-shadow: 0 12px 34px rgba(0, 0, 0, 0.18); }
+.card.running { border-color: #bb6533; box-shadow: 0 0 0 1px rgba(255, 156, 69, 0.15); }
+.card-top, .schedule { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.card h3 { margin: 0; font-size: 1.02rem; }
+.badge { padding: 4px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; }
+.badge.stopped { background: rgba(150, 137, 126, 0.15); color: #b8a99d; }
+.badge.running { background: rgba(255, 156, 69, 0.17); color: #ffb46f; }
+.description { min-height: 48px; margin: 15px 0 8px; color: #b7a79a; font-size: 0.88rem; line-height: 1.5; }
+.resource { margin-bottom: 14px; color: #ffba79; font-size: 0.8rem; font-weight: 700; }
+.schedule { padding: 11px 0; border-top: 1px solid #3a2c23; border-bottom: 1px solid #3a2c23; font-size: 0.84rem; }
+.schedule strong { font-size: 0.78rem; }
+.schedule .on { color: #ffc078; }
+.schedule .off { color: #9e9186; }
+.detail { margin: 11px 0; color: #9d8e81; font-size: 0.8rem; }
+.card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.card button, .text-button { padding: 8px 11px; border-radius: 8px; background: #33251c; color: #f4e5d8; }
+.card button:hover { background: #493427; }
+.card .run-button { background: #754219; color: #ffd5a6; }
+.card .warning-button { border: 1px solid #7f552e; }
+.card .danger { background: #54242a; color: #ffadb5; }
+.card .quiet { color: #b9aa9e; }
+.output-section { margin-top: 38px; border-top: 1px solid #3d3027; padding-top: 26px; }
+.compact { margin-bottom: 10px; }
+.text-button { color: #b3a296; background: transparent; }
+pre { min-height: 140px; max-height: 380px; overflow: auto; margin: 0; padding: 16px; border: 1px solid #35281f; border-radius: 12px; background: #080503; color: #f0cba8; white-space: pre-wrap; word-break: break-word; }
+button:disabled { cursor: wait; opacity: 0.55; }
+@media (max-width: 640px) { .page { width: min(100% - 22px, 1180px); padding-top: 24px; } .hero { align-items: flex-start; flex-direction: column; } .hero-actions, .hero .button { width: 100%; } .hero .button { flex: 1; } .grid { grid-template-columns: 1fr; } }
